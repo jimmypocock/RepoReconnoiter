@@ -1,0 +1,107 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <header class="bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <h1 class="text-3xl font-bold text-gray-900">RepoReconnoiter</h1>
+      <p class="mt-2 text-sm text-gray-600">Discover and analyze trending GitHub repositories with AI</p>
+    </div>
+  </header>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Category Filters -->
+    <div class="mb-8">
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">Filter by Category</h2>
+      <div class="flex flex-wrap gap-2">
+        <%= link_to "All Repositories", repositories_path,
+            class: "px-4 py-2 rounded-lg #{params[:category_type].blank? ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'} border border-gray-300" %>
+
+        <%= link_to "🎯 Problem Domain", repositories_path(category_type: "problem_domain"),
+            class: "px-4 py-2 rounded-lg #{params[:category_type] == 'problem_domain' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'} border border-gray-300" %>
+
+        <%= link_to "🏗️ Architecture", repositories_path(category_type: "architecture_pattern"),
+            class: "px-4 py-2 rounded-lg #{params[:category_type] == 'architecture_pattern' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'} border border-gray-300" %>
+
+        <%= link_to "📊 Maturity", repositories_path(category_type: "maturity"),
+            class: "px-4 py-2 rounded-lg #{params[:category_type] == 'maturity' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'} border border-gray-300" %>
+      </div>
+    </div>
+
+    <!-- Repository List -->
+    <div class="space-y-4">
+      <% if @repositories.any? %>
+        <% @repositories.each do |repo| %>
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
+            <!-- Repo Header -->
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <h3 class="text-xl font-semibold text-gray-900">
+                  <%= link_to repo.full_name, repo.html_url, target: "_blank", class: "hover:text-blue-600" %>
+                </h3>
+                <p class="mt-1 text-sm text-gray-600"><%= repo.description %></p>
+              </div>
+              <div class="ml-4 flex items-center space-x-4 text-sm text-gray-500">
+                <span class="flex items-center">
+                  ⭐ <%= number_with_delimiter(repo.stargazers_count) %>
+                </span>
+                <% if repo.language.present? %>
+                  <span class="px-2 py-1 bg-gray-100 rounded text-xs font-medium">
+                    <%= repo.language %>
+                  </span>
+                <% end %>
+              </div>
+            </div>
+
+            <!-- AI Analysis Summary -->
+            <% analysis = repo.analysis_current || repo.analysis_last %>
+            <% if analysis.present? %>
+              <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p class="text-sm text-gray-700"><%= analysis.summary %></p>
+              </div>
+            <% end %>
+
+            <!-- Categories -->
+            <% if repo.categories.any? %>
+              <div class="mt-4 flex flex-wrap gap-2">
+                <% repo.categories.each do |category| %>
+                  <% confidence = repo.repository_categories.find_by(category: category)&.confidence_score %>
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium <%= category_badge_class(category.category_type) %>">
+                    <%= category.name %>
+                    <% if confidence %>
+                      <span class="ml-1 text-xs opacity-75">(<%= (confidence * 100).to_i %>%)</span>
+                    <% end %>
+                  </span>
+                <% end %>
+              </div>
+            <% else %>
+              <div class="mt-4">
+                <span class="text-sm text-gray-400">Not yet analyzed</span>
+              </div>
+            <% end %>
+
+            <!-- Metadata -->
+            <div class="mt-4 flex items-center space-x-6 text-xs text-gray-500">
+              <span>Updated: <%= time_ago_in_words(repo.github_updated_at) %> ago</span>
+              <% if repo.last_analyzed_at %>
+                <span>Analyzed: <%= time_ago_in_words(repo.last_analyzed_at) %> ago</span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+          <p class="text-gray-500">No repositories found. Run the sync job to fetch some!</p>
+          <p class="mt-2 text-sm text-gray-400">
+            <code class="bg-gray-100 px-2 py-1 rounded">bin/rails sync_trending_repositories</code>
+          </p>
+        </div>
+      <% end %>
+
+      <!-- Pagination -->
+      <% if @repositories.any? %>
+        <div class="mt-8 flex justify-center">
+          <%== pagy_nav(@pagy, pagy_id: 'pagy-nav', link_extra: 'class="px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md"', nav_aria_label: 'Pagination', nav_i18n_key: 'pagy.nav.aria_label') %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

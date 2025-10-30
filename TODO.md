@@ -50,31 +50,35 @@ Track progress towards MVP release.
 
 ### Models & Validations
 
-- [ ] Create `Repository` model with associations and validations
-- [ ] Create `Analysis` model with cost tracking methods (renamed from `AiAnalysis`)
-- [ ] Create `Category` model with slug generation
-- [ ] Create `RepositoryCategory` model
-- [ ] Create `QueuedAnalysis` model with status enum (renamed from `AnalysisQueue`)
-- [ ] Create `AiCost` model with aggregation methods (renamed from `CostTracking`)
+- [x] Create `Repository` model with associations and validations
+- [x] Create `Analysis` model with cost tracking methods (renamed from `AiAnalysis`)
+- [x] Create `Category` model with slug generation
+- [x] Create `RepositoryCategory` model
+- [x] Create `QueuedAnalysis` model with status enum (renamed from `AnalysisQueue`)
+- [x] Create `AiCost` model with aggregation methods (renamed from `CostTracking`)
 - [ ] Add model tests for key business logic
 - [ ] Deferred: `GithubIssue` model (Phase 3)
 
 ### Basic UI & Data Display
 
-- [ ] Create repositories controller and index view
-- [ ] Create basic dashboard showing raw repo data
+- [x] Create repositories controller and index view
+- [x] Create basic dashboard showing categorized repo data
+- [x] Add Pagy pagination (20 repos per page)
+- [x] Style with Tailwind CSS
+- [x] Set root route to repositories#index
+- [x] Add category filtering by type
+- [x] Display AI summaries and confidence scores
+- [ ] Create repository show page with full details
 - [ ] Add Hotwire Turbo frames for dynamic updates
-- [ ] Style with Tailwind CSS
-- [ ] Set root route to repositories#index
 
 ### Background Jobs - GitHub Sync
 
-- [ ] Create `SyncTrendingRepositoriesJob`
+- [x] Create `SyncTrendingRepositoriesJob`
 - [ ] Configure Solid Queue recurring task in `config/recurring.yml`
 - [ ] Add job to fetch trending repos every 20 minutes
 - [ ] Implement smart caching (only update if repo changed)
 - [ ] Add error handling and retry logic
-- [ ] Test job execution manually
+- [x] Test job execution manually
 
 ---
 
@@ -82,40 +86,43 @@ Track progress towards MVP release.
 
 ### OpenAI API Setup
 
-- [ ] Add OpenAI gem to Gemfile
-- [ ] Create `OpenAiService` wrapper (`app/services/openai_service.rb`)
-- [ ] Implement token counting and cost calculation
-- [ ] Add API key configuration (credentials)
-- [ ] Create cost tracking helpers
-- [ ] Test API connection with simple prompt
+- [x] Add OpenAI gem to Gemfile
+- [x] Create `OpenAiService` wrapper (`app/services/openai_service.rb`)
+- [x] Implement token counting and cost calculation
+- [x] Add API key configuration (credentials)
+- [x] Create cost tracking helpers
+- [x] Test API connection with simple prompt
 
 ### Seed Categories
 
-- [ ] Create seeds file with Problem Domain categories
+- [x] Create seeds file with Problem Domain categories
   - Authentication & Identity, Data Sync, Rate Limiting, Background Jobs, etc.
-- [ ] Create seeds for Maturity Level categories
+- [x] Create seeds for Maturity Level categories
   - Experimental, Active Development, Production Ready, Enterprise Grade, Abandoned
-- [ ] Create seeds for Architecture Pattern categories
+- [x] Create seeds for Architecture Pattern categories
   - Microservices, Event-driven, Serverless-friendly, Monolith utilities
-- [ ] Run `bin/rails db:seed` and verify categories
+- [x] Run `bin/rails db:seed` and verify categories
 
 ### AI Categorization Job (Tier 1 - Cheap)
 
-- [ ] Create `CategorizeRepositoryJob` (uses gpt-4o-mini)
-- [ ] Implement prompt for quick categorization
-- [ ] Parse AI response and assign categories
-- [ ] Store analysis with token/cost tracking in `ai_analyses`
-- [ ] Link categories to repository via `repository_categories`
-- [ ] Add confidence scoring (0.0-1.0)
+- [x] Create `CategorizeRepositoryJob` (uses gpt-4o-mini)
+- [x] Implement prompt for quick categorization
+- [x] Parse AI response and assign categories
+- [x] Store analysis with token/cost tracking in `analyses`
+- [x] Link categories to repository via `repository_categories`
+- [x] Add confidence scoring (0.0-1.0)
+- [x] Implement smart duplicate detection (auto-create new categories intelligently)
 - [ ] Implement smart caching logic (`Repository#needs_analysis?`)
 
 ### Filtering & Display
 
-- [ ] Add category filter UI to dashboard
-- [ ] Display AI-assigned categories on each repo card
-- [ ] Show maturity level badges (🔬 Experimental, ✅ Production Ready, etc.)
+- [x] Add category filter UI to dashboard
+- [x] Display AI-assigned categories on each repo card
+- [x] Show category badges with color coding (blue=problem, purple=architecture, green=maturity)
+- [x] Display confidence scores as percentages on badges
+- [x] Display last analyzed timestamp
 - [ ] Add sorting by stars, recent activity, maturity level
-- [ ] Display last analyzed timestamp
+- [ ] Add search box for repo name/description
 
 ### Cost Monitoring
 
@@ -166,6 +173,63 @@ Track progress towards MVP release.
 - [ ] Pause analysis jobs if budget exceeded
 - [ ] Send alerts when approaching limits
 - [ ] Create emergency "pause all AI" switch
+
+---
+
+## Phase 3.5: AI Integration - Tier 3 (Comparative Evaluation) 🎯 MVP GOAL
+
+**Use Case**: Junior devs (or anyone) needs to evaluate multiple libraries/tools for a specific need.
+_"I need a background job library for Rails that handles retries well and has good monitoring"_
+
+### Natural Language Search
+
+- [ ] Create `EvaluateLibrariesJob` (uses gpt-4o-mini for search translation)
+- [ ] Parse user query into GitHub search parameters
+  - Extract tech stack context (Rails, Python, etc.)
+  - Extract problem domain (background jobs, authentication, etc.)
+  - Extract constraints (retries, monitoring, production-ready, etc.)
+- [ ] Execute GitHub search with translated parameters
+- [ ] Fetch top N repos (default 5, max 10)
+
+### Comparative Analysis
+
+- [ ] Create `CompareRepositoriesJob` (uses gpt-4o for comparison)
+- [ ] Build comprehensive comparison prompt
+  - Include all repos being compared
+  - Include user's specific constraints/requirements
+  - Include existing Tier 1 analysis if available
+- [ ] Parse AI comparison response
+  - Ranking with scores
+  - Pros/cons for each option
+  - Specific recommendation with reasoning
+  - Trade-offs between options
+- [ ] Store comparison as special `Analysis` type: `tier3_comparison`
+- [ ] Track tokens/costs for comparison (expected ~2-3x Tier 2 cost)
+
+### Comparison UI
+
+- [ ] Create `/evaluate` page with search input
+- [ ] Show loading state while analyzing repos
+- [ ] Display comparison results in table/card format
+- [ ] Highlight recommended option
+- [ ] Show detailed pros/cons for each repo
+- [ ] Link to individual repo pages for deep dives
+- [ ] Add "Save Comparison" feature for future reference
+
+### Smart Features
+
+- [ ] Cache comparisons (same query within 7 days)
+- [ ] Show "Similar Comparisons" if available
+- [ ] Rate limit: 3 comparisons per day for free tier
+- [ ] Auto-trigger Tier 1 analysis on repos that need it
+- [ ] Option to trigger Tier 2 deep dive on recommended repo
+
+### Cost Controls
+
+- [ ] Set max repos per comparison (default 5)
+- [ ] Warn user of estimated cost before running
+- [ ] Implement daily comparison limit
+- [ ] Track comparison costs separately in dashboard
 
 ---
 
@@ -250,13 +314,37 @@ Track progress towards MVP release.
 
 ## Notes
 
-**Current Status**: Rails app generated, ready to build GitHub API service
+**Current Status**: ✅ Phase 1 & 2 COMPLETE! Basic UI dashboard live with smart AI categorization.
 
-**Next Steps**:
+**What's Working**:
+- ✅ GitHub API integration and sync job
+- ✅ Database schema with all 6 tables
+- ✅ OpenAI Tier 1 categorization (gpt-4o-mini)
+- ✅ Smart category auto-creation with duplicate detection
+- ✅ Beautiful Tailwind UI with pagination and filtering
+- ✅ Cost tracking built-in (~$0.0002 per repo analyzed)
 
-1. Build GitHub API service wrapper
-2. Create explorer rake task to inspect available data
-3. Finalize database schema based on actual GitHub API response structure
-4. Begin implementing sync jobs
+**What We Learned**:
+- AI can create its own categories intelligently - no need to pre-define everything
+- 50% word overlap prevents duplicates (e.g., "finance" vs "trading-finance")
+- Tier 1 categorization is FAST and CHEAP (perfect for batch processing)
+
+**Next Steps - Path to MVP**:
+
+**Option A: Quick MVP (Recommended)**
+1. Run `ai:categorize_all` on remaining repos to populate dashboard
+2. Skip Tier 2 (deep dive on single repo) for now
+3. Jump directly to **Tier 3 (Comparative Evaluation)** - the killer feature
+4. Deploy MVP with comparative library evaluation
+
+**Option B: Methodical**
+1. Implement Tier 2 deep dive analysis (single repo with README/issues)
+2. Add repository show pages with full analysis
+3. Then build Tier 3 comparative evaluation
+4. Deploy MVP
+
+**Recommendation**: Option A - get to the most valuable feature (Tier 3 comparative evaluation) ASAP. Tier 2 can be added later if needed.
 
 **Cost Target**: Keep under $10/month for AI API calls during MVP phase
+
+**MVP Philosophy**: The comparative evaluation feature (Tier 3) is the killer feature that makes this tool genuinely useful - like having an experienced tech lead help you choose the right library. This is what we're building toward.

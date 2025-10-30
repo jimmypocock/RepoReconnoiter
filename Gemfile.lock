@@ -219,6 +219,7 @@ GEM
       connection_pool
     openssl (3.3.2)
     ostruct (0.6.3)
+    pagy (9.4.0)
     parallel (1.27.0)
     parser (3.3.10.0)
       ast (~> 2.4.1)
@@ -427,6 +428,7 @@ DEPENDENCIES
   octokit
   openai (~> 0.34.1)
   openssl (>= 3.3.1)
+  pagy
   pg (~> 1.1)
   propshaft
   puma (>= 5.0)

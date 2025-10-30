@@ -26,6 +26,8 @@ gem "openai", "~> 0.34.1"
 gem "faraday-retry"
 # Ruby OpenSSL wrapper - pinned to 3.3.1+ for OpenSSL 3.6 CRL fix
 gem "openssl", ">= 3.3.1"
+# Pagination [https://github.com/ddnexus/pagy]
+gem "pagy"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
