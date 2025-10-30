@@ -179,57 +179,176 @@ Track progress towards MVP release.
 ## Phase 3.5: AI Integration - Tier 3 (Comparative Evaluation) 🎯 MVP GOAL
 
 **Use Case**: Junior devs (or anyone) needs to evaluate multiple libraries/tools for a specific need.
-_"I need a background job library for Rails that handles retries well and has good monitoring"_
 
-### Natural Language Search
+**Example Queries:**
+- _"I need a Rails background job library with retry logic and monitoring"_
+- _"Looking for a Python authentication system that supports OAuth and 2FA"_
+- _"Need a React state management library for large applications"_
 
-- [ ] Create `EvaluateLibrariesJob` (uses gpt-4o-mini for search translation)
-- [ ] Parse user query into GitHub search parameters
-  - Extract tech stack context (Rails, Python, etc.)
+**Cost per Comparison**: ~$0.045 (220 comparisons per $10 budget)
+- Step 1 (Parse): gpt-4o-mini ~$0.0003
+- Step 3 (Compare): gpt-4o ~$0.045
+
+### Database Schema
+
+- [ ] Create `comparisons` table
+  - `user_query` (text) - Original user input
+  - `tech_stack`, `problem_domain` (string) - Extracted from query
+  - `constraints` (jsonb) - Array of requirements ["retry logic", "monitoring"]
+  - `github_search_query` (text) - Generated search string
+  - `recommended_repo_full_name` (string) - Top recommendation
+  - `recommendation_reasoning` (text) - Why this one?
+  - `ranking_results` (jsonb) - Full AI comparison response
+  - `repos_compared_count` (integer)
+  - `model_used`, `input_tokens`, `output_tokens`, `cost_usd`
+  - `view_count` (integer) - Track popularity
+  - Timestamps
+- [ ] Create `comparison_repositories` join table
+  - Links Comparison to Repository (many-to-many)
+  - `rank` (integer) - Position in ranking (1-5)
+  - `score` (integer) - AI score 0-100
+  - `pros` (jsonb) - Array of strengths
+  - `cons` (jsonb) - Array of weaknesses
+  - `fit_reasoning` (text) - Why this fits user's needs
+- [ ] Create `comparison_categories` join table
+  - Links Comparison to Category (many-to-many)
+  - `assigned_by` (string) - "ai" or "inferred"
+  - Enables browsing comparisons by category
+
+### Step 1: Query Parser Service (gpt-4o-mini)
+
+- [ ] Create `QueryParserService` (`app/services/query_parser_service.rb`)
+- [ ] Parse natural language into structured data
+  - Extract tech stack (Rails, Python, React, etc.)
   - Extract problem domain (background jobs, authentication, etc.)
-  - Extract constraints (retries, monitoring, production-ready, etc.)
-- [ ] Execute GitHub search with translated parameters
-- [ ] Fetch top N repos (default 5, max 10)
+  - Extract constraints/requirements as array
+  - Generate GitHub search query string
+- [ ] Return validation status (enough info to proceed?)
+- [ ] Extract keywords for user verification
+- [ ] Cost: ~500 tokens = $0.0003 per parse
 
-### Comparative Analysis
+### Step 2: Fetch & Prepare Repos
 
-- [ ] Create `CompareRepositoriesJob` (uses gpt-4o for comparison)
-- [ ] Build comprehensive comparison prompt
-  - Include all repos being compared
-  - Include user's specific constraints/requirements
-  - Include existing Tier 1 analysis if available
-- [ ] Parse AI comparison response
-  - Ranking with scores
-  - Pros/cons for each option
-  - Specific recommendation with reasoning
-  - Trade-offs between options
-- [ ] Store comparison as special `Analysis` type: `tier3_comparison`
-- [ ] Track tokens/costs for comparison (expected ~2-3x Tier 2 cost)
+- [ ] Execute GitHub search with generated query
+- [ ] Fetch top N repos (default 5, configurable max 10)
+- [ ] Filter out archived/disabled repos
+- [ ] Check which repos need Tier 1 analysis
+- [ ] Auto-trigger Tier 1 for unanalyzed repos
+- [ ] Wait for all analyses to complete before comparison
+- [ ] Collect GitHub quality signals for each repo:
+  - Last commit date (`github_updated_at`)
+  - Open issues count
+  - Stars vs age (growth velocity)
+  - Fork count (community adoption)
+  - Archived/disabled status
 
-### Comparison UI
+### Step 3: Comparative Analysis Job (gpt-4o)
 
-- [ ] Create `/evaluate` page with search input
-- [ ] Show loading state while analyzing repos
-- [ ] Display comparison results in table/card format
-- [ ] Highlight recommended option
-- [ ] Show detailed pros/cons for each repo
-- [ ] Link to individual repo pages for deep dives
-- [ ] Add "Save Comparison" feature for future reference
+- [ ] Create `CompareRepositoriesJob` (`app/jobs/compare_repositories_job.rb`)
+- [ ] Build comprehensive comparison prompt including:
+  - User's original query and constraints
+  - All repos with metadata (stars, age, language)
+  - Tier 1 summaries and categories for each repo
+  - GitHub quality signals (activity, issues, health)
+- [ ] Request structured JSON response:
+  ```json
+  {
+    "recommended_repo": "sidekiq/sidekiq",
+    "recommendation_reasoning": "...",
+    "ranking": [
+      {
+        "repo_full_name": "sidekiq/sidekiq",
+        "rank": 1,
+        "score": 95,
+        "pros": ["Proven at scale", "Excellent retry logic"],
+        "cons": ["Requires Redis infrastructure"],
+        "fit_reasoning": "Perfect match because..."
+      }
+    ]
+  }
+  ```
+- [ ] Parse AI response and create Comparison record
+- [ ] Link to repositories via `comparison_repositories`
+- [ ] Auto-assign categories based on problem_domain extraction
+- [ ] Track tokens and cost (~3000 tokens = $0.045)
 
-### Smart Features
+### Comparison UI - /evaluate Page
 
-- [ ] Cache comparisons (same query within 7 days)
-- [ ] Show "Similar Comparisons" if available
+- [ ] Create `/evaluate` route and controller
+- [ ] Build search input page with:
+  - Large search box with placeholder examples
+  - "What are you looking for?" prompt
+  - 3-4 example queries below input
+  - "Search" button
+- [ ] After submission, show extraction verification:
+  ```
+  ✓ Tech Stack: Rails, Ruby
+  ✓ Problem: Background job processing
+  ✓ Requirements: Retry logic, Monitoring
+  ✓ Searching GitHub for top 5 matches...
+  [Edit] button to refine
+  ```
+- [ ] Show loading state while:
+  - Searching GitHub
+  - Running Tier 1 analyses (if needed)
+  - Comparing repositories
+- [ ] Display comparison results:
+  - Highlighted recommendation at top with reasoning
+  - Comparison table/cards for all 5 repos
+  - Columns: Repo, Stars, Activity, Pros, Cons, Score, Fit
+  - GitHub quality signals (last updated, issues count)
+  - Category badges for each repo
+  - Links to GitHub repos
+- [ ] Add "View Analysis Details" to see full Tier 1 summary
+
+### Browsable Comparisons (/comparisons)
+
+- [ ] Create `/comparisons` index page
+- [ ] Show "Recent Evaluations" (last 20)
+- [ ] Show "Popular Comparisons" (highest view_count)
+- [ ] Filter by category (problem_domain, architecture, maturity)
+- [ ] Search existing comparisons before running new one
+- [ ] Increment `view_count` when comparison viewed
+- [ ] Cache comparisons for 7+ days (configurable)
+- [ ] Show "5 related comparisons in this category"
+- [ ] Analytics: "Top 10 most-compared problem domains"
+
+### Smart Caching & Re-analysis
+
+- [ ] Exact query match returns cached result (within 7 days)
+- [ ] Check if new repos matching criteria appeared on GitHub
+- [ ] Prompt user: "Found 2 new repos since last comparison. Re-run?"
+- [ ] Background job to refresh popular comparisons monthly
+- [ ] Store query variations to match similar requests
+
+### Category Assignment
+
+- [ ] Auto-infer category from `problem_domain` in Step 1
+  - "background job library" → find/create "Background Job Processing"
+- [ ] AI suggests additional categories during comparison
+  - Might add "Real-time Communication" if repos do websockets
+- [ ] Link via `comparison_categories` join table
+- [ ] Display category badges on comparison results
+
+### Cost Controls & Rate Limiting
+
+- [ ] Set max repos per comparison (default 5, max 10)
+- [ ] Show cost estimate before running: "This will analyze 5 repos (~$0.05)"
 - [ ] Rate limit: 3 comparisons per day for free tier
-- [ ] Auto-trigger Tier 1 analysis on repos that need it
-- [ ] Option to trigger Tier 2 deep dive on recommended repo
+- [ ] Track comparison costs in `ai_costs` table separately
+- [ ] Implement daily spending cap for comparisons
+- [ ] Show "X comparisons remaining today" in UI
 
-### Cost Controls
+### Testing & Validation
 
-- [ ] Set max repos per comparison (default 5)
-- [ ] Warn user of estimated cost before running
-- [ ] Implement daily comparison limit
-- [ ] Track comparison costs separately in dashboard
+- [ ] Test with various query types:
+  - Well-defined: "Rails background job with retry logic"
+  - Vague: "job thing for rails"
+  - Too specific: "Sidekiq alternative that uses PostgreSQL"
+  - Cross-language: "authentication library"
+- [ ] Verify GitHub search quality
+- [ ] Validate AI comparison reasoning makes sense
+- [ ] Check cost tracking accuracy
 
 ---
 

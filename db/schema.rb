@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_10_30_184311) do
+ActiveRecord::Schema[8.1].define(version: 2025_10_30_212505) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -65,6 +65,54 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_30_184311) do
     t.index ["category_type", "repositories_count"], name: "index_categories_on_category_type_and_repositories_count"
     t.index ["category_type"], name: "index_categories_on_category_type"
     t.index ["slug"], name: "index_categories_on_slug", unique: true
+  end
+
+  create_table "comparison_categories", force: :cascade do |t|
+    t.string "assigned_by", default: "inferred"
+    t.bigint "category_id", null: false
+    t.bigint "comparison_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["category_id"], name: "index_comparison_categories_on_category_id"
+    t.index ["comparison_id", "category_id"], name: "index_comparison_categories_on_comparison_id_and_category_id", unique: true
+    t.index ["comparison_id"], name: "index_comparison_categories_on_comparison_id"
+  end
+
+  create_table "comparison_repositories", force: :cascade do |t|
+    t.bigint "comparison_id", null: false
+    t.jsonb "cons", default: []
+    t.datetime "created_at", null: false
+    t.text "fit_reasoning"
+    t.jsonb "pros", default: []
+    t.integer "rank"
+    t.bigint "repository_id", null: false
+    t.integer "score"
+    t.datetime "updated_at", null: false
+    t.index ["comparison_id", "rank"], name: "index_comparison_repositories_on_comparison_id_and_rank"
+    t.index ["comparison_id"], name: "index_comparison_repositories_on_comparison_id"
+    t.index ["repository_id"], name: "index_comparison_repositories_on_repository_id"
+  end
+
+  create_table "comparisons", force: :cascade do |t|
+    t.jsonb "constraints", default: []
+    t.decimal "cost_usd", precision: 10, scale: 6
+    t.datetime "created_at", null: false
+    t.text "github_search_query"
+    t.integer "input_tokens"
+    t.string "model_used"
+    t.integer "output_tokens"
+    t.string "problem_domain"
+    t.jsonb "ranking_results"
+    t.text "recommendation_reasoning"
+    t.string "recommended_repo_full_name"
+    t.integer "repos_compared_count"
+    t.string "tech_stack"
+    t.datetime "updated_at", null: false
+    t.text "user_query", null: false
+    t.integer "view_count", default: 0
+    t.index ["created_at"], name: "index_comparisons_on_created_at"
+    t.index ["problem_domain"], name: "index_comparisons_on_problem_domain"
+    t.index ["view_count"], name: "index_comparisons_on_view_count"
   end
 
   create_table "queued_analyses", force: :cascade do |t|
@@ -148,6 +196,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_30_184311) do
   end
 
   add_foreign_key "analyses", "repositories"
+  add_foreign_key "comparison_categories", "categories"
+  add_foreign_key "comparison_categories", "comparisons"
+  add_foreign_key "comparison_repositories", "comparisons"
+  add_foreign_key "comparison_repositories", "repositories"
   add_foreign_key "queued_analyses", "repositories"
   add_foreign_key "repository_categories", "categories"
   add_foreign_key "repository_categories", "repositories"
