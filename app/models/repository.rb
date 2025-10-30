@@ -30,6 +30,22 @@ class Repository < ApplicationRecord
   #--------------------------------------
   # INSTANCE METHODS
   #--------------------------------------
+  def analysis_current
+    analyses.where(is_current: true).order(created_at: :desc).first
+  end
+
+  def analysis_last
+    analyses.order(created_at: :desc).first
+  end
+
+  def display_name
+    full_name
+  end
+
+  def github_url
+    html_url
+  end
+
   def needs_analysis?
     return true if last_analyzed_at.nil?
     return true if readme_changed?
@@ -46,14 +62,6 @@ class Repository < ApplicationRecord
     false # Placeholder - implement when fetching README
   end
 
-  def current_analysis
-    analyses.where(is_current: true).order(created_at: :desc).first
-  end
-
-  def last_analysis
-    analyses.order(created_at: :desc).first
-  end
-
   def trending_score
     # Simple trending score based on stars and recent activity
     days_since_created = (Time.current - github_created_at) / 1.day
@@ -62,65 +70,80 @@ class Repository < ApplicationRecord
     (stargazers_count / days_since_created).round(2)
   end
 
-  def display_name
-    full_name
-  end
-
-  def github_url
-    html_url
-  end
-
   #--------------------------------------
   # CLASS METHODS
   #--------------------------------------
   class << self
+    # Maps our database columns to GitHub API response keys
+    # Format: { our_column: api_column } or { our_column: [:nested, :keys] }
+    GITHUB_ATTRIBUTE_MAP = {
+      # Basic fields
+      node_id: :node_id,
+      full_name: :full_name,
+      name: :name,
+      description: :description,
+      html_url: :html_url,
+      homepage_url: :homepage,
+      clone_url: :clone_url,
+      language: :language,
+      size: :size,
+
+      # Owner info (nested)
+      owner_login: [ :owner, :login ],
+      owner_avatar_url: [ :owner, :avatar_url ],
+      owner_type: [ :owner, :type ],
+
+      # License (nested)
+      license: [ :license, :key ],
+
+      # GitHub timestamps
+      github_created_at: :created_at,
+      github_updated_at: :updated_at,
+      github_pushed_at: :pushed_at
+    }.freeze
+
+    # Default values for fields that may be missing
+    ATTRIBUTE_DEFAULTS = {
+      stargazers_count: 0,
+      forks_count: 0,
+      open_issues_count: 0,
+      watchers_count: 0,
+      topics: [],
+      default_branch: "main",
+      is_fork: false,
+      is_template: false,
+      archived: false,
+      disabled: false,
+      visibility: "public"
+    }.freeze
+
     def from_github_api(data)
       find_or_initialize_by(github_id: data[:id]).tap do |repo|
-        repo.assign_attributes(
-          node_id: data[:node_id],
-          full_name: data[:full_name],
-          name: data[:name],
-          description: data[:description],
-          html_url: data[:html_url],
-          homepage_url: data[:homepage],
-          clone_url: data[:clone_url],
-
-          # Owner info
-          owner_login: data[:owner][:login],
-          owner_avatar_url: data[:owner][:avatar_url],
-          owner_type: data[:owner][:type],
-
-          # Stats
-          stargazers_count: data[:stargazers_count] || 0,
-          forks_count: data[:forks_count] || 0,
-          open_issues_count: data[:open_issues_count] || 0,
-          watchers_count: data[:watchers_count] || 0,
-          size: data[:size],
-
-          # Technical metadata
-          language: data[:language],
-          topics: data[:topics] || [],
-          license: data.dig(:license, :key),
-          default_branch: data[:default_branch] || "main",
-
-          # Properties
-          is_fork: data[:fork] || false,
-          is_template: data[:is_template] || false,
-          archived: data[:archived] || false,
-          disabled: data[:disabled] || false,
-          visibility: data[:visibility] || "public",
-
-          # GitHub timestamps
-          github_created_at: data[:created_at],
-          github_updated_at: data[:updated_at],
-          github_pushed_at: data[:pushed_at],
-
-          # Our tracking
-          last_fetched_at: Time.current,
-          search_score: data[:score]
-        )
+        repo.assign_attributes(extract_github_attributes(data))
         repo.fetch_count += 1 if repo.persisted?
       end
+    end
+
+    private
+
+    def extract_github_attributes(data)
+      # Map API data to our attributes
+      attrs = GITHUB_ATTRIBUTE_MAP.each_with_object({}) do |(our_key, api_path), result|
+        value = api_path.is_a?(Array) ? data.dig(*api_path) : data[api_path]
+        result[our_key] = value if value.present?
+      end
+
+      # Add attributes with defaults
+      ATTRIBUTE_DEFAULTS.each do |key, default|
+        api_key = key == :is_fork ? :fork : key
+        attrs[key] = data[api_key] || default
+      end
+
+      # Add tracking fields
+      attrs.merge!(
+        last_fetched_at: Time.current,
+        search_score: data[:score]
+      )
     end
   end
 end

@@ -20,6 +20,12 @@ gem "tailwindcss-rails"
 gem "jbuilder"
 # GitHub API client [https://github.com/octokit/octokit.rb]
 gem "octokit"
+# OpenAI API client [https://github.com/openai/openai-ruby]
+gem "openai", "~> 0.34.1"
+# Faraday retry middleware
+gem "faraday-retry"
+# Ruby OpenSSL wrapper - pinned to 3.3.1+ for OpenSSL 3.6 CRL fix
+gem "openssl", ">= 3.3.1"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
