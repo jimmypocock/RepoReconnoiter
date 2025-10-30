@@ -3,6 +3,7 @@
 Track progress towards MVP release.
 
 ## Status Legend
+
 - [ ] Not started
 - [x] Complete
 - [~] In progress
@@ -10,6 +11,7 @@ Track progress towards MVP release.
 ---
 
 ## Phase 0: Initial Setup
+
 - [x] Generate Rails 8 app with Solid Queue
 - [x] Configure Tailwind CSS
 - [x] Set up Git repository
@@ -20,40 +22,45 @@ Track progress towards MVP release.
 ## Phase 1: Core Foundation
 
 ### GitHub API Integration
-- [ ] Create GitHub API service wrapper (`app/services/github_api_service.rb`)
-  - [ ] Implement trending repositories endpoint
-  - [ ] Implement repository details endpoint (README, metadata)
-  - [ ] Implement issues endpoint (for quality signals)
-  - [ ] Add rate limit tracking and handling
-  - [ ] Add authentication with GitHub token
-  - [ ] Create test/example script to explore available data structure
-- [ ] Build GitHub API explorer rake task (`bin/rails github:explore`)
-  - [ ] Fetch and display sample trending repos
-  - [ ] Print available fields and data structure
-  - [ ] Verify what metadata GitHub actually provides
+
+- [x] Add Octokit gem to Gemfile
+- [x] Store GitHub personal access token in Rails credentials
+- [x] Create GitHub API service wrapper (`app/services/github_api_service.rb`)
+  - [x] Implement search trending repositories (using Search API)
+  - [x] Implement repository details endpoint (README, metadata)
+  - [x] Implement issues endpoint (for quality signals)
+  - [x] Add rate limit tracking and handling
+  - [x] Add authentication with GitHub token
+- [x] Build GitHub API explorer rake task (`lib/tasks/github.rake`)
+  - [x] Fetch and display sample trending repos
+  - [x] Print available fields and data structure
+  - [x] Verify what metadata GitHub actually provides
 
 ### Database Schema
-- [ ] Design migrations based on actual GitHub API data structure
-- [ ] Create `repositories` table with GitHub metadata fields
-- [ ] Create `ai_analyses` table for AI-generated insights
-- [ ] Create `categories` table for categorization taxonomy
-- [ ] Create `repository_categories` join table
-- [ ] Create `github_issues` table for cached issues
-- [ ] Create `analysis_queue` table for batch processing
-- [ ] Create `cost_tracking` table for AI spending monitoring
-- [ ] Run migrations and verify schema
+
+- [x] Design migrations based on actual GitHub API data structure (see SCHEMA.md)
+- [x] Create `repositories` table with GitHub metadata fields
+- [x] Create `analyses` table for AI-generated insights (renamed from `ai_analyses`)
+- [x] Create `categories` table for categorization taxonomy
+- [x] Create `repository_categories` join table
+- [x] Create `queued_analyses` table for batch processing (renamed from `analysis_queue`)
+- [x] Create `ai_costs` table for AI spending monitoring (renamed from `cost_tracking`)
+- [~] Run migrations and verify schema
+- [ ] Deferred: `github_issues` table (will add in Phase 3 for Tier 2 deep dives)
 
 ### Models & Validations
+
 - [ ] Create `Repository` model with associations and validations
-- [ ] Create `AiAnalysis` model with cost tracking methods
+- [ ] Create `Analysis` model with cost tracking methods (renamed from `AiAnalysis`)
 - [ ] Create `Category` model with slug generation
 - [ ] Create `RepositoryCategory` model
-- [ ] Create `GithubIssue` model
-- [ ] Create `AnalysisQueue` model with status enum
-- [ ] Create `CostTracking` model with aggregation methods
+- [ ] Create `QueuedAnalysis` model with status enum (renamed from `AnalysisQueue`)
+- [ ] Create `AiCost` model with aggregation methods (renamed from `CostTracking`)
 - [ ] Add model tests for key business logic
+- [ ] Deferred: `GithubIssue` model (Phase 3)
 
 ### Basic UI & Data Display
+
 - [ ] Create repositories controller and index view
 - [ ] Create basic dashboard showing raw repo data
 - [ ] Add Hotwire Turbo frames for dynamic updates
@@ -61,6 +68,7 @@ Track progress towards MVP release.
 - [ ] Set root route to repositories#index
 
 ### Background Jobs - GitHub Sync
+
 - [ ] Create `SyncTrendingRepositoriesJob`
 - [ ] Configure Solid Queue recurring task in `config/recurring.yml`
 - [ ] Add job to fetch trending repos every 20 minutes
@@ -73,6 +81,7 @@ Track progress towards MVP release.
 ## Phase 2: AI Integration - Tier 1 (Categorization)
 
 ### OpenAI API Setup
+
 - [ ] Add OpenAI gem to Gemfile
 - [ ] Create `OpenAiService` wrapper (`app/services/openai_service.rb`)
 - [ ] Implement token counting and cost calculation
@@ -81,6 +90,7 @@ Track progress towards MVP release.
 - [ ] Test API connection with simple prompt
 
 ### Seed Categories
+
 - [ ] Create seeds file with Problem Domain categories
   - Authentication & Identity, Data Sync, Rate Limiting, Background Jobs, etc.
 - [ ] Create seeds for Maturity Level categories
@@ -90,6 +100,7 @@ Track progress towards MVP release.
 - [ ] Run `bin/rails db:seed` and verify categories
 
 ### AI Categorization Job (Tier 1 - Cheap)
+
 - [ ] Create `CategorizeRepositoryJob` (uses gpt-4o-mini)
 - [ ] Implement prompt for quick categorization
 - [ ] Parse AI response and assign categories
@@ -99,6 +110,7 @@ Track progress towards MVP release.
 - [ ] Implement smart caching logic (`Repository#needs_analysis?`)
 
 ### Filtering & Display
+
 - [ ] Add category filter UI to dashboard
 - [ ] Display AI-assigned categories on each repo card
 - [ ] Show maturity level badges (🔬 Experimental, ✅ Production Ready, etc.)
@@ -106,6 +118,7 @@ Track progress towards MVP release.
 - [ ] Display last analyzed timestamp
 
 ### Cost Monitoring
+
 - [ ] Create admin cost tracking dashboard
 - [ ] Show daily/weekly/monthly AI spending
 - [ ] Display tokens used per model
@@ -117,6 +130,7 @@ Track progress towards MVP release.
 ## Phase 3: AI Integration - Tier 2 (Deep Analysis)
 
 ### Deep Analysis Job (Tier 2 - Expensive)
+
 - [ ] Create `DeepAnalyzeRepositoryJob` (uses gpt-4o)
 - [ ] Fetch README content from GitHub
 - [ ] Fetch recent issues (last 30 days)
@@ -130,6 +144,7 @@ Track progress towards MVP release.
 - [ ] Add expiration logic (cache for 30 days)
 
 ### On-Demand Analysis UI
+
 - [ ] Add "Deep Analyze" button to repository cards
 - [ ] Queue analysis job when button clicked
 - [ ] Show loading state with Turbo Streams
@@ -138,6 +153,7 @@ Track progress towards MVP release.
 - [ ] Add visual diff between Tier 1 and Tier 2 insights
 
 ### Queue Management
+
 - [ ] Create `AnalysisQueueJob` for batch processing
 - [ ] Schedule nightly batch processing (max 50 repos/day)
 - [ ] Implement priority queue (trending repos first)
@@ -145,6 +161,7 @@ Track progress towards MVP release.
 - [ ] Create admin UI for queue monitoring
 
 ### Budget Controls
+
 - [ ] Implement daily spending cap ($0.50/day max)
 - [ ] Pause analysis jobs if budget exceeded
 - [ ] Send alerts when approaching limits
@@ -155,6 +172,7 @@ Track progress towards MVP release.
 ## Phase 4: Polish & MVP Launch
 
 ### User Experience
+
 - [ ] Add search functionality (repo name, description)
 - [ ] Implement "bookmark" feature for repos
 - [ ] Create weekly digest view (top 5 repos this week)
@@ -162,6 +180,7 @@ Track progress towards MVP release.
 - [ ] Improve mobile responsive design
 
 ### Performance & Caching
+
 - [ ] Add database indexes for common queries
 - [ ] Implement Solid Cache for expensive queries
 - [ ] Add pagination to repositories list
@@ -169,6 +188,7 @@ Track progress towards MVP release.
 - [ ] Add background job monitoring
 
 ### Deployment Preparation
+
 - [ ] Configure production environment variables
 - [ ] Set up PostgreSQL on hosting provider
 - [ ] Configure Kamal deployment (`config/deploy.yml`)
@@ -176,6 +196,7 @@ Track progress towards MVP release.
 - [ ] Configure error monitoring (Sentry or similar)
 
 ### Testing & Security
+
 - [ ] Write integration tests for critical paths
 - [ ] Test GitHub API error handling
 - [ ] Test OpenAI API error handling
@@ -183,12 +204,14 @@ Track progress towards MVP release.
 - [ ] Run bundle-audit and update vulnerable gems
 
 ### Documentation
+
 - [ ] Update README with setup instructions
 - [ ] Document environment variables needed
 - [ ] Create API key setup guide
 - [ ] Add troubleshooting section
 
 ### Launch
+
 - [ ] Deploy to production with Kamal
 - [ ] Verify Solid Queue jobs running
 - [ ] Monitor first 24 hours for errors
@@ -200,6 +223,7 @@ Track progress towards MVP release.
 ## Future Enhancements (Post-MVP)
 
 ### User Personalization
+
 - [ ] Add Sign In With GitHub authentication
 - [ ] Create user preferences (tech stack, interests)
 - [ ] Personalized recommendations based on user stack
@@ -207,6 +231,7 @@ Track progress towards MVP release.
 - [ ] Weekly email digest of relevant repos
 
 ### Trend Analysis
+
 - [ ] Create `Trend` model and aggregation jobs
 - [ ] Detect rising technologies (e.g., "Vector databases up 200%")
 - [ ] Pattern recognition across repos
@@ -214,6 +239,7 @@ Track progress towards MVP release.
 - [ ] Visualization of technology adoption over time
 
 ### Advanced Features
+
 - [ ] Alternative/cheaper AI providers (Gemini Flash)
 - [ ] Pro tier subscription ($5/month)
 - [ ] API for external integrations
@@ -227,6 +253,7 @@ Track progress towards MVP release.
 **Current Status**: Rails app generated, ready to build GitHub API service
 
 **Next Steps**:
+
 1. Build GitHub API service wrapper
 2. Create explorer rake task to inspect available data
 3. Finalize database schema based on actual GitHub API response structure
