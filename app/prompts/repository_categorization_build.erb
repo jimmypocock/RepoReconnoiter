@@ -1,0 +1,50 @@
+<%#
+PROMPT: repository_categorization_build
+DESCRIPTION: Builds the user prompt with repository data and available categories for categorization
+VARIABLES:
+  - @repository: Repository model instance
+  - @available_categories: Hash of categories grouped by type { "problem_domain" => [...], "architecture_pattern" => [...], "maturity" => [...] }
+SECURITY: structured_data - Uses validated Repository model data from GitHub API
+OUTPUT: User prompt with repository metadata and category options
+MODEL: gpt-4o-mini
+USED_BY: RepositoryCategorizationService#categorize_repository
+-%>
+Analyze this GitHub repository:
+
+**Repository:** <%= @repository.full_name %>
+**Description:** <%= @repository.description || "No description provided" %>
+**Language:** <%= @repository.language || "Unknown" %>
+**Stars:** <%= @repository.stargazers_count %>
+<% if @repository.topics.any? -%>
+**Topics:** <%= @repository.topics.join(", ") %>
+<% end -%>
+**Created:** <%= @repository.github_created_at&.strftime("%B %Y") %>
+**Last Updated:** <%= @repository.github_updated_at&.strftime("%B %Y") %>
+<% if @repository.homepage_url.present? -%>
+**Homepage:** <%= @repository.homepage_url %>
+<% end -%>
+
+---
+
+**Available Categories:**
+
+Problem Domains:
+<%= format_categories(@available_categories["problem_domain"]) %>
+
+Architecture Patterns:
+<%= format_categories(@available_categories["architecture_pattern"]) %>
+
+Maturity Levels:
+<%= format_categories(@available_categories["maturity"]) %>
+
+---
+
+Based on this information, categorize the repository and provide a summary.
+
+<%# Helper method for formatting categories -%>
+<%
+def format_categories(categories)
+  return "None available" if categories.blank?
+  categories.map { |c| "- #{c.slug}" }.join("\n")
+end
+%>

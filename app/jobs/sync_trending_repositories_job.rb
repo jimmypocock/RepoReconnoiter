@@ -2,12 +2,12 @@ class SyncTrendingRepositoriesJob < ApplicationJob
   queue_as :default
 
   def perform
-    github = GithubApiService.new
+    github = GithubService.new
 
     Rails.logger.info "🔄 Starting sync of trending repositories..."
 
     # Start small - just fetch 10 repos from the last 7 days
-    results = github.search_trending_repos(
+    results = github.search_trending(
       days_ago: 7,
       min_stars: 50,
       per_page: 10

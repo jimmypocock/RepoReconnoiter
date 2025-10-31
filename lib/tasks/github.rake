@@ -1,7 +1,7 @@
 namespace :github do
   desc "Explore GitHub API and display available data"
   task explore: :environment do
-    service = GithubApiService.new
+    service = GithubService.new
 
     puts "\n" + "=" * 80
     puts "GitHub API Explorer"
@@ -31,7 +31,7 @@ namespace :github do
     puts "\n🔥 Trending Repositories (last 7 days, min 10 stars):"
     puts "-" * 80
 
-    results = service.search_trending_repos(days_ago: 7, min_stars: 10, per_page: 5)
+    results = service.search_trending(days_ago: 7, min_stars: 10, per_page: 5)
 
     puts "Total found: #{results.total_count}"
     puts "Showing: #{results.items.count} repositories\n\n"
@@ -63,7 +63,7 @@ namespace :github do
       puts "\n📖 Sample README fetch:"
       puts "-" * 80
       begin
-        readme = service.get_readme(first_repo.full_name)
+        readme = service.readme(first_repo.full_name)
         puts "✅ README fetched successfully"
         puts "   Length: #{readme.length} characters"
         puts "   Preview: #{readme[0..200]}..."
@@ -76,7 +76,7 @@ namespace :github do
       puts "\n🐛 Sample Issues fetch:"
       puts "-" * 80
       begin
-        issues = service.get_issues(first_repo.full_name, per_page: 3)
+        issues = service.issues(first_repo.full_name, per_page: 3)
         puts "✅ Found #{issues.count} recent issues"
         issues.first(3).each do |issue|
           puts "   - ##{issue.number}: #{issue.title.truncate(60)}"
@@ -93,18 +93,17 @@ namespace :github do
   end
 
   desc "Search trending repos with custom parameters"
-  task :search, [:days, :language, :min_stars] => :environment do |t, args|
+  task :trending, [ :days, :language, :min_stars ] => :environment do |t, args|
     args.with_defaults(days: 7, language: nil, min_stars: 10)
 
-    service = GithubApiService.new
-    results = service.search_trending_repos(
+    results = GithubService.search_trending(
       days_ago: args[:days].to_i,
       language: args[:language],
       min_stars: args[:min_stars].to_i,
       per_page: 10
     )
 
-    puts "\n🔍 Search Results:"
+    puts "\n🔥 Trending Repositories:"
     puts "Query: Created in last #{args[:days]} days, #{args[:language] || 'any language'}, min #{args[:min_stars]} stars"
     puts "Total found: #{results.total_count}\n\n"
 
@@ -113,5 +112,36 @@ namespace :github do
       puts "   #{repo.description&.truncate(80)}"
       puts "   #{repo.html_url}\n\n"
     end
+  end
+
+  desc "Search GitHub repositories with any query string"
+  task :search, [ :query ] => :environment do |t, args|
+    query = args[:query] || "language:ruby stars:>1000"
+
+    puts "\n🔍 GitHub Repository Search"
+    puts "=" * 80
+    puts "Query: #{query}"
+    puts "=" * 80
+
+    begin
+      results = GithubService.search(query, per_page: 10)
+
+      puts "\n✅ Found #{results.total_count} total repositories"
+      puts "\nTop 10 Results:\n"
+
+      results.items.each_with_index do |repo, index|
+        puts "#{index + 1}. #{repo.full_name} (⭐ #{repo.stargazers_count})"
+        puts "   🔧 #{repo.language || 'N/A'}"
+        puts "   #{repo.description&.slice(0, 100)}..."
+        puts ""
+      end
+
+      puts "💡 Are these the repos you'd expect for this query?\n"
+
+    rescue => e
+      puts "\n❌ Error: #{e.message}"
+    end
+
+    puts ""
   end
 end

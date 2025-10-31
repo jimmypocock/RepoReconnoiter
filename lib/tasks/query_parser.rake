@@ -1,6 +1,6 @@
 namespace :query do
   desc "Test query parser with a natural language query"
-  task :parse, [:query] => :environment do |t, args|
+  task :parse, [ :query ] => :environment do |t, args|
     query = args[:query] || "I need a Rails background job library with retry logic and monitoring"
 
     puts "\n🔍 Parsing Query:"
@@ -38,7 +38,6 @@ namespace :query do
     ]
 
     parser = QueryParserService.new
-    github = GithubApiService.new
 
     examples.each_with_index do |query, index|
       puts "\n" + "=" * 80
@@ -56,7 +55,7 @@ namespace :query do
 
         # Test the GitHub query
         begin
-          gh_results = github.client.search_repositories(result[:github_query], per_page: 5)
+          gh_results = GithubService.search(result[:github_query], per_page: 5)
           puts "\n  📊 GitHub Results: #{gh_results.total_count} total repos found"
           puts "  Top 5:"
           gh_results.items.first(5).each_with_index do |repo, i|
@@ -75,11 +74,10 @@ namespace :query do
   end
 
   desc "Test and refine a single query iteratively"
-  task :refine, [:query] => :environment do |t, args|
+  task :refine, [ :query ] => :environment do |t, args|
     query = args[:query] || "I need a Rails background job library with retry logic"
 
     parser = QueryParserService.new
-    github = GithubApiService.new
 
     puts "\n" + "=" * 80
     puts "🔬 QUERY REFINEMENT SESSION"
@@ -98,7 +96,7 @@ namespace :query do
 
     # Test the query
     begin
-      gh_results = github.client.search_repositories(result[:github_query], per_page: 10)
+      gh_results = GithubService.search(result[:github_query], per_page: 10)
 
       puts "\n📊 RESULTS: #{gh_results.total_count} repos found\n"
       puts "Top 10:"
