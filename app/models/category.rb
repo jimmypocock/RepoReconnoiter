@@ -2,6 +2,7 @@ class Category < ApplicationRecord
   #--------------------------------------
   # ASSOCIATIONS
   #--------------------------------------
+
   has_many :repository_categories, dependent: :destroy
   has_many :repositories, through: :repository_categories
   has_many :comparison_categories, dependent: :destroy
@@ -10,6 +11,7 @@ class Category < ApplicationRecord
   #--------------------------------------
   # VALIDATIONS
   #--------------------------------------
+
   validates :name, presence: true
   validates :slug, presence: true, uniqueness: true
   validates :category_type, presence: true, inclusion: {
@@ -20,19 +22,22 @@ class Category < ApplicationRecord
   #--------------------------------------
   # CALLBACKS
   #--------------------------------------
+
   before_validation :generate_slug, if: -> { slug.blank? && name.present? }
 
   #--------------------------------------
   # SCOPES
   #--------------------------------------
+
   scope :problem_domains, -> { where(category_type: "problem_domain") }
   scope :architecture_patterns, -> { where(category_type: "architecture_pattern") }
   scope :maturity_levels, -> { where(category_type: "maturity") }
   scope :popular, -> { order(repositories_count: :desc) }
 
   #--------------------------------------
-  # INSTANCE METHODS
+  # PUBLIC INSTANCE METHODS
   #--------------------------------------
+
   def display_name
     name
   end
@@ -50,10 +55,11 @@ class Category < ApplicationRecord
     end
   end
 
+  private
+
   #--------------------------------------
   # PRIVATE METHODS
   #--------------------------------------
-  private
 
   def generate_slug
     self.slug = name.parameterize

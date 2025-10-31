@@ -2,6 +2,7 @@ class AiCost < ApplicationRecord
   #--------------------------------------
   # VALIDATIONS
   #--------------------------------------
+
   validates :date, presence: true, uniqueness: { scope: :model_used }
   validates :model_used, presence: true
   validates :total_cost_usd, numericality: { greater_than_or_equal_to: 0 }
@@ -12,6 +13,7 @@ class AiCost < ApplicationRecord
   #--------------------------------------
   # SCOPES
   #--------------------------------------
+
   scope :for_date, ->(date) { where(date: date) }
   scope :for_model, ->(model) { where(model_used: model) }
   scope :recent, -> { order(date: :desc) }
@@ -19,8 +21,9 @@ class AiCost < ApplicationRecord
   scope :this_week, -> { where("date >= ?", Time.current.beginning_of_week) }
 
   #--------------------------------------
-  # INSTANCE METHODS
+  # PUBLIC INSTANCE METHODS
   #--------------------------------------
+
   def average_cost_per_request
     return 0 if total_requests.zero?
     (total_cost_usd / total_requests).round(6)

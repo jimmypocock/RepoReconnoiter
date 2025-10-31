@@ -1,13 +1,13 @@
 # AI Prompts Library
 
-This directory contains all AI prompt templates for the application. Prompts are managed using the `Prompt` service class.
+This directory contains all AI prompt templates for the application. Prompts are managed using the `Prompter` class.
 
 ## Creating New Prompts
 
 ### System Prompts (for defining AI behavior)
 
 ```ruby
-Prompt.create('my_ai_task_system', system: true)
+Prompter.create('my_ai_task_system', system: true)
 ```
 
 Creates: `app/prompts/my_ai_task_system.erb` with:
@@ -20,7 +20,7 @@ Creates: `app/prompts/my_ai_task_system.erb` with:
 ### Build/User Prompts (for dynamic content)
 
 ```ruby
-Prompt.create('my_ai_task_build')
+Prompter.create('my_ai_task_build')
 ```
 
 Creates: `app/prompts/my_ai_task_build.erb` with:
@@ -34,10 +34,10 @@ Creates: `app/prompts/my_ai_task_build.erb` with:
 
 ```ruby
 # System prompt (no variables)
-system_prompt = Prompt.render('my_ai_task_system')
+system_prompt = Prompter.render('my_ai_task_system')
 
 # Build prompt (with variables)
-user_prompt = Prompt.render('my_ai_task_build',
+user_prompt = Prompter.render('my_ai_task_build',
   variable_name: some_value,
   another_variable: other_value
 )
@@ -45,8 +45,8 @@ user_prompt = Prompt.render('my_ai_task_build',
 # In a service
 response = client.chat.completions.create(
   messages: [
-    { role: "system", content: Prompt.render('my_ai_task_system') },
-    { role: "user", content: Prompt.render('my_ai_task_build', data: data) }
+    { role: "system", content: Prompter.render('my_ai_task_system') },
+    { role: "user", content: Prompter.render('my_ai_task_build', data: data) }
   ],
   model: "gpt-4o-mini"
 )
@@ -56,7 +56,7 @@ response = client.chat.completions.create(
 
 ```ruby
 # Always sanitize user-provided text before sending to AI
-safe_query = Prompt.sanitize_user_input(params[:user_query])
+safe_query = Prompter.sanitize_user_input(params[:user_query])
 ```
 
 ## Prompt Template Structure
@@ -93,19 +93,22 @@ USED_BY: ServiceName#method_name
 
 ### Current Prompts
 
-1. **query_parser_system.erb**
+1. **user_query_parser_system.erb**
    - System prompt for parsing user queries into GitHub searches
    - No variables, pure instruction
-   - Returns: JSON with tech_stack, problem_domain, github_query
+   - Returns: JSON with tech_stack, problem_domain, github_queries, query_strategy
+   - Used by: UserQueryParser#parse
 
-2. **repository_categorization_system.erb**
-   - System prompt for categorizing repositories
+2. **repository_analyzer_system.erb**
+   - System prompt for analyzing and categorizing repositories
    - Defines JSON output format for categories
+   - Used by: RepositoryAnalyzer#analyze_repository
 
-3. **repository_categorization_build.erb**
+3. **repository_analyzer_build.erb**
    - Builds user prompt with repository data
    - Variables: @repository, @available_categories
    - Dynamic content based on repo metadata
+   - Used by: RepositoryAnalyzer#analyze_repository
 
 ## Best Practices
 
@@ -115,7 +118,7 @@ USED_BY: ServiceName#method_name
 4. **Version control** - Commit prompt changes with clear messages
 5. **Document variables** - Describe type and purpose in header
 6. **Test prompts** - Verify output before deploying
-7. **Sanitize inputs** - Always use `Prompt.sanitize_user_input()` for user text
+7. **Sanitize inputs** - Always use `Prompter.sanitize_user_input()` for user text
 
 ## Future Gem Features
 

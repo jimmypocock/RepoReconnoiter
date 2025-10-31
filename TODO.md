@@ -231,25 +231,29 @@ Track progress towards MVP release.
   - [x] `bin/rails query:test_examples` - Test multiple examples with GitHub results
   - [x] `bin/rails query:refine[query]` - Detailed refinement session with evaluation
 - [x] Create GitHub query testing task (`lib/tasks/test_github_query.rake`)
-- [~] **REFINEMENT IN PROGRESS** - Fix frontend framework handling
-  - [x] ✅ Backend frameworks (Rails, Django) correctly use language filter only
-  - [x] ✅ Query: `"I need a Rails background job library"` → `"background processing language:ruby stars:>100"` (returns Sidekiq #1!)
-  - [ ] ⚠️ Frontend frameworks (React, Vue) incorrectly exclude framework name
-  - [ ] ⚠️ Query: `"React state management library"` → `"state management language:javascript"` (returns Vuex for Vue.js instead of Redux/Zustand)
-  - [ ] **TODO**: Update prompt to clarify backend vs frontend framework handling
-  - [ ] **TODO**: Test all example queries (Rails jobs, Python auth, React state)
-- [ ] Cost: ~500 tokens = $0.0003 per parse
+- [x] ✅ **MULTI-QUERY STRATEGY IMPLEMENTED**
+  - [x] ✅ Updated response format: `github_queries` (array) + `query_strategy` field
+  - [x] ✅ Single-query scenarios work (Rails, React, Python)
+  - [x] ✅ Multi-query for edge cases (Python ORMs, Node.js frameworks, JS/TS testing)
+  - [x] ✅ Backend frameworks use language filter only (Rails → `language:ruby`)
+  - [x] ✅ Frontend frameworks use TypeScript for modern libs (React → `language:typescript`)
+  - [x] ✅ Universal `stars:>100` threshold validated across all ecosystems
+  - [x] ✅ Tested: Python ORM returns 2 queries, Node.js returns 2 queries, JS testing returns 2 queries
+- [x] Cost: ~1200 tokens = $0.0003 per parse
 
-**Testing Notes**:
+**Testing Notes** (Phase 1 GitHub Search Research):
 - GitHub search API quirks discovered:
   - Different libraries use different terminology (Sidekiq="processing", Resque="jobs")
   - Simpler queries (1-2 keywords) work better than complex ones
   - `in:name,description` filters are too restrictive - removed
-  - Can't get ALL relevant libraries in one query - that's OK!
+  - Can't get ALL relevant libraries in one query - multi-query strategy solves this!
 - Successful query patterns:
   - Backend: `"background processing language:ruby stars:>100"` (14 results, Sidekiq #1)
   - Backend: `"authentication language:python stars:>100"` (224 results, authentik/django-allauth top)
-  - Frontend: Need to include framework name for framework-specific features
+  - Frontend: `"state management language:typescript stars:>100"` (returns Redux, Zustand, MobX)
+  - Multi-query: Python ORMs need both "orm" and "sqlalchemy" queries to be comprehensive
+  - Multi-query: Node.js needs both JavaScript and TypeScript queries
+  - See `GITHUB_SEARCH_RESEARCH.md` for full 16 golden queries documentation
 
 ### Step 2: Fetch & Prepare Repos
 
@@ -457,7 +461,7 @@ Track progress towards MVP release.
 
 ## Notes
 
-**Current Status**: ✅ Phase 1 & 2 COMPLETE! 🚧 Phase 3.5 Tier 3 IN PROGRESS (95% done with Step 1)
+**Current Status**: ✅ Phase 1 & 2 COMPLETE! ✅ Phase 3.5 Tier 3 Step 1 COMPLETE! 🚧 Starting Step 2
 
 **What's Working**:
 - ✅ GitHub API integration and sync job
@@ -468,42 +472,46 @@ Track progress towards MVP release.
 - ✅ Cost tracking built-in (~$0.0002 per repo analyzed)
 - ✅ Tier 3 database migrations and models complete
 - ✅ QueryParserService created with gpt-4o-mini integration
+- ✅ Multi-query strategy implemented (handles edge cases with 2+ GitHub queries)
 - ✅ Comprehensive testing rake tasks for query refinement
-- 🚧 Query parser working for backend frameworks (Rails, Python, Django)
-- ⚠️ Query parser needs fix for frontend frameworks (React, Vue, Angular)
+- ✅ Query parser working for all scenarios (backend, frontend, ORMs, testing frameworks)
 
 **What We Learned**:
 - AI can create its own categories intelligently - no need to pre-define everything
 - 50% word overlap prevents duplicates (e.g., "finance" vs "trading-finance")
 - Tier 1 categorization is FAST and CHEAP (perfect for batch processing)
-- **GitHub Search API quirks** (Tier 3 testing):
+- **GitHub Search API quirks** (Phase 1 research):
   - Simpler queries (1-2 keywords) > complex queries
   - Use broad problem terms: "processing" not "background job processing"
   - Different libraries use different terminology in their descriptions
   - Field filters (`in:name,description`) are too restrictive
   - Backend frameworks (Rails, Django) should only use language filters
-  - Frontend frameworks (React, Vue) NEED to be in query for framework-specific features
-  - One query won't find ALL relevant libraries - trust GitHub's relevance ranking
+  - Frontend frameworks use TypeScript for modern libs (React, Vue, Angular)
+  - Universal `stars:>100` threshold works across all ecosystems
+- **Multi-query strategy** (Step 1 completion):
+  - Single query can't find ALL relevant libraries - need 2-3 queries for comprehensive results
+  - Python ORMs: Need both "orm" and "sqlalchemy" queries to catch Django ORM + SQLAlchemy
+  - Node.js: Need both JavaScript and TypeScript queries (Express vs Fastify)
+  - Testing frameworks: Need specific library names (Jest) + generic terms
+  - AI intelligently determines when multi-query needed vs single query sufficient
 
 **Next Steps - Path to MVP**:
 
 🎯 **Currently Building: Tier 3 Comparative Evaluation** (Option A - chosen path)
 
-**Immediate Next Steps** (to resume tomorrow):
-1. **Fix QueryParserService for frontend frameworks**:
-   - Update prompt in `app/services/query_parser_service.rb` around line 68
-   - Clarify: Backend frameworks (Rails/Django/Flask) → use language filter only
-   - Clarify: Frontend frameworks (React/Vue/Angular) → include framework name in query
-   - Example: "React state management" → `"react state language:javascript stars:>500"`
-   - Test with: `bin/rails 'query:refine[Need a React state management library]'`
-   - Should return Redux, Zustand, MobX (NOT Vuex)
+**Immediate Next Steps**:
+1. ✅ **Step 1 COMPLETE** - Query parser with multi-query strategy working!
 
-2. **Complete query parser testing**:
-   - Test all 3 example queries (Rails jobs ✅, Python auth ✅, React state ⚠️)
-   - Add 1-2 more test cases (Vue.js, Node.js, etc.)
-   - Mark Step 1 complete
+2. **Build Step 2: Fetch & Prepare Repos**:
+   - Create service to execute GitHub searches (handle multi-query merging/deduping)
+   - Fetch top N repos (default 5, max 10)
+   - Filter archived/disabled repos
+   - Check which repos need Tier 1 analysis
+   - Auto-trigger categorization for unanalyzed repos
+   - Collect GitHub quality signals (stars, activity, issues)
+   - Prepare data structure for Step 3 comparison
 
-3. **Build CompareRepositoriesJob** (Step 3):
+3. **Build Step 3: CompareRepositoriesJob**:
    - Create `app/jobs/compare_repositories_job.rb`
    - Uses gpt-4o for comprehensive comparison
    - Takes user query + 5 repos + Tier 1 analyses

@@ -2,12 +2,14 @@ class ComparisonRepository < ApplicationRecord
   #--------------------------------------
   # ASSOCIATIONS
   #--------------------------------------
+
   belongs_to :comparison
   belongs_to :repository
 
   #--------------------------------------
   # VALIDATIONS
   #--------------------------------------
+
   validates :comparison_id, presence: true
   validates :rank, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :repository_id, presence: true
@@ -16,6 +18,7 @@ class ComparisonRepository < ApplicationRecord
   #--------------------------------------
   # SCOPES
   #--------------------------------------
+
   scope :ranked, -> { order(rank: :asc) }
   scope :top_ranked, -> { where(rank: 1) }
 end

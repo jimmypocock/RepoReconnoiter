@@ -8,7 +8,7 @@ namespace :query do
     puts query
     puts "=" * 80
 
-    parser = QueryParserService.new
+    parser = UserQueryParser.new
     result = parser.parse(query)
 
     if result[:valid]
@@ -16,7 +16,8 @@ namespace :query do
       puts "Tech Stack:       #{result[:tech_stack]}"
       puts "Problem Domain:   #{result[:problem_domain]}"
       puts "Constraints:      #{result[:constraints].join(', ')}"
-      puts "\nGitHub Query:     #{result[:github_query]}"
+      puts "\nGitHub Queries:   #{result[:github_queries].join(' | ')}"
+      puts "Query Strategy:   #{result[:query_strategy]}"
       puts "\nTokens: #{result[:input_tokens]} in / #{result[:output_tokens]} out"
       puts "Cost: $#{((result[:input_tokens] * 0.150 / 1_000_000) + (result[:output_tokens] * 0.600 / 1_000_000)).round(6)}"
     else
@@ -37,7 +38,7 @@ namespace :query do
       "best library"
     ]
 
-    parser = QueryParserService.new
+    parser = UserQueryParser.new
 
     examples.each_with_index do |query, index|
       puts "\n" + "=" * 80
@@ -51,11 +52,12 @@ namespace :query do
         puts "  Tech Stack:     #{result[:tech_stack]}"
         puts "  Problem:        #{result[:problem_domain]}"
         puts "  Constraints:    #{result[:constraints].join(', ')}"
-        puts "  GitHub Query:   #{result[:github_query]}"
+        puts "  GitHub Queries: #{result[:github_queries].join(' | ')}"
+        puts "  Strategy:       #{result[:query_strategy]}"
 
-        # Test the GitHub query
+        # Test the GitHub query (just first one for now)
         begin
-          gh_results = GithubService.search(result[:github_query], per_page: 5)
+          gh_results = Github.search(result[:github_queries].first, per_page: 5)
           puts "\n  📊 GitHub Results: #{gh_results.total_count} total repos found"
           puts "  Top 5:"
           gh_results.items.first(5).each_with_index do |repo, i|
@@ -71,54 +73,5 @@ namespace :query do
     end
 
     puts "\n"
-  end
-
-  desc "Test and refine a single query iteratively"
-  task :refine, [ :query ] => :environment do |t, args|
-    query = args[:query] || "I need a Rails background job library with retry logic"
-
-    parser = QueryParserService.new
-
-    puts "\n" + "=" * 80
-    puts "🔬 QUERY REFINEMENT SESSION"
-    puts "=" * 80
-    puts "User Query: #{query}"
-    puts "=" * 80
-
-    result = parser.parse(query)
-
-    puts "\n📋 PARSED DATA:"
-    puts "  Tech Stack:     #{result[:tech_stack]}"
-    puts "  Problem:        #{result[:problem_domain]}"
-    puts "  Constraints:    #{result[:constraints].join(', ')}"
-    puts "\n🔍 GITHUB QUERY:"
-    puts "  #{result[:github_query]}"
-
-    # Test the query
-    begin
-      gh_results = GithubService.search(result[:github_query], per_page: 10)
-
-      puts "\n📊 RESULTS: #{gh_results.total_count} repos found\n"
-      puts "Top 10:"
-      gh_results.items.first(10).each_with_index do |repo, i|
-        puts "  #{i + 1}. #{repo.full_name}"
-        puts "     ⭐ #{repo.stargazers_count} | 🔧 #{repo.language || 'N/A'}"
-        puts "     #{repo.description&.slice(0, 80)}..."
-        puts ""
-      end
-
-      puts "\n💭 EVALUATION QUESTIONS:"
-      puts "  1. Are these the right repos for: '#{query}'?"
-      puts "  2. Is Sidekiq/Good Job/Delayed Job in the top 5 (if Rails job query)?"
-      puts "  3. Are there irrelevant results we need to filter out?"
-      puts "  4. What would make this query better?"
-
-    rescue => e
-      puts "\n❌ GitHub Search Failed: #{e.message}"
-      puts "\n🔧 DEBUG: Try this query manually at:"
-      puts "   https://github.com/search?q=#{URI.encode_www_form_component(result[:github_query])}"
-    end
-
-    puts "\n" + "=" * 80
   end
 end

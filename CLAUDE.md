@@ -6,6 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 RepoReconnoiter is an Open Source Intelligence Dashboard that analyzes GitHub trending repositories using AI to provide developers with context-aware recommendations. The system fetches trending repos every 20 minutes, uses AI to categorize and analyze them, and helps developers discover relevant tools based on their tech stack.
 
+## Core Principles
+
+1. **Cost Control**: Keep AI API costs under $10/month through automatic tracking, caching, and smart model selection
+2. **Code Consistency**: All code follows strict organization standards with alphabetized methods and clear section headers
+3. **Service Pattern**: Use "Doer" naming (no "Service" suffix) for all service classes
+4. **Automatic Tracking**: The `OpenAi` service automatically tracks all API costs - never call OpenAI directly
+5. **Prompt as Code**: AI prompts are versioned ERB templates in `app/prompts/`, not hardcoded strings
+6. **Multi-Query Strategy**: Use 2-3 GitHub queries for comprehensive results when needed
+
 ## Tech Stack
 
 - **Framework**: Rails 8.1 with Hotwire/Turbo + Stimulus
@@ -38,6 +47,11 @@ bin/rails db:reset        # Drop, create, migrate, and seed database
 bin/rails test            # Run all tests
 bin/rails test:system     # Run system tests
 bin/rails test test/models/repository_test.rb  # Run specific test file
+
+# AI Analysis Testing
+bin/rails analyze:compare["query"]         # Test full comparison pipeline (parse → search → merge)
+bin/rails analyze:validate_queries         # Run test suite with sample queries
+bin/rails analyze:repo[owner/name]         # Test Tier 1 analysis on single repo
 ```
 
 ### Linting & Security
@@ -61,6 +75,82 @@ bin/kamal logs            # Tail production logs
 bin/kamal shell           # SSH into production container
 ```
 
+## Code Organization Standards
+
+All services and models MUST follow this consistent structure:
+
+### Service/Model Organization
+
+```ruby
+class ExampleService
+  #--------------------------------------
+  # PUBLIC INSTANCE METHODS
+  #--------------------------------------
+
+  def initialize
+    # initialization logic
+  end
+
+  def method_a
+    # Methods alphabetized within this section
+  end
+
+  def method_b
+    # ...
+  end
+
+  #--------------------------------------
+  # CLASS METHODS
+  #--------------------------------------
+
+  class << self
+    # Use 'class << self' - NOT 'def self.method_name'
+
+    def class_method_a
+      # Methods alphabetized within this section
+    end
+
+    def class_method_b
+      # ...
+    end
+  end
+
+  private
+
+  #--------------------------------------
+  # PRIVATE METHODS
+  #--------------------------------------
+
+  def private_method_a
+    # Methods alphabetized within this section
+  end
+
+  def private_method_b
+    # ...
+  end
+end
+```
+
+### Key Rules
+
+1. **Section Order**: Public instance methods → Class methods → Private methods
+2. **Class Methods**: ALWAYS use `class << self`, NEVER use `def self.method_name`
+3. **Alphabetization**: Methods MUST be alphabetized within each section (except `initialize` which comes first)
+4. **Headers**: Use `#--------------------------------------` separators with section names
+5. **Models**: Same rules apply - ASSOCIATIONS, VALIDATIONS, CALLBACKS, SCOPES, then methods
+
+## Service Naming Convention ("Doer" Pattern)
+
+Services use action-oriented names WITHOUT "Service" suffix:
+
+- ✅ `Prompter` (renders AI prompts)
+- ✅ `UserQueryParser` (parses user queries)
+- ✅ `RepositoryAnalyzer` (analyzes repositories)
+- ✅ `Github` (GitHub API wrapper)
+- ✅ `OpenAi` (OpenAI API wrapper)
+- ❌ ~~`PromptService`~~ (too verbose)
+- ❌ ~~`QueryParserService`~~ (too verbose)
+
 ## Architecture Overview
 
 ### Data Flow
@@ -68,28 +158,171 @@ bin/kamal shell           # SSH into production container
 1. **GitHub API Sync**: Solid Queue recurring job fetches trending repos from GitHub API
 2. **Tier 1 Processing (Cheap)**: gpt-4o-mini categorizes repos using metadata + description
 3. **Tier 2 Processing (Expensive)**: gpt-4o performs deep analysis on-demand (README + issues)
-4. **Caching Strategy**: Aggressive caching to minimize AI API costs - repos only re-analyzed if README changes or significant activity detected
+4. **Tier 3 Processing (Comparison)**: Multi-query GitHub search, merge/dedupe, AI-powered comparison
+5. **Caching Strategy**: Aggressive caching to minimize AI API costs - repos only re-analyzed if README changes or significant activity detected
 
-### Database Schema (from OVERVIEW.md)
+### Core Services
 
-- **repositories**: Stores GitHub repo data, cached README content, and metadata
-- **ai_analyses**: Versioned AI-generated insights with cost tracking (tracks tokens, model used, USD cost)
-- **categories**: AI-generated categorization taxonomy (Problem Domain, Architecture Pattern, Maturity Level)
-- **repository_categories**: Many-to-many join with confidence scores
-- **github_issues**: Cached issues for quality signal analysis
-- **analysis_queue**: Queue for batch processing AI analysis jobs
-- **cost_tracking**: Daily rollup of AI API spending
-- **trends**: Aggregate trend data computed periodically
+#### OpenAi Service (`app/services/open_ai.rb`)
+
+Transparent wrapper for OpenAI API that automatically tracks costs and enforces model whitelisting.
+
+**Key Features:**
+- **Model Whitelisting**: Only allows `gpt-4o-mini` and `gpt-4o` with explicit pricing
+- **Automatic Cost Tracking**: Every API call updates `ai_costs` table with daily rollup
+- **Transparent API**: Returns same response object as `OpenAI::Client`
+- **Usage Tracking**: Logs model, tokens, and cost for every request
+
+```ruby
+# Always use OpenAi service instead of calling OpenAI directly
+ai = OpenAi.new
+response = ai.chat(
+  messages: [
+    { role: "system", content: "You are a helpful assistant" },
+    { role: "user", content: "Hello!" }
+  ],
+  model: "gpt-4o-mini",
+  temperature: 0.3,
+  track_as: "description_of_what_this_does"  # Optional: helps with debugging
+)
+
+# Response is standard OpenAI::Client response
+content = response.choices[0].message.content
+tokens = response.usage.prompt_tokens
+```
+
+**Pricing (as of 2025):**
+- `gpt-4o-mini`: $0.150/1M input, $0.600/1M output
+- `gpt-4o`: $2.50/1M input, $10.00/1M output
+
+#### Prompter Service (`app/services/prompter.rb`)
+
+Renders AI prompt templates from `app/prompts/` directory using ERB.
+
+**Key Features:**
+- **Template Rendering**: Renders `.erb` files with variable interpolation
+- **Prompt Injection Prevention**: `sanitize_user_input()` method prevents attacks
+- **Convention**: System prompts end in `_system.erb`, user prompts in other names
+
+```ruby
+# Render a system prompt (no variables)
+system_prompt = Prompter.render("user_query_parser_system")
+
+# Render with variables
+user_prompt = Prompter.render("repository_analyzer_build",
+  repository: repo,
+  available_categories: categories
+)
+
+# Sanitize user input to prevent prompt injection
+safe_query = Prompter.sanitize_user_input(user_input)
+```
+
+**Prompt Directory Structure:**
+```
+app/prompts/
+  ├── README.md                              # Documentation
+  ├── user_query_parser_system.erb           # System prompt for query parsing
+  ├── repository_analyzer_system.erb         # System prompt for repo analysis
+  └── repository_analyzer_build.erb          # User prompt with variables
+```
+
+**Creating New Prompts:**
+```ruby
+# Generate a new system prompt
+Prompter.create("my_new_prompt", system: true)
+# Creates: app/prompts/my_new_prompt_system.erb
+
+# Generate a regular prompt
+Prompter.create("my_prompt")
+# Creates: app/prompts/my_prompt.erb
+```
+
+#### UserQueryParser Service (`app/services/user_query_parser.rb`)
+
+Parses natural language queries into structured GitHub search parameters.
+
+**Key Features:**
+- **Multi-Query Support**: Can return 2-3 GitHub queries for comprehensive coverage
+- **JSON Response**: Returns structured data with validation
+- **Query Strategy**: Indicates "single" or "multi" query approach
+
+```ruby
+parser = UserQueryParser.new
+result = parser.parse("I need a Rails background job library")
+
+result[:github_queries]    # ["background job rails stars:>100", "sidekiq rails stars:>100"]
+result[:query_strategy]    # "multi"
+result[:tech_stack]        # "Rails, Ruby"
+result[:problem_domain]    # "Background Job Processing"
+result[:constraints]       # ["production ready", "retry logic"]
+result[:valid]             # true
+```
+
+#### RepositoryAnalyzer Service (`app/services/repository_analyzer.rb`)
+
+Analyzes and categorizes repositories using AI (formerly `RepositoryCategorizationService`).
+
+**Methods:**
+- `analyze_repository(repository)` - Tier 1 analysis using metadata + description
+- `deep_dive_analysis(repository)` - Tier 2 analysis using README + issues (not yet implemented)
+
+```ruby
+analyzer = RepositoryAnalyzer.new
+result = analyzer.analyze_repository(repo)
+
+result[:categories]      # [{ category_id: 1, confidence: 0.95, reasoning: "..." }]
+result[:summary]         # "Modern background job processor..."
+result[:use_cases]       # ["Email sending", "Report generation"]
+result[:input_tokens]    # 150
+result[:output_tokens]   # 300
+```
+
+#### Github Service (`app/services/github.rb`)
+
+Wrapper for GitHub API using Octokit gem.
+
+```ruby
+# Search repositories
+results = Github.search("background job rails stars:>100", per_page: 30)
+
+# Search trending repos
+trending = Github.search_trending(days_ago: 7, language: "ruby", min_stars: 10)
+
+# Instance methods also available
+gh = Github.new
+results = gh.search("query")
+authenticated = gh.authenticated?
+```
+
+### Database Schema
+
+**Core Tables:**
+- **repositories**: GitHub repo data, cached README content, metadata
+- **analyses**: Versioned AI-generated insights (Tier 1/Tier 2) with token/cost tracking
+- **categories**: Categorization taxonomy (Problem Domain, Architecture Pattern, Maturity Level)
+- **comparisons**: User queries with AI-generated repo comparisons (Tier 3)
+
+**Join Tables:**
+- **repository_categories**: Many-to-many with confidence scores, assignment method (ai/manual/github_topics)
+- **comparison_repositories**: Links comparisons to repos with rank and score
+- **comparison_categories**: Links comparisons to inferred categories
+
+**Processing:**
+- **queued_analyses**: Queue for batch Tier 1/Tier 2 analysis (priority, retry logic, scheduling)
+- **ai_costs**: Daily rollup of AI API spending by model (auto-updated by OpenAi service)
 
 ### Cost Optimization Strategy
 
 The app implements several strategies to keep AI API costs under $10/month:
 
-1. **Selective Processing**: Only analyze repos that pass metadata filters (stars > 100, active within 30 days, relevant language)
-2. **Tiered AI Models**: Use cheap models (gpt-4o-mini ~$0.001/repo) for categorization, expensive models only for deep dives
-3. **Aggressive Caching**: Track `readme_sha` to detect changes; don't re-analyze unless content changed or 7+ days passed
-4. **Batch Processing**: Queue repos during the day, process in nightly batches (limit 50/day)
-5. **User-Pays Model**: Free tier has basic features, Pro tier ($5/month) unlocks AI-powered insights
+1. **Automatic Cost Tracking**: `OpenAi` service automatically tracks all API calls to `ai_costs` table with daily rollup
+2. **Model Whitelisting**: Only allow pre-approved models with known pricing to prevent cost surprises
+3. **Selective Processing**: Only analyze repos that pass metadata filters (stars > 100, active within 30 days, relevant language)
+4. **Tiered AI Models**: Use cheap models (gpt-4o-mini ~$0.001/repo) for categorization, expensive models only for deep dives
+5. **Aggressive Caching**: Track `readme_sha` to detect changes; don't re-analyze unless content changed or 7+ days passed
+6. **Batch Processing**: Queue repos during the day, process in nightly batches (limit 50/day)
+7. **Multi-Query Strategy**: Use 2-3 GitHub queries to get comprehensive results, reducing need for expensive AI filtering
 
 ### Key Model Methods Pattern
 
@@ -113,7 +346,7 @@ end
 
 ### Background Job Pattern
 
-Jobs should track costs and implement rate limiting:
+Jobs should use services that automatically track costs:
 
 ```ruby
 class AnalyzeRepositoryJob < ApplicationJob
@@ -123,19 +356,39 @@ class AnalyzeRepositoryJob < ApplicationJob
     repo = Repository.find(repository_id)
     return unless repo.needs_analysis?
 
-    result = OpenAiService.analyze(repo, model: "gpt-4o-mini")
+    # Use RepositoryAnalyzer service which uses OpenAi internally
+    analyzer = RepositoryAnalyzer.new
+    result = analyzer.analyze_repository(repo)
 
-    # Store analysis with cost tracking
-    repo.ai_analyses.create!(
+    # OpenAi service already tracked costs to ai_costs table
+    # Just store the analysis results
+    repo.analyses.create!(
+      analysis_type: "tier1_categorization",
       summary: result[:summary],
-      input_tokens: result[:usage][:input_tokens],
-      output_tokens: result[:usage][:output_tokens],
-      cost_usd: calculate_cost(result[:usage]),
-      model_used: "gpt-4o-mini"
+      use_cases: result[:use_cases],
+      input_tokens: result[:input_tokens],
+      output_tokens: result[:output_tokens],
+      model_used: "gpt-4o-mini",
+      is_current: true
     )
+
+    # Create category associations
+    result[:categories].each do |cat|
+      repo.repository_categories.create!(
+        category_id: cat[:category_id],
+        confidence_score: cat[:confidence],
+        assigned_by: "ai"
+      )
+    end
   end
 end
 ```
+
+**Important Rules:**
+1. ALWAYS use `OpenAi` service, NEVER call `OpenAI::Client` directly
+2. Cost tracking is automatic - no need to manually calculate or save costs
+3. The `OpenAi#chat` method returns standard OpenAI response object
+4. Use `track_as:` parameter to label what the API call is for (helps debugging)
 
 ## Rails 8 Specific Features
 
@@ -145,10 +398,33 @@ end
 - **Thruster**: HTTP asset caching/compression (runs in production via Dockerfile)
 - **Kamal**: Zero-downtime deployments with Docker containers (config in `config/deploy.yml`)
 
-## Configuration Files
+## Configuration Files & Directories
 
+**Configuration:**
 - `config/deploy.yml`: Kamal deployment configuration (servers, registry, environment variables)
 - `config/recurring.yml`: Solid Queue recurring task definitions for scheduled jobs
 - `config/queue.yml`: Solid Queue configuration
+
+**AI Prompts:**
+- `app/prompts/`: ERB templates for AI prompts (rendered by Prompter service)
+- `app/prompts/README.md`: Documentation for prompt templates
+
+**Services:**
+- `app/services/`: All service classes following "Doer" naming pattern
+  - `open_ai.rb`: OpenAI API wrapper with automatic cost tracking
+  - `prompter.rb`: AI prompt template renderer
+  - `user_query_parser.rb`: Natural language query parser
+  - `repository_analyzer.rb`: Repository AI analysis
+  - `github.rb`: GitHub API wrapper
+
+**Testing/Analysis:**
+- `lib/tasks/analyze.rake`: Rake tasks for testing AI analysis pipeline
+  - `analyze:compare[query]`: Test full comparison pipeline
+  - `analyze:validate_queries`: Run test suite with sample queries
+  - `analyze:repo[full_name]`: Test Tier 1 analysis on single repo
+
+**Documentation:**
 - `OVERVIEW.md`: Detailed project concept, database schema, and cost optimization strategies
 - `PLAN.md`: Phased build order from foundation to deployment
+- `TODO.md`: Current development status and next steps
+- `CLAUDE.md`: This file - coding standards and architecture guide

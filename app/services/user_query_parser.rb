@@ -1,30 +1,29 @@
-class QueryParserService
-  attr_reader :client
+class UserQueryParser
+  attr_reader :ai
 
   def initialize
-    @client = OpenAI::Client.new(
-      api_key: Rails.application.credentials.openai&.api_key
-    )
+    @ai = OpenAi.new
   end
 
   #--------------------------------------
-  # PUBLIC METHODS
+  # PUBLIC INSTANCE METHODS
   #--------------------------------------
 
   # Parses natural language query into structured search parameters
-  # Returns: { tech_stack:, problem_domain:, constraints:, github_query:, valid:, input_tokens:, output_tokens: }
+  # Returns: { tech_stack:, problem_domain:, constraints:, github_queries:, query_strategy:, valid:, validation_message:, input_tokens:, output_tokens: }
   def parse(user_query)
     # Sanitize user input to prevent prompt injection
-    sanitized_query = Prompt.sanitize_user_input(user_query)
+    sanitized_query = Prompter.sanitize_user_input(user_query)
 
-    response = client.chat.completions.create(
+    response = ai.chat(
       messages: [
-        { role: "system", content: Prompt.render("query_parser_system") },
+        { role: "system", content: Prompter.render("user_query_parser_system") },
         { role: "user", content: sanitized_query }
       ],
       model: "gpt-4o-mini",
       temperature: 0.3,
-      response_format: { type: "json_object" }
+      response_format: { type: "json_object" },
+      track_as: "query_parsing"
     )
 
     content = JSON.parse(response.choices[0].message.content)
@@ -33,12 +32,12 @@ class QueryParserService
       tech_stack: content["tech_stack"],
       problem_domain: content["problem_domain"],
       constraints: content["constraints"] || [],
-      github_query: content["github_query"],
+      github_queries: content["github_queries"] || [],
+      query_strategy: content["query_strategy"] || "single",
       valid: content["valid"] || false,
       validation_message: content["validation_message"],
       input_tokens: response.usage.prompt_tokens,
       output_tokens: response.usage.completion_tokens
     }
   end
-
 end

@@ -2,6 +2,7 @@ class QueuedAnalysis < ApplicationRecord
   #--------------------------------------
   # ENUMS
   #--------------------------------------
+
   enum :status, {
     pending: "pending",
     processing: "processing",
@@ -12,11 +13,13 @@ class QueuedAnalysis < ApplicationRecord
   #--------------------------------------
   # ASSOCIATIONS
   #--------------------------------------
+
   belongs_to :repository
 
   #--------------------------------------
   # VALIDATIONS
   #--------------------------------------
+
   validates :analysis_type, presence: true, inclusion: {
     in: %w[tier1_categorization tier2_deep_dive],
     message: "%{value} is not a valid analysis type"
@@ -27,6 +30,7 @@ class QueuedAnalysis < ApplicationRecord
   #--------------------------------------
   # SCOPES
   #--------------------------------------
+
   scope :ready_to_process, -> {
     where(status: "pending")
       .where("scheduled_for IS NULL OR scheduled_for <= ?", Time.current)
@@ -38,8 +42,9 @@ class QueuedAnalysis < ApplicationRecord
   scope :recent, -> { order(created_at: :desc) }
 
   #--------------------------------------
-  # INSTANCE METHODS
+  # PUBLIC INSTANCE METHODS
   #--------------------------------------
+
   def tier1?
     analysis_type == "tier1_categorization"
   end
@@ -114,6 +119,7 @@ class QueuedAnalysis < ApplicationRecord
   #--------------------------------------
   # PRIVATE METHODS
   #--------------------------------------
+
   private
 
   def calculate_retry_time

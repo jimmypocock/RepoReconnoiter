@@ -14,7 +14,22 @@ Respond ONLY with valid JSON in this exact format:
   "tech_stack": "Rails, Ruby",
   "problem_domain": "Background Job Processing",
   "constraints": ["retry logic", "monitoring support", "production ready"],
-  "github_query": "rails background job retry language:ruby stars:>100",
+  "github_queries": ["background processing language:ruby stars:>100"],
+  "query_strategy": "single",
+  "valid": true,
+  "validation_message": null
+}
+
+For cases requiring multiple queries, use "multi" strategy with array:
+{
+  "tech_stack": "Python",
+  "problem_domain": "Data Access",
+  "constraints": ["PostgreSQL support"],
+  "github_queries": [
+    "orm language:python stars:>100",
+    "sqlalchemy python stars:>100"
+  ],
+  "query_strategy": "multi",
   "valid": true,
   "validation_message": null
 }
@@ -44,33 +59,54 @@ Guidelines:
   * ALWAYS add "stars:>100" universally - this works across all ecosystems
   * Don't include constraint keywords in the query - we'll evaluate those during comparison
   * Trust GitHub's relevance ranking - simpler, broader queries work better than specific ones
+- **Multi-Query Strategy** - Use multiple queries when:
+  * JavaScript + TypeScript ecosystems (Node.js frameworks, testing, HTTP clients)
+  * Specific library names needed (SQLAlchemy for Python ORMs, Jest for testing)
+  * Docker vs Kubernetes (different ecosystems)
+  * When a single query would miss major libraries
+  * Examples where multi-query is needed:
+    - Python ORMs: ["orm language:python stars:>100", "sqlalchemy python stars:>100"]
+    - JS/TS testing: ["testing framework language:javascript stars:>1000", "jest testing javascript stars:>1000", "testing framework language:typescript stars:>100"]
+    - Node.js frameworks: ["web framework language:javascript stars:>100", "web framework language:typescript stars:>100"]
 - Set "valid" to false if query is too vague or unclear
 - If invalid, explain why in "validation_message"
 
-Examples of good queries:
+Examples of SINGLE-query responses:
 - "I need a Rails background job library with retry logic"
   → tech_stack: "Rails, Ruby"
   → problem_domain: "Background Job Processing"
   → constraints: ["retry logic"]
-  → github_query: "background processing language:ruby stars:>100"
-
-- "Looking for Python authentication with OAuth and 2FA"
-  → tech_stack: "Python"
-  → problem_domain: "Authentication & Identity"
-  → constraints: ["OAuth support", "two-factor authentication"]
-  → github_query: "authentication language:python stars:>100"
+  → github_queries: ["background processing language:ruby stars:>100"]
+  → query_strategy: "single"
 
 - "Need a React state management library for large apps"
   → tech_stack: "React, TypeScript"
   → problem_domain: "State Management"
   → constraints: ["large applications"]
-  → github_query: "state management language:typescript stars:>100"
+  → github_queries: ["state management language:typescript stars:>100"]
+  → query_strategy: "single"
 
-- "I want a Ruby web framework"
-  → tech_stack: "Ruby"
+Examples of MULTI-query responses:
+- "I need a Python ORM for PostgreSQL"
+  → tech_stack: "Python"
+  → problem_domain: "Data Access"
+  → constraints: ["PostgreSQL support"]
+  → github_queries: ["orm language:python stars:>100", "sqlalchemy python stars:>100"]
+  → query_strategy: "multi"
+
+- "Looking for a Node.js web framework"
+  → tech_stack: "Node.js"
   → problem_domain: "Web Framework"
   → constraints: []
-  → github_query: "web framework language:ruby stars:>100"
+  → github_queries: ["web framework language:javascript stars:>100", "web framework language:typescript stars:>100"]
+  → query_strategy: "multi"
+
+- "I need a JavaScript testing framework"
+  → tech_stack: "JavaScript, TypeScript"
+  → problem_domain: "Testing"
+  → constraints: []
+  → github_queries: ["testing framework language:javascript stars:>1000", "jest testing javascript stars:>1000"]
+  → query_strategy: "multi"
 
 Examples of bad queries:
 - "job thing" → valid: false, validation_message: "Too vague. Please specify tech stack and requirements."

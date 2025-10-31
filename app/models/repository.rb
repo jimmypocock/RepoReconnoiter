@@ -2,6 +2,7 @@ class Repository < ApplicationRecord
   #--------------------------------------
   # ASSOCIATIONS
   #--------------------------------------
+
   has_many :analyses, dependent: :restrict_with_error
   has_many :categories, through: :repository_categories
   has_many :comparison_repositories, dependent: :restrict_with_error
@@ -12,6 +13,7 @@ class Repository < ApplicationRecord
   #--------------------------------------
   # VALIDATIONS
   #--------------------------------------
+
   validates :github_id, presence: true, uniqueness: true
   validates :node_id, presence: true, uniqueness: true
   validates :full_name, presence: true, uniqueness: true
@@ -21,6 +23,7 @@ class Repository < ApplicationRecord
   #--------------------------------------
   # SCOPES
   #--------------------------------------
+
   scope :active, -> { where(archived: false, disabled: false) }
   scope :recently_updated, -> { order(github_pushed_at: :desc) }
   scope :popular, -> { order(stargazers_count: :desc) }
@@ -30,8 +33,9 @@ class Repository < ApplicationRecord
   }
 
   #--------------------------------------
-  # INSTANCE METHODS
+  # PUBLIC INSTANCE METHODS
   #--------------------------------------
+
   def analysis_current
     analyses.where(is_current: true).order(created_at: :desc).first
   end
@@ -127,6 +131,10 @@ class Repository < ApplicationRecord
     end
 
     private
+
+    #--------------------------------------
+    # PRIVATE CLASS METHODS
+    #--------------------------------------
 
     def extract_github_attributes(data)
       # Map API data to our attributes

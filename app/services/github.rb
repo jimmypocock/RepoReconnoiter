@@ -1,13 +1,15 @@
-# Service wrapper for GitHub API using Octokit
+# GitHub API wrapper using Octokit
 # Handles authentication, rate limiting, and common API operations
-class GithubService
-  attr_reader :results
-
+class Github
   def initialize
     @client = Octokit::Client.new(
       access_token: Rails.application.credentials.github&.personal_access_token
     )
   end
+
+  #--------------------------------------
+  # PUBLIC INSTANCE METHODS
+  #--------------------------------------
 
   # Check if we're authenticated
   # @return [Boolean]
@@ -85,11 +87,19 @@ class GithubService
     search(query, sort: "stars", order: "desc", per_page: per_page)
   end
 
+  #--------------------------------------
+  # CLASS METHODS
+  #--------------------------------------
+
   class << self
     delegate :search, :search_trending, to: :new
   end
 
   private
+
+  #--------------------------------------
+  # PRIVATE METHODS
+  #--------------------------------------
 
   attr_reader :client
 end

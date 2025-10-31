@@ -3,12 +3,12 @@ class CategorizeRepositoryJob < ApplicationJob
 
   def perform(repository_id)
     repository = Repository.find(repository_id)
-    categorization_service = RepositoryCategorizationService.new
+    analyzer = RepositoryAnalyzer.new
 
     Rails.logger.info "🤖 Starting Tier 1 analysis for #{repository.full_name}..."
 
-    # Call OpenAI to categorize the repository
-    result = categorization_service.categorize_repository(repository)
+    # Call OpenAI to analyze and categorize the repository
+    result = analyzer.analyze_repository(repository)
 
     # Create the analysis record
     analysis = repository.analyses.create!(

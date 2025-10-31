@@ -2,7 +2,7 @@ class SyncTrendingRepositoriesJob < ApplicationJob
   queue_as :default
 
   def perform
-    github = GithubService.new
+    github = Github.new
 
     Rails.logger.info "🔄 Starting sync of trending repositories..."
 

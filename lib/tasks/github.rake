@@ -1,7 +1,7 @@
 namespace :github do
   desc "Explore GitHub API and display available data"
   task explore: :environment do
-    service = GithubService.new
+    service = Github.new
 
     puts "\n" + "=" * 80
     puts "GitHub API Explorer"
@@ -96,7 +96,7 @@ namespace :github do
   task :trending, [ :days, :language, :min_stars ] => :environment do |t, args|
     args.with_defaults(days: 7, language: nil, min_stars: 10)
 
-    results = GithubService.search_trending(
+    results = Github.search_trending(
       days_ago: args[:days].to_i,
       language: args[:language],
       min_stars: args[:min_stars].to_i,
@@ -124,7 +124,7 @@ namespace :github do
     puts "=" * 80
 
     begin
-      results = GithubService.search(query, per_page: 10)
+      results = Github.search(query, per_page: 10)
 
       puts "\n✅ Found #{results.total_count} total repositories"
       puts "\nTop 10 Results:\n"

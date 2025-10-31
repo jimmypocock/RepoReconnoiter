@@ -2,6 +2,7 @@ class Comparison < ApplicationRecord
   #--------------------------------------
   # ASSOCIATIONS
   #--------------------------------------
+
   has_many :categories, through: :comparison_categories
   has_many :comparison_repositories, dependent: :restrict_with_error
   has_many :comparison_categories, dependent: :restrict_with_error
@@ -10,6 +11,7 @@ class Comparison < ApplicationRecord
   #--------------------------------------
   # VALIDATIONS
   #--------------------------------------
+
   validates :cost_usd, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :input_tokens, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :output_tokens, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
@@ -19,19 +21,22 @@ class Comparison < ApplicationRecord
   #--------------------------------------
   # CALLBACKS
   #--------------------------------------
+
   before_save :calculate_cost, if: -> { model_used.present? && input_tokens.present? && output_tokens.present? }
 
   #--------------------------------------
   # SCOPES
   #--------------------------------------
+
   scope :recent, -> { order(created_at: :desc) }
   scope :popular, -> { order(view_count: :desc) }
   scope :by_problem_domain, ->(domain) { where(problem_domain: domain) }
   scope :cached, -> { where("created_at > ?", 7.days.ago) }
 
   #--------------------------------------
-  # INSTANCE METHODS
+  # PUBLIC INSTANCE METHODS
   #--------------------------------------
+
   def increment_view_count!
     increment!(:view_count)
   end
@@ -48,6 +53,10 @@ class Comparison < ApplicationRecord
   end
 
   private
+
+  #--------------------------------------
+  # PRIVATE METHODS
+  #--------------------------------------
 
   def calculate_cost
     rates = case model_used

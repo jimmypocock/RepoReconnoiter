@@ -2,11 +2,13 @@ class Analysis < ApplicationRecord
   #--------------------------------------
   # ASSOCIATIONS
   #--------------------------------------
+
   belongs_to :repository
 
   #--------------------------------------
   # VALIDATIONS
   #--------------------------------------
+
   validates :analysis_type, presence: true, inclusion: {
     in: %w[tier1_categorization tier2_deep_dive],
     message: "%{value} is not a valid analysis type"
@@ -19,6 +21,7 @@ class Analysis < ApplicationRecord
   #--------------------------------------
   # CALLBACKS
   #--------------------------------------
+
   before_save :calculate_cost, if: -> { input_tokens_changed? || output_tokens_changed? }
   after_create :rollup_daily_cost
   before_save :mark_previous_as_not_current, if: -> { is_current? && is_current_changed? }
@@ -26,6 +29,7 @@ class Analysis < ApplicationRecord
   #--------------------------------------
   # SCOPES
   #--------------------------------------
+
   scope :current, -> { where(is_current: true) }
   scope :tier1, -> { where(analysis_type: "tier1_categorization") }
   scope :tier2, -> { where(analysis_type: "tier2_deep_dive") }
@@ -34,8 +38,9 @@ class Analysis < ApplicationRecord
   scope :expired, -> { where("expires_at < ?", Time.current) }
 
   #--------------------------------------
-  # INSTANCE METHODS
+  # PUBLIC INSTANCE METHODS
   #--------------------------------------
+
   def cost_per_token
     return 0 if total_tokens.zero? || cost_usd.nil?
     (cost_usd / total_tokens).round(6)
@@ -44,6 +49,7 @@ class Analysis < ApplicationRecord
   def expired?
     expires_at.present? && expires_at < Time.current
   end
+
   def tier1?
     analysis_type == "tier1_categorization"
   end
@@ -78,10 +84,11 @@ class Analysis < ApplicationRecord
     end
   end
 
+  private
+
   #--------------------------------------
   # PRIVATE METHODS
   #--------------------------------------
-  private
 
   def calculate_cost
     # OpenAI pricing as of 2025 (adjust as needed)
