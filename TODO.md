@@ -191,7 +191,7 @@ Track progress towards MVP release.
 
 ### Database Schema
 
-- [ ] Create `comparisons` table
+- [x] Create `comparisons` table
   - `user_query` (text) - Original user input
   - `tech_stack`, `problem_domain` (string) - Extracted from query
   - `constraints` (jsonb) - Array of requirements ["retry logic", "monitoring"]
@@ -203,29 +203,53 @@ Track progress towards MVP release.
   - `model_used`, `input_tokens`, `output_tokens`, `cost_usd`
   - `view_count` (integer) - Track popularity
   - Timestamps
-- [ ] Create `comparison_repositories` join table
+- [x] Create `comparison_repositories` join table
   - Links Comparison to Repository (many-to-many)
   - `rank` (integer) - Position in ranking (1-5)
   - `score` (integer) - AI score 0-100
   - `pros` (jsonb) - Array of strengths
   - `cons` (jsonb) - Array of weaknesses
   - `fit_reasoning` (text) - Why this fits user's needs
-- [ ] Create `comparison_categories` join table
+- [x] Create `comparison_categories` join table
   - Links Comparison to Category (many-to-many)
   - `assigned_by` (string) - "ai" or "inferred"
   - Enables browsing comparisons by category
+- [x] Create models: `Comparison`, `ComparisonRepository`, `ComparisonCategory`
+- [x] Update `Repository` and `Category` models with comparison associations
 
 ### Step 1: Query Parser Service (gpt-4o-mini)
 
-- [ ] Create `QueryParserService` (`app/services/query_parser_service.rb`)
-- [ ] Parse natural language into structured data
-  - Extract tech stack (Rails, Python, React, etc.)
-  - Extract problem domain (background jobs, authentication, etc.)
-  - Extract constraints/requirements as array
-  - Generate GitHub search query string
-- [ ] Return validation status (enough info to proceed?)
-- [ ] Extract keywords for user verification
+- [x] Create `QueryParserService` (`app/services/query_parser_service.rb`)
+- [x] Parse natural language into structured data
+  - [x] Extract tech stack (Rails, Python, React, etc.)
+  - [x] Extract problem domain (background jobs, authentication, etc.)
+  - [x] Extract constraints/requirements as array
+  - [x] Generate GitHub search query string
+- [x] Return validation status (enough info to proceed?)
+- [x] Create testing rake tasks (`lib/tasks/query_parser.rake`)
+  - [x] `bin/rails query:parse[query]` - Parse single query
+  - [x] `bin/rails query:test_examples` - Test multiple examples with GitHub results
+  - [x] `bin/rails query:refine[query]` - Detailed refinement session with evaluation
+- [x] Create GitHub query testing task (`lib/tasks/test_github_query.rake`)
+- [~] **REFINEMENT IN PROGRESS** - Fix frontend framework handling
+  - [x] ✅ Backend frameworks (Rails, Django) correctly use language filter only
+  - [x] ✅ Query: `"I need a Rails background job library"` → `"background processing language:ruby stars:>100"` (returns Sidekiq #1!)
+  - [ ] ⚠️ Frontend frameworks (React, Vue) incorrectly exclude framework name
+  - [ ] ⚠️ Query: `"React state management library"` → `"state management language:javascript"` (returns Vuex for Vue.js instead of Redux/Zustand)
+  - [ ] **TODO**: Update prompt to clarify backend vs frontend framework handling
+  - [ ] **TODO**: Test all example queries (Rails jobs, Python auth, React state)
 - [ ] Cost: ~500 tokens = $0.0003 per parse
+
+**Testing Notes**:
+- GitHub search API quirks discovered:
+  - Different libraries use different terminology (Sidekiq="processing", Resque="jobs")
+  - Simpler queries (1-2 keywords) work better than complex ones
+  - `in:name,description` filters are too restrictive - removed
+  - Can't get ALL relevant libraries in one query - that's OK!
+- Successful query patterns:
+  - Backend: `"background processing language:ruby stars:>100"` (14 results, Sidekiq #1)
+  - Backend: `"authentication language:python stars:>100"` (224 results, authentik/django-allauth top)
+  - Frontend: Need to include framework name for framework-specific features
 
 ### Step 2: Fetch & Prepare Repos
 
@@ -433,36 +457,69 @@ Track progress towards MVP release.
 
 ## Notes
 
-**Current Status**: ✅ Phase 1 & 2 COMPLETE! Basic UI dashboard live with smart AI categorization.
+**Current Status**: ✅ Phase 1 & 2 COMPLETE! 🚧 Phase 3.5 Tier 3 IN PROGRESS (95% done with Step 1)
 
 **What's Working**:
 - ✅ GitHub API integration and sync job
-- ✅ Database schema with all 6 tables
+- ✅ Database schema with all 9 tables (original 6 + 3 Tier 3 tables)
 - ✅ OpenAI Tier 1 categorization (gpt-4o-mini)
 - ✅ Smart category auto-creation with duplicate detection
 - ✅ Beautiful Tailwind UI with pagination and filtering
 - ✅ Cost tracking built-in (~$0.0002 per repo analyzed)
+- ✅ Tier 3 database migrations and models complete
+- ✅ QueryParserService created with gpt-4o-mini integration
+- ✅ Comprehensive testing rake tasks for query refinement
+- 🚧 Query parser working for backend frameworks (Rails, Python, Django)
+- ⚠️ Query parser needs fix for frontend frameworks (React, Vue, Angular)
 
 **What We Learned**:
 - AI can create its own categories intelligently - no need to pre-define everything
 - 50% word overlap prevents duplicates (e.g., "finance" vs "trading-finance")
 - Tier 1 categorization is FAST and CHEAP (perfect for batch processing)
+- **GitHub Search API quirks** (Tier 3 testing):
+  - Simpler queries (1-2 keywords) > complex queries
+  - Use broad problem terms: "processing" not "background job processing"
+  - Different libraries use different terminology in their descriptions
+  - Field filters (`in:name,description`) are too restrictive
+  - Backend frameworks (Rails, Django) should only use language filters
+  - Frontend frameworks (React, Vue) NEED to be in query for framework-specific features
+  - One query won't find ALL relevant libraries - trust GitHub's relevance ranking
 
 **Next Steps - Path to MVP**:
 
-**Option A: Quick MVP (Recommended)**
-1. Run `ai:categorize_all` on remaining repos to populate dashboard
-2. Skip Tier 2 (deep dive on single repo) for now
-3. Jump directly to **Tier 3 (Comparative Evaluation)** - the killer feature
-4. Deploy MVP with comparative library evaluation
+🎯 **Currently Building: Tier 3 Comparative Evaluation** (Option A - chosen path)
 
-**Option B: Methodical**
-1. Implement Tier 2 deep dive analysis (single repo with README/issues)
-2. Add repository show pages with full analysis
-3. Then build Tier 3 comparative evaluation
-4. Deploy MVP
+**Immediate Next Steps** (to resume tomorrow):
+1. **Fix QueryParserService for frontend frameworks**:
+   - Update prompt in `app/services/query_parser_service.rb` around line 68
+   - Clarify: Backend frameworks (Rails/Django/Flask) → use language filter only
+   - Clarify: Frontend frameworks (React/Vue/Angular) → include framework name in query
+   - Example: "React state management" → `"react state language:javascript stars:>500"`
+   - Test with: `bin/rails 'query:refine[Need a React state management library]'`
+   - Should return Redux, Zustand, MobX (NOT Vuex)
 
-**Recommendation**: Option A - get to the most valuable feature (Tier 3 comparative evaluation) ASAP. Tier 2 can be added later if needed.
+2. **Complete query parser testing**:
+   - Test all 3 example queries (Rails jobs ✅, Python auth ✅, React state ⚠️)
+   - Add 1-2 more test cases (Vue.js, Node.js, etc.)
+   - Mark Step 1 complete
+
+3. **Build CompareRepositoriesJob** (Step 3):
+   - Create `app/jobs/compare_repositories_job.rb`
+   - Uses gpt-4o for comprehensive comparison
+   - Takes user query + 5 repos + Tier 1 analyses
+   - Returns ranking with pros/cons/scoring
+   - ~3000 tokens = $0.045 per comparison
+
+4. **Build /evaluate UI page**:
+   - Create routes and controller
+   - Search input page with examples
+   - Show parsed extraction for verification
+   - Loading states during GitHub search + analysis
+   - Display ranked comparison results
+
+**Original Options** (for reference):
+- ~~Option A~~: Skip Tier 2, jump to Tier 3 ← **CURRENT PATH (80% complete)**
+- Option B: Build Tier 2 first, then Tier 3 ← Deferred
 
 **Cost Target**: Keep under $10/month for AI API calls during MVP phase
 

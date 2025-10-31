@@ -1,4 +1,4 @@
-class OpenaiService
+class RepositoryCategorizationService
   attr_reader :client
 
   def initialize

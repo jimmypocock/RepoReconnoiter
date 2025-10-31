@@ -2,10 +2,12 @@ class Repository < ApplicationRecord
   #--------------------------------------
   # ASSOCIATIONS
   #--------------------------------------
-  has_many :analyses, dependent: :destroy
-  has_many :queued_analyses, dependent: :destroy
-  has_many :repository_categories, dependent: :destroy
+  has_many :analyses, dependent: :restrict_with_error
   has_many :categories, through: :repository_categories
+  has_many :comparison_repositories, dependent: :restrict_with_error
+  has_many :comparisons, through: :comparison_repositories
+  has_many :queued_analyses, dependent: :restrict_with_error
+  has_many :repository_categories, dependent: :restrict_with_error
 
   #--------------------------------------
   # VALIDATIONS

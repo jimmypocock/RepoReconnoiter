@@ -4,6 +4,8 @@ class Category < ApplicationRecord
   #--------------------------------------
   has_many :repository_categories, dependent: :destroy
   has_many :repositories, through: :repository_categories
+  has_many :comparison_categories, dependent: :destroy
+  has_many :comparisons, through: :comparison_categories
 
   #--------------------------------------
   # VALIDATIONS
