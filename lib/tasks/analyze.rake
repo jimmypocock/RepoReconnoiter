@@ -1,7 +1,25 @@
 namespace :analyze do
   desc "Test full comparison pipeline: parse query → multi-search → merge/dedupe → display results"
-  task :compare, [ :query ] => :environment do |t, args|
-    query = args[:query] || "I need a Rails background job library with retry logic"
+  desc "Usage: QUERY='your query here' bin/rails analyze:compare"
+  task compare: :environment do
+    # Use environment variable for easy natural language input (no escaping needed)
+    query = ENV["QUERY"]
+
+    unless query.present?
+      puts "\n" + "=" * 80
+      puts "🔬 COMPARISON PIPELINE TEST"
+      puts "=" * 80
+      puts "\n❌ No query provided!"
+      puts "\n📖 Usage:"
+      puts "  QUERY='your query here' bin/rails analyze:compare"
+      puts "\n💡 Examples:"
+      puts "  QUERY='I need a Rails background job library' bin/rails analyze:compare"
+      puts "  QUERY='python orm with good migration support' bin/rails analyze:compare"
+      puts "  QUERY='modern javascript testing framework' bin/rails analyze:compare"
+      puts "\n" + "=" * 80
+      puts ""
+      exit
+    end
 
     puts "\n" + "=" * 80
     puts "🔬 COMPARISON PIPELINE TEST"

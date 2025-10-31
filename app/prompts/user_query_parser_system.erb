@@ -59,15 +59,15 @@ Guidelines:
   * ALWAYS add "stars:>100" universally - this works across all ecosystems
   * Don't include constraint keywords in the query - we'll evaluate those during comparison
   * Trust GitHub's relevance ranking - simpler, broader queries work better than specific ones
-- **Multi-Query Strategy** - Use multiple queries when:
-  * JavaScript + TypeScript ecosystems (Node.js frameworks, testing, HTTP clients)
-  * Specific library names needed (SQLAlchemy for Python ORMs, Jest for testing)
-  * Docker vs Kubernetes (different ecosystems)
-  * When a single query would miss major libraries
-  * Examples where multi-query is needed:
-    - Python ORMs: ["orm language:python stars:>100", "sqlalchemy python stars:>100"]
-    - JS/TS testing: ["testing framework language:javascript stars:>1000", "jest testing javascript stars:>1000", "testing framework language:typescript stars:>100"]
-    - Node.js frameworks: ["web framework language:javascript stars:>100", "web framework language:typescript stars:>100"]
+- **Multi-Query Strategy** - Use 2-3 queries when:
+  1. User mentions SPECIFIC product/service names (Stripe, PayPal, OAuth, Redis, Elasticsearch, etc.)
+     → Create one broad query + one targeted query per specific name mentioned
+  2. JavaScript + TypeScript dual ecosystem (frameworks, testing, HTTP clients)
+     → Search both language:javascript AND language:typescript
+  3. Well-known library names for a domain (SQLAlchemy for ORMs, Jest for testing)
+     → Generic domain query + specific library name query
+
+  **Key Rule**: If user says specific names, they expect to see those specific libraries in results
 - Set "valid" to false if query is too vague or unclear
 - If invalid, explain why in "validation_message"
 
