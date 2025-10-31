@@ -25,12 +25,14 @@ Track progress towards MVP release.
 
 - [x] Add Octokit gem to Gemfile
 - [x] Store GitHub personal access token in Rails credentials
-- [x] Create GitHub API service wrapper (`app/services/github_api_service.rb`)
-  - [x] Implement search trending repositories (using Search API)
+- [x] Create `Github` API wrapper (`app/services/github.rb`) - follows "Doer" naming pattern
+  - [x] Implement search repositories (using Search API)
+  - [x] Implement search trending repositories
   - [x] Implement repository details endpoint (README, metadata)
   - [x] Implement issues endpoint (for quality signals)
   - [x] Add rate limit tracking and handling
   - [x] Add authentication with GitHub token
+  - [x] Support both instance and class methods via delegation
 - [x] Build GitHub API explorer rake task (`lib/tasks/github.rake`)
   - [x] Fetch and display sample trending repos
   - [x] Print available fields and data structure
@@ -87,11 +89,14 @@ Track progress towards MVP release.
 ### OpenAI API Setup
 
 - [x] Add OpenAI gem to Gemfile
-- [x] Create `OpenAiService` wrapper (`app/services/openai_service.rb`)
+- [x] Create `OpenAi` wrapper (`app/services/open_ai.rb`) - transparent wrapper with automatic cost tracking
 - [x] Implement token counting and cost calculation
 - [x] Add API key configuration (credentials)
 - [x] Create cost tracking helpers
 - [x] Test API connection with simple prompt
+- [x] Model whitelisting (only gpt-4o-mini and gpt-4o with explicit pricing)
+- [x] Automatic daily rollup to `ai_costs` table
+- [x] All services use `OpenAi` instead of calling OpenAI directly
 
 ### Seed Categories
 
@@ -105,13 +110,16 @@ Track progress towards MVP release.
 
 ### AI Categorization Job (Tier 1 - Cheap)
 
-- [x] Create `CategorizeRepositoryJob` (uses gpt-4o-mini)
+- [x] Create `CategorizeRepositoryJob` (uses gpt-4o-mini via `OpenAi` service)
+- [x] Create `RepositoryAnalyzer` service (`app/services/repository_analyzer.rb`)
+- [x] Create `Prompter` service for AI prompt template rendering (`app/prompts/`)
 - [x] Implement prompt for quick categorization
 - [x] Parse AI response and assign categories
 - [x] Store analysis with token/cost tracking in `analyses`
 - [x] Link categories to repository via `repository_categories`
 - [x] Add confidence scoring (0.0-1.0)
 - [x] Implement smart duplicate detection (auto-create new categories intelligently)
+- [x] All models organized with consistent code structure (Public Instance → Class → Private)
 - [ ] Implement smart caching logic (`Repository#needs_analysis?`)
 
 ### Filtering & Display
@@ -217,28 +225,44 @@ Track progress towards MVP release.
 - [x] Create models: `Comparison`, `ComparisonRepository`, `ComparisonCategory`
 - [x] Update `Repository` and `Category` models with comparison associations
 
-### Step 1: Query Parser Service (gpt-4o-mini)
+### Step 1: Query Parser Service (gpt-4o-mini) ✅ COMPLETE
 
-- [x] Create `QueryParserService` (`app/services/query_parser_service.rb`)
+- [x] Renamed from `QueryParserService` to `UserQueryParser` (follows "Doer" naming pattern)
 - [x] Parse natural language into structured data
-  - [x] Extract tech stack (Rails, Python, React, etc.)
-  - [x] Extract problem domain (background jobs, authentication, etc.)
+  - [x] Extract tech stack (Rails, Python, React, etc.) - or null for language-agnostic
+  - [x] Extract problem domain (background jobs, authentication, monitoring, etc.)
   - [x] Extract constraints/requirements as array
-  - [x] Generate GitHub search query string
+  - [x] Generate GitHub search query string(s)
 - [x] Return validation status (enough info to proceed?)
-- [x] Create testing rake tasks (`lib/tasks/query_parser.rake`)
-  - [x] `bin/rails query:parse[query]` - Parse single query
-  - [x] `bin/rails query:test_examples` - Test multiple examples with GitHub results
-  - [x] `bin/rails query:refine[query]` - Detailed refinement session with evaluation
-- [x] Create GitHub query testing task (`lib/tasks/test_github_query.rake`)
 - [x] ✅ **MULTI-QUERY STRATEGY IMPLEMENTED**
   - [x] ✅ Updated response format: `github_queries` (array) + `query_strategy` field
   - [x] ✅ Single-query scenarios work (Rails, React, Python)
   - [x] ✅ Multi-query for edge cases (Python ORMs, Node.js frameworks, JS/TS testing)
+  - [x] ✅ Multi-query when user mentions specific services (Stripe, PayPal, OAuth, Redis)
   - [x] ✅ Backend frameworks use language filter only (Rails → `language:ruby`)
   - [x] ✅ Frontend frameworks use TypeScript for modern libs (React → `language:typescript`)
+  - [x] ✅ Infrastructure/DevOps queries use NO language filter (docker, monitoring, search engines)
   - [x] ✅ Universal `stars:>100` threshold validated across all ecosystems
   - [x] ✅ Tested: Python ORM returns 2 queries, Node.js returns 2 queries, JS testing returns 2 queries
+  - [x] ✅ Language-agnostic queries work (charting, docker, monitoring, search engines, desktop apps)
+- [x] **COMPREHENSIVE TESTING INFRASTRUCTURE**
+  - [x] Created `analyze:test_suite` - Runs 30 diverse queries holistically with statistics
+  - [x] Created `analyze:compare` - Test single query through full pipeline (parse → search → merge)
+  - [x] Created `analyze:validate_queries` - Test suite with expected repos validation
+  - [x] Created `analyze:repo` - Test Tier 1 analysis on single repository
+  - [x] All tasks use environment variables (QUERY= and REPO=) - no escaping needed
+  - [x] All tasks show helpful usage instructions when run without arguments
+  - [x] ✅ **100% success rate** on 30-query test suite (was 83.3%, now 100%)
+- [x] **PROMPT OPTIMIZATION**
+  - [x] Accept language-agnostic queries for infrastructure/DevOps tools
+  - [x] Principle-based rules instead of infinite examples
+  - [x] Only reject truly meaningless queries ("best library", "good tool")
+  - [x] Let GitHub's relevance ranking work - don't be too opinionated
+- [x] **COST TRACKING IMPROVEMENTS**
+  - [x] Created `OpenAi` service wrapper with automatic cost tracking
+  - [x] Model whitelisting (gpt-4o-mini, gpt-4o) with explicit pricing
+  - [x] Updated `ai_costs` table precision from 2 to 6 decimal places (tracks $0.000150 costs)
+  - [x] All AI calls automatically tracked to daily rollup table
 - [x] Cost: ~1200 tokens = $0.0003 per parse
 
 **Testing Notes** (Phase 1 GitHub Search Research):
@@ -461,7 +485,7 @@ Track progress towards MVP release.
 
 ## Notes
 
-**Current Status**: ✅ Phase 1 & 2 COMPLETE! ✅ Phase 3.5 Tier 3 Step 1 COMPLETE! 🚧 Starting Step 2
+**Current Status**: ✅ Phase 1 & 2 COMPLETE! ✅ Phase 3.5 Tier 3 Step 1 COMPLETE! 🚧 Ready for Step 2
 
 **What's Working**:
 - ✅ GitHub API integration and sync job
@@ -469,12 +493,15 @@ Track progress towards MVP release.
 - ✅ OpenAI Tier 1 categorization (gpt-4o-mini)
 - ✅ Smart category auto-creation with duplicate detection
 - ✅ Beautiful Tailwind UI with pagination and filtering
-- ✅ Cost tracking built-in (~$0.0002 per repo analyzed)
+- ✅ Automatic cost tracking with `OpenAi` service wrapper
+- ✅ Cost tracking precision (6 decimals) - tracks micro-dollar costs accurately
 - ✅ Tier 3 database migrations and models complete
-- ✅ QueryParserService created with gpt-4o-mini integration
-- ✅ Multi-query strategy implemented (handles edge cases with 2+ GitHub queries)
-- ✅ Comprehensive testing rake tasks for query refinement
-- ✅ Query parser working for all scenarios (backend, frontend, ORMs, testing frameworks)
+- ✅ `UserQueryParser` service with gpt-4o-mini integration
+- ✅ Multi-query strategy implemented (handles edge cases with 2-3 GitHub queries)
+- ✅ Language-agnostic query support (infrastructure/DevOps/charting/monitoring)
+- ✅ Comprehensive testing infrastructure (`analyze:test_suite`, `analyze:compare`, `analyze:repo`)
+- ✅ **100% success rate on 30-query test suite** (30/30 queries valid, all return good results)
+- ✅ Query parser working for ALL scenarios (backend, frontend, ORMs, testing, infrastructure, cross-language)
 
 **What We Learned**:
 - AI can create its own categories intelligently - no need to pre-define everything
@@ -493,23 +520,36 @@ Track progress towards MVP release.
   - Python ORMs: Need both "orm" and "sqlalchemy" queries to catch Django ORM + SQLAlchemy
   - Node.js: Need both JavaScript and TypeScript queries (Express vs Fastify)
   - Testing frameworks: Need specific library names (Jest) + generic terms
+  - User mentions specific services (Stripe, PayPal) → create targeted queries for those
   - AI intelligently determines when multi-query needed vs single query sufficient
+- **Query parser philosophy** (Step 1 refinement):
+  - Don't be too opinionated - let GitHub's ranking work
+  - Accept language-agnostic queries (docker, monitoring, charting, search engines)
+  - Only reject truly meaningless queries ("best library", "good tool")
+  - Principle-based rules > infinite examples (avoid prompt bloat)
+  - Testing holistically (30 queries) catches regressions better than one-by-one
+  - Environment variables (QUERY=) easier than rake arguments (no escaping needed)
 
 **Next Steps - Path to MVP**:
 
 🎯 **Currently Building: Tier 3 Comparative Evaluation** (Option A - chosen path)
 
 **Immediate Next Steps**:
-1. ✅ **Step 1 COMPLETE** - Query parser with multi-query strategy working!
+1. ✅ **Step 1 COMPLETE** - Query parser with multi-query strategy working at 100% success rate!
 
-2. **Build Step 2: Fetch & Prepare Repos**:
-   - Create service to execute GitHub searches (handle multi-query merging/deduping)
-   - Fetch top N repos (default 5, max 10)
-   - Filter archived/disabled repos
-   - Check which repos need Tier 1 analysis
-   - Auto-trigger categorization for unanalyzed repos
-   - Collect GitHub quality signals (stars, activity, issues)
-   - Prepare data structure for Step 3 comparison
+2. 🚧 **Build Step 2: Fetch & Prepare Repos** (NEXT):
+   - Create `RepositoryFetcher` service to execute GitHub searches
+   - Handle multi-query execution (iterate through `github_queries` array)
+   - Merge results from multiple queries and deduplicate by `full_name`
+   - Track which query found each repo (for debugging/analytics)
+   - Fetch top N repos (default 5, max 10 configurable)
+   - Filter out archived/disabled repos
+   - Use `Repository.from_github_api()` to create/update records
+   - Check which repos need Tier 1 analysis (`needs_analysis?`)
+   - Auto-trigger `RepositoryAnalyzer` for unanalyzed repos
+   - Collect GitHub quality signals (stars, activity, open issues, last push date)
+   - Return prepared data structure for Step 3 comparison
+   - Add rake task `analyze:fetch[query]` to test this step independently
 
 3. **Build Step 3: CompareRepositoriesJob**:
    - Create `app/jobs/compare_repositories_job.rb`

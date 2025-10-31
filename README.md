@@ -176,13 +176,18 @@ Test the AI analysis pipeline with rake tasks:
 
 ```bash
 # Test full comparison pipeline (parse → search → merge)
-bin/rails "analyze:compare[I need a Rails background job library]"
+QUERY="I need a Rails background job library" bin/rails analyze:compare
+
+# More examples (supports commas, quotes, any natural language)
+QUERY="python orm with good migration support" bin/rails analyze:compare
+QUERY="ruby gem for payments, needs stripe and paypal" bin/rails analyze:compare
+QUERY="what's good for state management in React?" bin/rails analyze:compare
 
 # Run test suite with sample queries
 bin/rails analyze:validate_queries
 
 # Test Tier 1 analysis on a single repo
-bin/rails "analyze:repo[mperham/sidekiq]"
+REPO="mperham/sidekiq" bin/rails analyze:repo
 ```
 
 ## Running Tests

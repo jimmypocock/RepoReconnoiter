@@ -100,6 +100,171 @@ namespace :analyze do
     puts ""
   end
 
+  desc "Run comprehensive test suite with 30 diverse queries"
+  task test_suite: :environment do
+    test_queries = [
+      # Rails / Ruby
+      "I need a Rails background job library",
+      "What's the best authentication solution for Rails? I need OAuth support and good documentation",
+      "ruby gem for processing payments, needs stripe and paypal",
+      "I'm building a Rails API and need really good serialization that's fast",
+      "state machine for ruby",
+
+      # Python
+      "python orm with good migration support",
+      "I need a Python web framework that's fast and async, not Django",
+      "what should I use for data validation in Python? Working with APIs",
+      "python library for scraping websites",
+      "task queue for python with retry logic and monitoring",
+
+      # JavaScript / TypeScript / Node.js
+      "modern javascript testing framework",
+      "I need a Node.js framework for building APIs, prefer TypeScript support",
+      "what's good for state management in React apps nowadays?",
+      "form validation library for react",
+      "node.js orm that works with postgres and mysql",
+      "Looking for a bundler for my frontend project, needs to be fast and support TypeScript",
+
+      # Frontend / UI
+      "css framework that's not bootstrap",
+      "I need a component library for Vue 3",
+      "datatable library for displaying large datasets in the browser",
+      "charting library for dashboards, needs to look good and be interactive",
+
+      # DevOps / Infrastructure
+      "docker alternative",
+      "I need something to deploy my Rails app easily without a ton of DevOps knowledge",
+      "monitoring solution for production apps",
+      "CI/CD tool for github that's free for small teams",
+
+      # Database / Data
+      "document database for nodejs apps",
+      "fast cache for reducing database load",
+      "full-text search engine",
+
+      # Other Languages / Use Cases
+      "go web framework",
+      "command line argument parser for rust",
+      "I want to build desktop apps with web technologies"
+    ]
+
+    parser = UserQueryParser.new
+    results = []
+
+    puts "\n" + "=" * 80
+    puts "🧪 COMPREHENSIVE TEST SUITE - 30 QUERIES"
+    puts "=" * 80
+    puts "Running all queries and collecting statistics...\n"
+
+    test_queries.each_with_index do |query, idx|
+      print "#{idx + 1}/30: #{query[0..60]}#{'...' if query.length > 60} "
+
+      begin
+        # Parse query
+        parsed = parser.parse(query)
+
+        # Execute searches
+        all_repos = []
+        seen_full_names = Set.new
+
+        parsed[:github_queries].each do |search_query|
+          begin
+            gh_results = Github.search(search_query, per_page: 10)
+            new_repos = gh_results.items.reject { |repo| seen_full_names.include?(repo.full_name) }
+            new_repos.each do |repo|
+              all_repos << repo
+              seen_full_names.add(repo.full_name)
+            end
+          rescue => e
+            # Silently continue on API errors
+          end
+        end
+
+        results << {
+          query: query,
+          valid: parsed[:valid],
+          strategy: parsed[:query_strategy],
+          num_queries: parsed[:github_queries].size,
+          num_results: all_repos.size,
+          top_repo: all_repos.first&.full_name,
+          tech_stack: parsed[:tech_stack],
+          problem_domain: parsed[:problem_domain],
+          constraints: parsed[:constraints]
+        }
+
+        puts "✅ (#{parsed[:query_strategy]}, #{all_repos.size} results)"
+      rescue => e
+        results << {
+          query: query,
+          valid: false,
+          error: e.message
+        }
+        puts "❌ ERROR: #{e.message}"
+      end
+    end
+
+    # Analyze results
+    puts "\n" + "=" * 80
+    puts "📊 HOLISTIC ANALYSIS"
+    puts "=" * 80
+
+    valid_results = results.select { |r| r[:valid] }
+    invalid_results = results.reject { |r| r[:valid] }
+
+    single_strategy = valid_results.select { |r| r[:strategy] == "single" }
+    multi_strategy = valid_results.select { |r| r[:strategy] == "multi" }
+
+    zero_results = valid_results.select { |r| r[:num_results] == 0 }
+    low_results = valid_results.select { |r| r[:num_results] > 0 && r[:num_results] < 5 }
+    good_results = valid_results.select { |r| r[:num_results] >= 5 }
+
+    puts "\n🎯 Overall Success Rate:"
+    puts "  Valid queries: #{valid_results.size}/#{results.size} (#{(valid_results.size.to_f / results.size * 100).round(1)}%)"
+    puts "  Invalid/Error: #{invalid_results.size}/#{results.size}"
+
+    puts "\n🔍 Query Strategy Distribution:"
+    puts "  Single-query: #{single_strategy.size}/#{valid_results.size} (#{(single_strategy.size.to_f / valid_results.size * 100).round(1)}%)"
+    puts "  Multi-query:  #{multi_strategy.size}/#{valid_results.size} (#{(multi_strategy.size.to_f / valid_results.size * 100).round(1)}%)"
+
+    puts "\n📈 Results Quality:"
+    puts "  Zero results:     #{zero_results.size}/#{valid_results.size}"
+    puts "  Low results (1-4): #{low_results.size}/#{valid_results.size}"
+    puts "  Good results (5+): #{good_results.size}/#{valid_results.size}"
+
+    if zero_results.any?
+      puts "\n⚠️  Queries with ZERO results:"
+      zero_results.each do |r|
+        puts "  - #{r[:query]}"
+        puts "    Strategy: #{r[:strategy]}, Queries: #{r[:num_queries]}"
+      end
+    end
+
+    if invalid_results.any?
+      puts "\n❌ Invalid/Error queries:"
+      invalid_results.each do |r|
+        puts "  - #{r[:query]}"
+        puts "    Error: #{r[:error]}"
+      end
+    end
+
+    puts "\n🏆 Multi-Query Examples (showing it's working):"
+    multi_strategy.first(5).each do |r|
+      puts "  - #{r[:query]}"
+      puts "    Queries: #{r[:num_queries]}, Results: #{r[:num_results]}, Top: #{r[:top_repo]}"
+    end
+
+    puts "\n📋 Tech Stack Coverage:"
+    tech_stacks = valid_results.map { |r| r[:tech_stack] }.compact.tally.sort_by { |k, v| -v }
+    tech_stacks.first(10).each do |stack, count|
+      puts "  #{stack}: #{count} queries"
+    end
+
+    puts "\n" + "=" * 80
+    puts "✅ Test suite complete"
+    puts "=" * 80
+    puts ""
+  end
+
   desc "Validate query parser with test suite of known queries"
   task validate_queries: :environment do
     test_cases = [
@@ -204,8 +369,25 @@ namespace :analyze do
   end
 
   desc "Analyze a single repository (Tier 1 categorization)"
-  task :repo, [ :full_name ] => :environment do |t, args|
-    full_name = args[:full_name] || "sidekiq/sidekiq"
+  desc "Usage: REPO='owner/name' bin/rails analyze:repo"
+  task repo: :environment do
+    full_name = ENV["REPO"]
+
+    unless full_name.present?
+      puts "\n" + "=" * 80
+      puts "🤖 REPOSITORY ANALYSIS"
+      puts "=" * 80
+      puts "\n❌ No repository provided!"
+      puts "\n📖 Usage:"
+      puts "  REPO='owner/name' bin/rails analyze:repo"
+      puts "\n💡 Examples:"
+      puts "  REPO='mperham/sidekiq' bin/rails analyze:repo"
+      puts "  REPO='rails/rails' bin/rails analyze:repo"
+      puts "  REPO='facebook/react' bin/rails analyze:repo"
+      puts "\n" + "=" * 80
+      puts ""
+      exit
+    end
 
     puts "\n" + "=" * 80
     puts "🤖 REPOSITORY ANALYSIS"
