@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_10_30_212505) do
+ActiveRecord::Schema[8.1].define(version: 2025_10_31_193127) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -18,7 +18,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_30_212505) do
     t.datetime "created_at", null: false
     t.date "date", null: false
     t.string "model_used", null: false
-    t.decimal "total_cost_usd", precision: 10, scale: 2, default: "0.0"
+    t.decimal "total_cost_usd", precision: 10, scale: 6, default: "0.0"
     t.bigint "total_input_tokens", default: 0
     t.bigint "total_output_tokens", default: 0
     t.integer "total_requests", default: 0
