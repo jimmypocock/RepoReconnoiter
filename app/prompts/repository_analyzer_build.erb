@@ -9,6 +9,13 @@ OUTPUT: User prompt with repository metadata and category options
 MODEL: gpt-4o-mini
 USED_BY: RepositoryCategorizationService#categorize_repository
 -%>
+<%# Helper method for formatting categories - MUST be defined before use -%>
+<%
+def format_categories(categories)
+  return "None available" if categories.blank?
+  categories.map { |c| "- #{c.slug}" }.join("\n")
+end
+%>
 Analyze this GitHub repository:
 
 **Repository:** <%= @repository.full_name %>
@@ -40,11 +47,3 @@ Maturity Levels:
 ---
 
 Based on this information, categorize the repository and provide a summary.
-
-<%# Helper method for formatting categories -%>
-<%
-def format_categories(categories)
-  return "None available" if categories.blank?
-  categories.map { |c| "- #{c.slug}" }.join("\n")
-end
-%>

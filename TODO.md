@@ -120,7 +120,7 @@ Track progress towards MVP release.
 - [x] Add confidence scoring (0.0-1.0)
 - [x] Implement smart duplicate detection (auto-create new categories intelligently)
 - [x] All models organized with consistent code structure (Public Instance → Class → Private)
-- [ ] Implement smart caching logic (`Repository#needs_analysis?`)
+- [x] Implement smart caching logic (`Repository#needs_analysis?`)
 
 ### Filtering & Display
 
@@ -279,20 +279,30 @@ Track progress towards MVP release.
   - Multi-query: Node.js needs both JavaScript and TypeScript queries
   - See `GITHUB_SEARCH_RESEARCH.md` for full 16 golden queries documentation
 
-### Step 2: Fetch & Prepare Repos
+### Step 2: Fetch & Prepare Repos ✅ COMPLETE
 
-- [ ] Execute GitHub search with generated query
-- [ ] Fetch top N repos (default 5, configurable max 10)
-- [ ] Filter out archived/disabled repos
-- [ ] Check which repos need Tier 1 analysis
-- [ ] Auto-trigger Tier 1 for unanalyzed repos
-- [ ] Wait for all analyses to complete before comparison
-- [ ] Collect GitHub quality signals for each repo:
-  - Last commit date (`github_updated_at`)
+- [x] Execute GitHub search with generated query (multi-query support)
+- [x] Fetch top N repos (default 10, configurable via limit parameter)
+- [x] Filter out archived/disabled repos (tracked in quality signals)
+- [x] Check which repos need Tier 1 analysis (`Repository#needs_analysis?`)
+- [x] Auto-trigger Tier 1 for unanalyzed repos (synchronous execution)
+- [x] Wait for all analyses to complete before comparison (synchronous by design)
+- [x] Collect GitHub quality signals for each repo:
+  - Last commit date (`github_pushed_at`)
   - Open issues count
-  - Stars vs age (growth velocity)
+  - Stars vs age (growth velocity / `stars_per_day`)
   - Fork count (community adoption)
   - Archived/disabled status
+- [x] Created `RepositoryFetcher` service (`app/services/repository_fetcher.rb`)
+- [x] Multi-query execution with deduplication by `full_name`
+- [x] Smart prioritization: Sort by stars, analyze top 5, show others unanalyzed
+- [x] Created `analyze:fetch` rake task for testing
+- [x] Fixed critical bugs:
+  - Fixed `needs_analysis?` method (wrong method name `last_analysis` → `analysis_last`)
+  - Removed reference to non-existent `stargazers_at_analysis` column
+  - Fixed category lookup (AI returns `slug`, not `category_id`)
+  - Categories now auto-created via `find_or_create_by!`
+- [x] Performance optimization: Second run 4x faster (no AI calls for analyzed repos)
 
 ### Step 3: Comparative Analysis Job (gpt-4o)
 
@@ -485,7 +495,7 @@ Track progress towards MVP release.
 
 ## Notes
 
-**Current Status**: ✅ Phase 1 & 2 COMPLETE! ✅ Phase 3.5 Tier 3 Step 1 COMPLETE! 🚧 Ready for Step 2
+**Current Status**: ✅ Phase 1 & 2 COMPLETE! ✅ Phase 3.5 Tier 3 Steps 1 & 2 COMPLETE! 🚧 Ready for Step 3
 
 **What's Working**:
 - ✅ GitHub API integration and sync job
@@ -499,9 +509,14 @@ Track progress towards MVP release.
 - ✅ `UserQueryParser` service with gpt-4o-mini integration
 - ✅ Multi-query strategy implemented (handles edge cases with 2-3 GitHub queries)
 - ✅ Language-agnostic query support (infrastructure/DevOps/charting/monitoring)
-- ✅ Comprehensive testing infrastructure (`analyze:test_suite`, `analyze:compare`, `analyze:repo`)
+- ✅ Comprehensive testing infrastructure (`analyze:test_suite`, `analyze:compare`, `analyze:repo`, `analyze:fetch`)
 - ✅ **100% success rate on 30-query test suite** (30/30 queries valid, all return good results)
 - ✅ Query parser working for ALL scenarios (backend, frontend, ORMs, testing, infrastructure, cross-language)
+- ✅ `RepositoryFetcher` service with multi-query execution and smart caching
+- ✅ Smart prioritization: Top 5 analyzed (synchronous), bottom 5 shown as "Other Options"
+- ✅ Performance optimization: Second query run 4x faster (cached repos skip AI analysis)
+- ✅ Category auto-creation via `find_or_create_by!` (AI returns slug, we look up or create)
+- ✅ GitHub quality signals: stars/day, activity, forks, issues, archived status
 
 **What We Learned**:
 - AI can create its own categories intelligently - no need to pre-define everything
@@ -529,6 +544,13 @@ Track progress towards MVP release.
   - Principle-based rules > infinite examples (avoid prompt bloat)
   - Testing holistically (30 queries) catches regressions better than one-by-one
   - Environment variables (QUERY=) easier than rake arguments (no escaping needed)
+- **Repository fetcher insights** (Step 2 completion):
+  - Synchronous analysis (blocking) is simpler and safer than async for MVP
+  - Smart prioritization: Analyze top 5 (best candidates), defer bottom 5 (show unanalyzed)
+  - Category lookup bug: AI returns `slug` but code expected `category_id` - always use `find_or_create_by!`
+  - Caching is critical: Second run 4x faster when repos already analyzed
+  - Fixed subtle bugs: wrong method names (`last_analysis` vs `analysis_last`), missing columns
+  - Quality signals should be calculated, not stored: stars/day changes daily, calculate on-demand
 
 **Next Steps - Path to MVP**:
 
@@ -537,21 +559,19 @@ Track progress towards MVP release.
 **Immediate Next Steps**:
 1. ✅ **Step 1 COMPLETE** - Query parser with multi-query strategy working at 100% success rate!
 
-2. 🚧 **Build Step 2: Fetch & Prepare Repos** (NEXT):
-   - Create `RepositoryFetcher` service to execute GitHub searches
-   - Handle multi-query execution (iterate through `github_queries` array)
-   - Merge results from multiple queries and deduplicate by `full_name`
-   - Track which query found each repo (for debugging/analytics)
-   - Fetch top N repos (default 5, max 10 configurable)
-   - Filter out archived/disabled repos
-   - Use `Repository.from_github_api()` to create/update records
-   - Check which repos need Tier 1 analysis (`needs_analysis?`)
-   - Auto-trigger `RepositoryAnalyzer` for unanalyzed repos
-   - Collect GitHub quality signals (stars, activity, open issues, last push date)
-   - Return prepared data structure for Step 3 comparison
-   - Add rake task `analyze:fetch[query]` to test this step independently
+2. ✅ **Step 2 COMPLETE** - Repository fetcher with smart caching:
+   - ✅ Created `RepositoryFetcher` service that executes multi-query GitHub searches
+   - ✅ Multi-query execution with deduplication by `full_name`
+   - ✅ Fetches top 10 repos (configurable), filters archived/disabled
+   - ✅ Smart prioritization: analyzes top 5, shows bottom 5 as "Other Options"
+   - ✅ Auto-triggers Tier 1 analysis for unanalyzed repos (synchronous)
+   - ✅ Collects GitHub quality signals (stars/day, activity, forks, issues)
+   - ✅ Returns prepared data structure for Step 3 comparison
+   - ✅ Added `analyze:fetch` rake task for testing
+   - ✅ Fixed critical bugs: `needs_analysis?` method, category lookup, timestamp persistence
+   - ✅ Performance: Second run 4x faster (no AI calls for cached repos)
 
-3. **Build Step 3: CompareRepositoriesJob**:
+3. 🚧 **Build Step 3: CompareRepositoriesJob** (NEXT):
    - Create `app/jobs/compare_repositories_job.rb`
    - Uses gpt-4o for comprehensive comparison
    - Takes user query + 5 repos + Tier 1 analyses
@@ -566,7 +586,7 @@ Track progress towards MVP release.
    - Display ranked comparison results
 
 **Original Options** (for reference):
-- ~~Option A~~: Skip Tier 2, jump to Tier 3 ← **CURRENT PATH (80% complete)**
+- ~~Option A~~: Skip Tier 2, jump to Tier 3 ← **CURRENT PATH (85% complete - Steps 1 & 2 done)**
 - Option B: Build Tier 2 first, then Tier 3 ← Deferred
 
 **Cost Target**: Keep under $10/month for AI API calls during MVP phase

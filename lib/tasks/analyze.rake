@@ -1,101 +1,94 @@
 namespace :analyze do
-  desc "Test full comparison pipeline: parse query → multi-search → merge/dedupe → display results"
-  desc "Usage: QUERY='your query here' bin/rails analyze:compare"
-  task compare: :environment do
-    # Use environment variable for easy natural language input (no escaping needed)
+  desc "Test repository fetcher: parse → fetch → analyze top 5 → prepare data"
+  desc "Usage: QUERY='your query here' bin/rails analyze:fetch"
+  task fetch: :environment do
     query = ENV["QUERY"]
 
     unless query.present?
       puts "\n" + "=" * 80
-      puts "🔬 COMPARISON PIPELINE TEST"
+      puts "🔍 FETCH & PREPARE PIPELINE TEST"
       puts "=" * 80
       puts "\n❌ No query provided!"
       puts "\n📖 Usage:"
-      puts "  QUERY='your query here' bin/rails analyze:compare"
+      puts "  QUERY='your query here' bin/rails analyze:fetch"
       puts "\n💡 Examples:"
-      puts "  QUERY='I need a Rails background job library' bin/rails analyze:compare"
-      puts "  QUERY='python orm with good migration support' bin/rails analyze:compare"
-      puts "  QUERY='modern javascript testing framework' bin/rails analyze:compare"
+      puts "  QUERY='Rails background job library' bin/rails analyze:fetch"
+      puts "  QUERY='python orm for PostgreSQL' bin/rails analyze:fetch"
+      puts "  QUERY='docker alternative' bin/rails analyze:fetch"
       puts "\n" + "=" * 80
       puts ""
       exit
     end
 
     puts "\n" + "=" * 80
-    puts "🔬 COMPARISON PIPELINE TEST"
+    puts "🔍 FETCH & PREPARE PIPELINE TEST"
     puts "=" * 80
     puts "User Query: #{query}"
     puts "=" * 80
 
     # Step 1: Parse the query
+    puts "\n📋 Step 1: Parsing query..."
     parser = UserQueryParser.new
-    result = parser.parse(query)
+    parsed = parser.parse(query)
 
-    unless result[:valid]
+    unless parsed[:valid]
       puts "\n❌ Invalid Query"
-      puts "Message: #{result[:validation_message]}"
+      puts "Message: #{parsed[:validation_message]}"
       puts ""
       exit
     end
 
-    puts "\n📋 PARSED DATA:"
-    puts "  Tech Stack:     #{result[:tech_stack]}"
-    puts "  Problem:        #{result[:problem_domain]}"
-    puts "  Constraints:    #{result[:constraints].join(', ')}"
-    puts "  Strategy:       #{result[:query_strategy]}"
-    puts "\n🔍 GITHUB QUERIES (#{result[:github_queries].size}):"
-    result[:github_queries].each_with_index do |q, i|
-      puts "  #{i + 1}. #{q}"
+    puts "  Tech Stack:     #{parsed[:tech_stack] || 'Language-agnostic'}"
+    puts "  Problem:        #{parsed[:problem_domain]}"
+    puts "  Constraints:    #{parsed[:constraints].join(', ')}"
+    puts "  Strategy:       #{parsed[:query_strategy]}"
+    puts "  GitHub Queries: #{parsed[:github_queries].size}"
+    parsed[:github_queries].each_with_index do |q, i|
+      puts "    #{i + 1}. #{q}"
     end
 
-    # Step 2: Execute all GitHub searches
-    puts "\n📡 EXECUTING GITHUB SEARCHES..."
-    all_repos = []
-    seen_full_names = Set.new
+    # Step 2: Fetch and prepare repositories
+    puts "\n📡 Step 2: Fetching and preparing repositories..."
+    fetcher = RepositoryFetcher.new
+    result = fetcher.fetch_and_prepare(
+      github_queries: parsed[:github_queries],
+      limit: 10
+    )
 
-    result[:github_queries].each_with_index do |search_query, idx|
-      begin
-        puts "  Query #{idx + 1}: Searching..."
-        gh_results = Github.search(search_query, per_page: 10)
+    puts "  Total found: #{result[:total_found]}"
+    puts "  Queries executed: #{result[:queries_executed]}"
+    puts "  Top repos (analyzed): #{result[:top_repositories].size}"
+    puts "  Other repos: #{result[:other_repositories].size}"
 
-        # Dedupe: only add repos we haven't seen yet
-        new_repos = gh_results.items.reject { |repo| seen_full_names.include?(repo.full_name) }
-        new_repos.each do |repo|
-          all_repos << { repo: repo, found_by_query: idx + 1, query: search_query }
-          seen_full_names.add(repo.full_name)
-        end
-
-        puts "    Found: #{gh_results.total_count} total | Added: #{new_repos.size} new (#{all_repos.size} total so far)"
-      rescue => e
-        puts "    ❌ Error: #{e.message}"
-      end
-    end
-
-    # Step 3: Display merged results
+    # Display results
     puts "\n" + "=" * 80
-    puts "📊 MERGED RESULTS: #{all_repos.size} unique repositories"
+    puts "📊 RESULTS"
     puts "=" * 80
 
-    if all_repos.empty?
-      puts "\n❌ No results found"
-    else
-      all_repos.first(10).each_with_index do |item, i|
-        repo = item[:repo]
-        puts "\n#{i + 1}. #{repo.full_name}"
-        puts "   ⭐ #{repo.stargazers_count} | 🍴 #{repo.forks_count} | 🔧 #{repo.language || 'N/A'}"
-        puts "   📝 #{repo.description&.slice(0, 100)}..." if repo.description
-        puts "   🔍 Found by query ##{item[:found_by_query]}: #{item[:query]}"
-      end
+    puts "\n🏆 TOP 5 (Analyzed & Ready for Comparison):"
+    result[:top_repositories].each_with_index do |item, i|
+      repo = item[:repository]
+      signals = item[:quality_signals]
 
-      puts "\n💭 EVALUATION QUESTIONS:"
-      puts "  1. Are these the right repos for: '#{query}'?"
-      puts "  2. Do you see the expected libraries in the top 5?"
-      puts "  3. Any irrelevant results that should be filtered?"
-      puts "  4. If multi-query: Did we catch repos that would've been missed by a single query?"
+      puts "\n#{i + 1}. #{repo.full_name}"
+      puts "   ⭐ #{signals[:stars]} stars | 🍴 #{signals[:forks]} forks | 🔧 #{signals[:language] || 'N/A'}"
+      puts "   📅 Last updated: #{signals[:last_updated]&.strftime('%Y-%m-%d') || 'Unknown'}"
+      puts "   📈 Growth: #{signals[:stars_per_day]} stars/day (#{signals[:age_days]} days old)"
+      puts "   #{signals[:has_analysis] ? '✅ Analyzed' : '⚠️  Not analyzed'}"
+      puts "   #{signals[:is_archived] ? '📦 ARCHIVED' : ''}"
+    end
+
+    if result[:other_repositories].any?
+      puts "\n💡 OTHER OPTIONS (Not yet analyzed):"
+      result[:other_repositories].each_with_index do |item, i|
+        repo = item[:repository]
+        signals = item[:quality_signals]
+        puts "  #{i + 6}. #{repo.full_name} - ⭐ #{signals[:stars]} | #{signals[:language] || 'N/A'}"
+      end
     end
 
     puts "\n" + "=" * 80
-    puts "✅ Pipeline test complete"
+    puts "✅ Fetch & prepare test complete"
     puts "=" * 80
     puts ""
   end

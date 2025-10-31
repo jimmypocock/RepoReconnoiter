@@ -56,7 +56,8 @@ class Repository < ApplicationRecord
     return true if last_analyzed_at.nil?
     return true if readme_changed?
     return true if last_analyzed_at < 7.days.ago
-    return true if stargazers_count > (last_analysis&.stargazers_at_analysis || 0) * 1.5
+    # TODO: Add star growth check when stargazers_at_analysis column is added
+    # return true if stargazers_count > (analysis_last&.stargazers_at_analysis || 0) * 1.5
     false
   end
 
