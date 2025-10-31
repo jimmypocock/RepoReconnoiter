@@ -4,11 +4,11 @@ class Repository < ApplicationRecord
   #--------------------------------------
 
   has_many :analyses, dependent: :restrict_with_error
-  has_many :categories, through: :repository_categories
   has_many :comparison_repositories, dependent: :restrict_with_error
   has_many :comparisons, through: :comparison_repositories
   has_many :queued_analyses, dependent: :restrict_with_error
   has_many :repository_categories, dependent: :restrict_with_error
+  has_many :categories, through: :repository_categories
 
   #--------------------------------------
   # VALIDATIONS

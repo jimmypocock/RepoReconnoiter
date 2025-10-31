@@ -1,0 +1,57 @@
+<%#
+PROMPT: repository_comparer_build
+DESCRIPTION: Builds the user prompt with user query, requirements, and repository comparison data
+VARIABLES:
+  - @user_query: String - Original user query
+  - @parsed_query: Hash - Parsed query from UserQueryParser (tech_stack, problem_domain, constraints)
+  - @repositories: Array of hashes - Each with { repository:, quality_signals:, analysis: }
+SECURITY: structured_data - Uses validated Repository model data and parsed user query
+OUTPUT: User prompt with all comparison data
+MODEL: gpt-4o
+USED_BY: RepositoryComparer#compare_repositories
+-%>
+**User's Request:**
+<%= @user_query %>
+
+**Requirements Analysis:**
+- **Tech Stack**: <%= @parsed_query[:tech_stack] || "Language-agnostic" %>
+- **Problem Domain**: <%= @parsed_query[:problem_domain] %>
+<% if @parsed_query[:constraints].any? -%>
+- **Specific Requirements**: <%= @parsed_query[:constraints].join(", ") %>
+<% end -%>
+
+---
+
+**Repositories to Compare** (<%= @repositories.size %> options):
+
+<% @repositories.each_with_index do |item, index| %>
+<%= index + 1 %>. **<%= item[:repository].full_name %>**
+
+**Description**: <%= item[:repository].description || "No description" %>
+
+**GitHub Stats**:
+- ⭐ **<%= item[:quality_signals][:stars] %> stars** | 🍴 <%= item[:quality_signals][:forks] %> forks
+- 📊 Growth: **<%= item[:quality_signals][:stars_per_day] %> stars/day** (<%= item[:quality_signals][:age_days] %> days old)
+- 🔧 Language: **<%= item[:quality_signals][:language] || "N/A" %>**
+- 📅 Last updated: **<%= item[:quality_signals][:last_updated]&.strftime("%B %d, %Y") || "Unknown" %>**
+- 🐛 Open issues: **<%= item[:quality_signals][:open_issues] %>**
+<% if item[:quality_signals][:is_archived] -%>
+- ⚠️  **ARCHIVED** - No longer maintained
+<% end -%>
+
+<% if item[:analysis] -%>
+**AI Analysis** (Tier 1 Categorization):
+- **Summary**: <%= item[:analysis].summary %>
+- **Use Cases**: <%= item[:analysis].use_cases %>
+<% if item[:repository].categories.any? -%>
+- **Categories**: <%= item[:repository].categories.pluck(:name).join(", ") %>
+<% end -%>
+<% else -%>
+**AI Analysis**: Not yet analyzed
+<% end -%>
+
+---
+
+<% end -%>
+
+Based on the user's requirements and the data above, provide a comprehensive comparison with rankings, pros/cons, and your recommendation.

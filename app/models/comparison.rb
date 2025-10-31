@@ -3,9 +3,9 @@ class Comparison < ApplicationRecord
   # ASSOCIATIONS
   #--------------------------------------
 
+  has_many :comparison_categories, dependent: :restrict_with_error
   has_many :categories, through: :comparison_categories
   has_many :comparison_repositories, dependent: :restrict_with_error
-  has_many :comparison_categories, dependent: :restrict_with_error
   has_many :repositories, through: :comparison_repositories
 
   #--------------------------------------

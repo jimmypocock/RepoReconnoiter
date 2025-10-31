@@ -93,6 +93,100 @@ namespace :analyze do
     puts ""
   end
 
+  desc "Full comparison pipeline: parse → fetch → analyze → compare (creates Comparison record)"
+  desc "Usage: QUERY='your query here' bin/rails analyze:compare"
+  task compare: :environment do
+    query = ENV["QUERY"]
+
+    unless query.present?
+      puts "\n" + "=" * 80
+      puts "🏆 FULL COMPARISON PIPELINE TEST"
+      puts "=" * 80
+      puts "\n❌ No query provided!"
+      puts "\n📖 Usage:"
+      puts "  QUERY='your query here' bin/rails analyze:compare"
+      puts "\n💡 Examples:"
+      puts "  QUERY='Rails background job library with retry logic' bin/rails analyze:compare"
+      puts "  QUERY='Python ORM for PostgreSQL' bin/rails analyze:compare"
+      puts "  QUERY='React state management for large apps' bin/rails analyze:compare"
+      puts "\n" + "=" * 80
+      puts ""
+      exit
+    end
+
+    puts "\n" + "=" * 80
+    puts "🏆 FULL COMPARISON PIPELINE TEST"
+    puts "=" * 80
+    puts "User Query: #{query}"
+    puts "=" * 80
+
+    # Step 1: Parse the query
+    puts "\n📋 Step 1: Parsing query..."
+    parser = UserQueryParser.new
+    parsed = parser.parse(query)
+
+    unless parsed[:valid]
+      puts "\n❌ Invalid Query"
+      puts "Message: #{parsed[:validation_message]}"
+      puts ""
+      exit
+    end
+
+    puts "  ✅ Tech Stack: #{parsed[:tech_stack] || 'Language-agnostic'}"
+    puts "  ✅ Problem: #{parsed[:problem_domain]}"
+    puts "  ✅ Constraints: #{parsed[:constraints].join(', ')}" if parsed[:constraints].any?
+    puts "  ✅ GitHub Queries: #{parsed[:github_queries].join(' | ')}"
+
+    # Step 2: Fetch and prepare repositories
+    puts "\n📡 Step 2: Fetching and preparing repositories..."
+    fetcher = RepositoryFetcher.new
+    result = fetcher.fetch_and_prepare(
+      github_queries: parsed[:github_queries],
+      limit: 10
+    )
+
+    puts "  ✅ Found #{result[:total_found]} repos, analyzed top #{result[:top_repositories].size}"
+
+    # Step 3: Compare repositories
+    puts "\n🤖 Step 3: Comparing repositories with AI (gpt-4o)..."
+    puts "  (This will take ~10-15 seconds and cost ~$0.05)"
+
+    comparer = RepositoryComparer.new
+    comparison = comparer.compare_repositories(
+      user_query: query,
+      parsed_query: parsed,
+      repositories: result[:top_repositories]
+    )
+
+    # Display results
+    puts "\n" + "=" * 80
+    puts "🏆 COMPARISON RESULTS"
+    puts "=" * 80
+
+    puts "\n✨ RECOMMENDATION: #{comparison.recommended_repo_full_name}"
+    puts "#{comparison.recommendation_reasoning}"
+
+    puts "\n📊 RANKING:"
+    comparison.comparison_repositories.order(:rank).each do |cr|
+      puts "\n#{cr.rank}. #{cr.repository.full_name} (Score: #{cr.score}/100)"
+      puts "   👍 Pros:"
+      cr.pros.each { |pro| puts "      • #{pro}" }
+      if cr.cons.any?
+        puts "   👎 Cons:"
+        cr.cons.each { |con| puts "      • #{con}" }
+      end
+      puts "   💡 Fit: #{cr.fit_reasoning}"
+    end
+
+    puts "\n💰 Cost: $#{comparison.cost_usd.round(6)} (#{comparison.input_tokens} in / #{comparison.output_tokens} out)"
+    puts "\n✅ Comparison saved! ID: #{comparison.id}"
+
+    puts "\n" + "=" * 80
+    puts "✅ Full comparison pipeline complete"
+    puts "=" * 80
+    puts ""
+  end
+
   desc "Run comprehensive test suite with 30 diverse queries"
   task test_suite: :environment do
     test_queries = [

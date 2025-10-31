@@ -377,7 +377,7 @@ Track progress towards MVP release.
 
 ### Smart Caching & Re-analysis
 
-- [ ] Exact query match returns cached result (within 7 days)
+- [ ] 🎯 **PRE-MVP**: Exact query match returns cached result (within 7 days) - saves $0.05 per repeated query
 - [ ] Check if new repos matching criteria appeared on GitHub
 - [ ] Prompt user: "Found 2 new repos since last comparison. Re-run?"
 - [ ] Background job to refresh popular comparisons monthly
