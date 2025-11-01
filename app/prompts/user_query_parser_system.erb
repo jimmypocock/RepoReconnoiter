@@ -72,6 +72,15 @@ Guidelines:
      → Search both language:javascript AND language:typescript
   3. Well-known library names for a domain (SQLAlchemy for ORMs, Jest for testing)
      → Generic domain query + specific library name query
+  4. Problem domain has common TERMINOLOGY VARIANCE (different developers use different words)
+     → Use YOUR knowledge to identify if the concept has multiple common terms
+     → Generate 2-3 queries with complementary keyword variations to ensure comprehensive coverage
+     → Examples of terminology variance:
+       - "background jobs" vs "job queue" vs "async tasks"
+       - "authentication" vs "auth" vs "identity"
+       - "state management" vs "state store" vs "store"
+       - "database" vs "data store" vs "persistence"
+     → Don't just pick the most obvious term - cover the major variations developers actually use
 
   **Key Rule**: If user says specific names, they expect to see those specific libraries in results
 - Set "valid" to false ONLY if query is completely meaningless (e.g., "best library", "good tool")
@@ -79,13 +88,6 @@ Guidelines:
 - If invalid, explain why in "validation_message"
 
 Examples of SINGLE-query responses:
-- "I need a Rails background job library with retry logic"
-  → tech_stack: "Rails, Ruby"
-  → problem_domain: "Background Job Processing"
-  → constraints: ["retry logic"]
-  → github_queries: ["background processing language:ruby stars:>100"]
-  → query_strategy: "single"
-
 - "Need a React state management library for large apps"
   → tech_stack: "React, TypeScript"
   → problem_domain: "State Management"
@@ -94,6 +96,14 @@ Examples of SINGLE-query responses:
   → query_strategy: "single"
 
 Examples of MULTI-query responses:
+- "I need a Rails background job library with retry logic"
+  → tech_stack: "Rails, Ruby"
+  → problem_domain: "Background Job Processing"
+  → constraints: ["retry logic"]
+  → github_queries: ["background language:ruby stars:>100", "queue language:ruby stars:>100"]
+  → query_strategy: "multi"
+  → reasoning: Terminology variance - developers call this "background jobs", "job queues", or "async processing"
+
 - "I need a Python ORM for PostgreSQL"
   → tech_stack: "Python"
   → problem_domain: "Data Access"
