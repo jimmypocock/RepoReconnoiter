@@ -304,76 +304,61 @@ Track progress towards MVP release.
   - Categories now auto-created via `find_or_create_by!`
 - [x] Performance optimization: Second run 4x faster (no AI calls for analyzed repos)
 
-### Step 3: Comparative Analysis Job (gpt-4o)
+### Step 3: Comparative Analysis Service (gpt-4o) ✅ COMPLETE
 
-- [ ] Create `CompareRepositoriesJob` (`app/jobs/compare_repositories_job.rb`)
-- [ ] Build comprehensive comparison prompt including:
+- [x] Create `RepositoryComparer` service (`app/services/repository_comparer.rb`)
+- [x] Build comprehensive comparison prompt including:
   - User's original query and constraints
   - All repos with metadata (stars, age, language)
   - Tier 1 summaries and categories for each repo
   - GitHub quality signals (activity, issues, health)
-- [ ] Request structured JSON response:
-  ```json
-  {
-    "recommended_repo": "sidekiq/sidekiq",
-    "recommendation_reasoning": "...",
-    "ranking": [
-      {
-        "repo_full_name": "sidekiq/sidekiq",
-        "rank": 1,
-        "score": 95,
-        "pros": ["Proven at scale", "Excellent retry logic"],
-        "cons": ["Requires Redis infrastructure"],
-        "fit_reasoning": "Perfect match because..."
-      }
-    ]
-  }
-  ```
-- [ ] Parse AI response and create Comparison record
-- [ ] Link to repositories via `comparison_repositories`
-- [ ] Auto-assign categories based on problem_domain extraction
-- [ ] Track tokens and cost (~3000 tokens = $0.045)
+- [x] Request structured JSON response with recommended_repo, reasoning, and ranking
+- [x] Parse AI response and create Comparison record
+- [x] Link to repositories via `comparison_repositories` with rank, score, pros, cons
+- [x] Auto-assign categories based on problem_domain extraction via `comparison_categories`
+- [x] Track tokens and cost (~3000 tokens = $0.045)
+- [x] Created prompts:
+  - `app/prompts/repository_comparer_system.erb`
+  - `app/prompts/repository_comparer_build.erb`
+- [x] NOTE: Uses synchronous service instead of background job (simpler for MVP, 10-15s response time acceptable)
 
-### Comparison UI - /evaluate Page
+### Comparison UI ✅ COMPLETE
 
-- [ ] Create `/evaluate` route and controller
-- [ ] Build search input page with:
-  - Large search box with placeholder examples
-  - "What are you looking for?" prompt
-  - 3-4 example queries below input
-  - "Search" button
-- [ ] After submission, show extraction verification:
-  ```
-  ✓ Tech Stack: Rails, Ruby
-  ✓ Problem: Background job processing
-  ✓ Requirements: Retry logic, Monitoring
-  ✓ Searching GitHub for top 5 matches...
-  [Edit] button to refine
-  ```
-- [ ] Show loading state while:
-  - Searching GitHub
-  - Running Tier 1 analyses (if needed)
-  - Comparing repositories
-- [ ] Display comparison results:
-  - Highlighted recommendation at top with reasoning
-  - Comparison table/cards for all 5 repos
-  - Columns: Repo, Stars, Activity, Pros, Cons, Score, Fit
-  - GitHub quality signals (last updated, issues count)
-  - Category badges for each repo
-  - Links to GitHub repos
-- [ ] Add "View Analysis Details" to see full Tier 1 summary
+- [x] Create `ComparisonsController` with index, create, show actions
+- [x] Set root route to `comparisons#index`
+- [x] Build search input page (`comparisons/index.html.erb`) with:
+  - Large centered search box with placeholder
+  - 5 example query buttons (Rails jobs, Python ORM, React state, Go framework, Node testing)
+  - Beautiful landing page design with Tailwind
+- [x] Build comparison results page (`comparisons/show.html.erb`) with:
+  - Sticky header with search bar (can search again from results)
+  - Query info display (tech stack, problem domain, repo count)
+  - Highlighted recommendation card with reasoning at top
+  - Ranked repository cards showing:
+    - Rank badge and score (/100)
+    - GitHub stats (stars, forks, language)
+    - Fit reasoning in highlighted box
+    - Pros (green checkmarks) and Cons (orange X marks)
+    - Links to GitHub repos
+  - Footer with view count and cost tracking
+- [x] Full end-to-end flow working: search → parse → fetch → analyze → compare → display
+- [x] Turbo-enabled forms with flash messages
+- [x] Auto-increment view_count on each comparison view
+- [ ] DEFERRED: Extraction verification step with "Edit" button (simplified flow for MVP)
+- [ ] DEFERRED: Loading states (synchronous execution is fast enough for MVP)
+- [ ] DEFERRED: "View full Tier 1 details" modal
 
 ### Browsable Comparisons (/comparisons)
 
-- [ ] Create `/comparisons` index page
-- [ ] Show "Recent Evaluations" (last 20)
-- [ ] Show "Popular Comparisons" (highest view_count)
+- [x] `/comparisons` index page exists (clean search interface by design)
+- [x] Increment `view_count` when comparison viewed (implemented in show action)
+- [x] Comparison model has scopes for recent, popular, cached, by_problem_domain
+- [ ] Show "Recent Evaluations" list on index page (last 20)
+- [ ] Show "Popular Comparisons" list (highest view_count)
 - [ ] Filter by category (problem_domain, architecture, maturity)
-- [ ] Search existing comparisons before running new one
-- [ ] Increment `view_count` when comparison viewed
-- [ ] Cache comparisons for 7+ days (configurable)
-- [ ] Show "5 related comparisons in this category"
-- [ ] Analytics: "Top 10 most-compared problem domains"
+- [ ] Search existing comparisons before running new one (save $0.045 per duplicate)
+- [ ] Show "5 related comparisons in this category" on show page
+- [ ] Analytics dashboard: "Top 10 most-compared problem domains"
 
 ### Smart Caching & Re-analysis
 
@@ -385,12 +370,11 @@ Track progress towards MVP release.
 
 ### Category Assignment
 
-- [ ] Auto-infer category from `problem_domain` in Step 1
+- [x] Auto-infer category from `problem_domain` extraction (implemented in `RepositoryComparer#link_comparison_categories`)
   - "background job library" → find/create "Background Job Processing"
-- [ ] AI suggests additional categories during comparison
-  - Might add "Real-time Communication" if repos do websockets
-- [ ] Link via `comparison_categories` join table
-- [ ] Display category badges on comparison results
+- [x] Link via `comparison_categories` join table with `assigned_by: "inferred"`
+- [ ] AI suggests additional categories during comparison (not implemented - deferred)
+- [ ] Display category badges on comparison results page (deferred)
 
 ### Cost Controls & Rate Limiting
 
@@ -401,16 +385,301 @@ Track progress towards MVP release.
 - [ ] Implement daily spending cap for comparisons
 - [ ] Show "X comparisons remaining today" in UI
 
-### Testing & Validation
+### Testing & Validation ✅ COMPLETE
 
-- [ ] Test with various query types:
-  - Well-defined: "Rails background job with retry logic"
-  - Vague: "job thing for rails"
-  - Too specific: "Sidekiq alternative that uses PostgreSQL"
-  - Cross-language: "authentication library"
-- [ ] Verify GitHub search quality
-- [ ] Validate AI comparison reasoning makes sense
-- [ ] Check cost tracking accuracy
+- [x] Comprehensive testing infrastructure via rake tasks:
+  - `analyze:compare` - Full pipeline test (parse → fetch → compare)
+  - `analyze:fetch` - Steps 1 & 2 test (parse → fetch)
+  - `analyze:test_suite` - 30 diverse queries with statistics
+  - `analyze:validate_queries` - Expected repos validation
+  - `analyze:repo` - Single repo Tier 1 analysis
+- [x] Test with various query types:
+  - Well-defined: "Rails background job with retry logic" ✓
+  - Vague: "job thing for rails" ✓
+  - Too specific: "Sidekiq alternative that uses PostgreSQL" ✓
+  - Cross-language: "authentication library" ✓
+  - Language-agnostic: "docker monitoring", "charting library" ✓
+- [x] Verify GitHub search quality (100% success rate on 30-query test suite)
+- [x] Validate AI comparison reasoning (manual testing confirms quality)
+- [x] Check cost tracking accuracy (automatic via `OpenAi` service wrapper)
+
+---
+
+## Phase 3.6: Core Infrastructure Hardening 🎯 HIGHEST PRIORITY
+
+**Goal**: Strengthen the core application before adding user management complexity.
+
+**Why This Comes First**:
+- Prevents runaway costs from duplicate queries (caching saves 80%+)
+- Adds reliability through proper error handling
+- Secures inputs before multiple users start using the app
+- Establishes transparent cost expectations
+
+**Estimated Time**: 2-3 hours total
+
+### Query Caching & Deduplication 💰 (Biggest Cost Saver)
+
+- [ ] Implement exact query match caching in `ComparisonsController#create`
+  - Check for existing comparison with same `user_query` in last 7 days
+  - Use `Comparison.cached` scope (already exists in model)
+  - If found, redirect to cached result instead of creating new comparison
+  - Increment `view_count` on cached comparison
+  - Show notice: "Showing cached results from X days ago"
+- [ ] Add cache status indicator to comparison show page
+  - Display "Fresh comparison" vs "Cached from X ago"
+  - Option to "Re-run with latest data" button
+- [ ] Test caching behavior
+  - Search "Rails background jobs" twice → second uses cache ✓
+  - Wait 8 days, search again → creates new comparison ✓
+  - Search "rails background jobs" (lowercase) → matches cached ✓
+
+**Cost Impact**: With 5 users searching similar queries, saves ~$0.18 per duplicate query (80%+ savings)
+
+### Input Validation & Sanitization 🔒
+
+- [ ] Add query validation at controller level (`ComparisonsController#create`)
+  - Reject empty or whitespace-only queries with helpful error
+  - Enforce maximum length: 500 characters
+  - Strip whitespace before processing
+  - Sanitize with `Prompter.sanitize_user_input` before AI calls
+- [ ] Add validation to comparison form view
+  - Client-side: HTML5 `maxlength="500"` attribute
+  - Client-side: `required` attribute
+  - Show character counter (optional, nice-to-have)
+- [ ] Strengthen `Prompter.sanitize_user_input` method
+  - Review existing filters in `app/services/prompter.rb`
+  - Add additional malicious pattern filters if needed
+  - Test with adversarial inputs (SQL injection attempts, XSS, prompt injection)
+- [ ] Test validation edge cases
+  - Empty query → error message ✓
+  - 600 character query → error message ✓
+  - Query with only spaces → error message ✓
+  - Normal query → works ✓
+
+**Security Impact**: Prevents abuse and prompt injection attacks
+
+### Error Handling & Graceful Degradation 🛡️
+
+- [ ] Add error handling to `ComparisonsController#create`
+  - Wrap comparison pipeline in begin/rescue block
+  - Handle `Github::RateLimitError` → show friendly message
+  - Handle `OpenAI::Error` → show AI unavailable message
+  - Handle invalid queries → show helpful rephrasing suggestion
+  - Handle empty results → suggest different keywords
+  - Log all errors with full backtrace for debugging
+- [ ] Add custom error classes to `Github` service
+  - Define `Github::RateLimitError` exception
+  - Rescue `Octokit::TooManyRequests` and raise custom error
+  - Add rate limit info to error message (resets at X time)
+- [ ] Add custom error classes to `OpenAi` service (if needed)
+  - Rescue OpenAI gem errors and provide context
+- [ ] Add error handling to `UserQueryParser` service
+  - Return `valid: false` with `error_message` for unparseable queries
+  - Handle API timeouts gracefully
+- [ ] Add error handling to `RepositoryFetcher` service
+  - Handle GitHub search failures
+  - Handle empty result sets
+  - Handle Tier 1 analysis failures
+- [ ] Add error handling to `RepositoryComparer` service
+  - Handle malformed AI responses (invalid JSON)
+  - Handle missing required fields in AI response
+- [ ] Test error scenarios
+  - Invalid query → helpful error message ✓
+  - Mock GitHub API failure → graceful error ✓
+  - Mock OpenAI API failure → graceful error ✓
+  - Empty search results → helpful suggestion ✓
+
+**Reliability Impact**: App doesn't crash, users get helpful feedback
+
+### Cost Transparency & Limits 💵
+
+- [ ] Display cost estimate on homepage (`comparisons/index.html.erb`)
+  - Add text: "Each comparison analyzes up to 10 repositories using AI (~$0.05 per search)"
+  - Position below search box or in help text
+- [ ] Enforce max repos per comparison in `RepositoryFetcher`
+  - Set `DEFAULT_LIMIT = 10`
+  - Set `MAX_LIMIT = 15`
+  - Clamp user-provided limit: `limit = [limit, MAX_LIMIT].min`
+  - Document in code comments why limit exists (cost control)
+- [ ] Add cost breakdown to comparison show page (optional, nice-to-have)
+  - Show tokens used: "Used X input tokens, Y output tokens"
+  - Show cost: "This comparison cost $0.045"
+  - Link to "How pricing works" documentation
+
+**Cost Impact**: Users understand costs, hard limit prevents runaway expenses
+
+### Documentation & Logging Improvements 📝
+
+- [ ] Add logging for all comparison creations
+  - Log: user_query, repos_count, total_cost, processing_time
+  - Use Rails.logger.info for successful comparisons
+  - Use Rails.logger.error for failures with full context
+- [ ] Document cost optimization strategies in CLAUDE.md
+  - Explain query caching strategy
+  - Explain why we limit repos per comparison
+  - Explain Tier 1 vs Tier 2 vs Tier 3 cost tradeoffs
+- [ ] Add performance monitoring (optional)
+  - Track comparison creation time (parse + fetch + analyze + compare)
+  - Log slow comparisons (>30 seconds)
+  - Identify bottlenecks for future optimization
+
+---
+
+## Phase 3.7: Security & Access Control 🎯 PRE-LAUNCH PRIORITY
+
+**Goal**: Secure the application for controlled public release with invite-only access.
+
+**Prerequisites**: Phase 3.6 (Core Infrastructure Hardening) must be complete first!
+
+### User Authentication & Authorization
+
+- [ ] Add `users` table migration
+  - `github_id` (integer, unique) - GitHub user ID
+  - `github_username` (string) - GitHub username
+  - `github_name` (string) - Full name from GitHub
+  - `github_avatar_url` (string) - Profile picture
+  - `email` (string) - Email from GitHub
+  - `whitelisted` (boolean, default: false) - Access control flag
+  - `whitelisted_at` (datetime) - When access was granted
+  - `whitelisted_by_id` (integer) - Admin who granted access
+  - `admin` (boolean, default: false) - Admin privileges
+  - `last_sign_in_at` (datetime) - Track login activity
+  - `comparisons_count` (integer, default: 0) - Cache counter
+  - Timestamps
+- [ ] Create `User` model with validations
+  - Validates uniqueness of github_id and github_username
+  - Has many comparisons (for cost tracking)
+  - Scopes: whitelisted, admins, recent_sign_ins
+- [ ] Add OmniAuth GitHub authentication
+  - Add `omniauth-github` gem to Gemfile
+  - Configure OmniAuth in `config/initializers/omniauth.rb`
+  - Store GitHub OAuth app credentials in Rails credentials
+  - Create sessions controller for OAuth callback
+- [ ] Add `user_id` to `comparisons` table
+  - Migration: `add_reference :comparisons, :user, foreign_key: true`
+  - Update Comparison model association: `belongs_to :user, optional: true` (optional for now, required after migration)
+- [ ] Update `ai_costs` table to track by user
+  - Migration: `add_reference :ai_costs, :user, foreign_key: true`
+  - Update AiCost model association: `belongs_to :user, optional: true`
+  - Update OpenAi service to accept optional user parameter
+- [ ] Implement authentication flow
+  - Sign in with GitHub button on homepage (if not authenticated)
+  - OAuth callback creates or updates user record
+  - Session management (store user_id in session)
+  - Current user helper methods in ApplicationController
+- [ ] Implement authorization checks
+  - Before action filter: `require_whitelisted_user!`
+  - Apply to ComparisonsController#create (must be whitelisted to run comparisons)
+  - Allow public viewing of comparison results (no auth required)
+  - Redirect non-whitelisted users to waitlist page
+
+### Invite/Waitlist System
+
+- [ ] Create waitlist page (`/waitlist`)
+  - Shown to non-whitelisted authenticated users
+  - Message: "RepoReconnoiter is in private beta. Request access below."
+  - Display user's GitHub username and avatar
+  - "Request Access" button (records interest)
+  - Friendly message: "We'll notify you when your invite is ready!"
+- [ ] Create `access_requests` table (optional, for tracking interest)
+  - `user_id` (integer, references users)
+  - `requested_at` (datetime)
+  - `notes` (text) - Optional message from user
+  - `status` (enum: pending, approved, denied)
+  - Timestamps
+- [ ] Admin interface for whitelist management
+  - `/admin/users` - List all users with whitelist status
+  - Filter: whitelisted, pending, all
+  - Bulk actions: "Whitelist selected users"
+  - Individual actions: Whitelist, Remove access, Make admin
+  - Show user's GitHub profile, comparisons count, cost spent
+- [ ] Email notifications (optional for MVP, can add later)
+  - Notify user when whitelisted (via Action Mailer)
+  - Welcome email with getting started guide
+
+### Rate Limiting & Abuse Prevention
+
+- [ ] Add `rack-attack` gem to Gemfile
+- [ ] Configure Rack::Attack in `config/initializers/rack_attack.rb`
+  - Throttle comparison creation: 5 requests per 10 minutes per user
+  - Throttle comparison creation: 20 requests per 10 minutes per IP (for anonymous viewing)
+  - Block suspicious patterns (too many failed OAuth attempts)
+  - Whitelist localhost for development
+- [ ] Add rate limit tracking to User model
+  - `comparisons_today_count` - Cache counter (reset daily via background job)
+  - `daily_comparison_limit` (integer, default: 10) - Configurable per user
+  - `daily_comparison_limit_override` (integer, nullable) - For special users
+- [ ] Implement daily limit checks in controller
+  - Before creating comparison, check if user.can_create_comparison?
+  - Flash message: "You've reached your daily limit of 10 comparisons. Try again tomorrow!"
+  - Admins have unlimited comparisons
+- [ ] Add cost tracking per user
+  - Track AI costs per user via `ai_costs.user_id`
+  - User model methods: `total_ai_cost`, `cost_this_month`, `cost_today`
+  - Admin dashboard shows top spenders
+
+### Input Validation & Security
+
+- [ ] Add input length validation at controller level
+  - Validate `user_query` parameter in ComparisonsController
+  - Maximum length: 500 characters
+  - Reject empty or whitespace-only queries
+  - Sanitize input before passing to AI services
+- [ ] Strengthen prompt injection prevention
+  - Review `Prompter.sanitize_user_input` method
+  - Add additional filters for malicious patterns
+  - Test with adversarial inputs (SQL injection attempts, XSS, prompt injection)
+- [ ] Add CSRF protection verification
+  - Ensure `protect_from_forgery with: :exception` is enabled (Rails default)
+  - Verify all forms include CSRF token
+- [ ] Add Content Security Policy (CSP)
+  - Configure in `config/initializers/content_security_policy.rb`
+  - Restrict external scripts, styles, images to trusted sources
+- [ ] Add security headers
+  - Configure SecureHeaders gem or set manually in ApplicationController
+  - X-Frame-Options: DENY
+  - X-Content-Type-Options: nosniff
+  - X-XSS-Protection: 1; mode=block
+  - Strict-Transport-Security (HSTS) for production
+
+### Logging & Audit Trails
+
+- [ ] Add comprehensive logging for AI requests
+  - Log all comparison creations with user_id, query, cost, timestamp
+  - Log all AI API calls with model, tokens, cost, user_id
+  - Log authentication events (sign in, sign out, failed attempts)
+  - Log authorization failures (non-whitelisted user attempts)
+- [ ] Create audit_logs table (optional, structured logging)
+  - `user_id` (integer, nullable)
+  - `action` (string) - e.g., "comparison_created", "user_whitelisted"
+  - `resource_type` (string) - e.g., "Comparison", "User"
+  - `resource_id` (integer)
+  - `metadata` (jsonb) - Additional context
+  - `ip_address` (string)
+  - `user_agent` (text)
+  - Timestamps
+- [ ] Admin audit log viewer
+  - `/admin/audit_logs` - Searchable, filterable log viewer
+  - Filter by user, action, resource, date range
+  - Export to CSV for analysis
+
+### Cost Monitoring & Budget Controls
+
+- [ ] Admin cost dashboard (`/admin/costs`)
+  - Total spend today, this week, this month
+  - Spend by user (top 10 users)
+  - Spend by model (gpt-4o vs gpt-4o-mini)
+  - Daily spend chart (last 30 days)
+  - Budget status: "$X.XX / $10.00 monthly budget"
+  - Alert banner if approaching limit (>$8.00/month)
+- [ ] Implement spending cap enforcement
+  - Check total monthly spend before allowing new comparisons
+  - If over budget, show message: "We've reached our AI budget for this month. Please try again next month."
+  - Admins can override budget limit
+  - Log budget limit hits for monitoring
+- [ ] Budget alert notifications (optional)
+  - Email admin when spend reaches 50%, 75%, 90% of monthly budget
+  - Slack/Discord webhook integration for real-time alerts
 
 ---
 
@@ -457,11 +726,34 @@ Track progress towards MVP release.
 
 ### Launch
 
+- [ ] Pre-launch security checklist
+  - [ ] Verify all authentication flows work correctly
+  - [ ] Test whitelist enforcement (non-whitelisted users blocked)
+  - [ ] Test rate limiting (Rack::Attack configured correctly)
+  - [ ] Verify input validation prevents malicious input
+  - [ ] Run Brakeman security scan (no critical issues)
+  - [ ] Run bundle-audit (no vulnerable gems)
+  - [ ] Review Rails credentials (all secrets properly stored)
+- [ ] Initial whitelist setup
+  - [ ] Whitelist yourself as admin
+  - [ ] Whitelist 3-5 trusted friends for beta testing
+  - [ ] Document who has access and why
 - [ ] Deploy to production with Kamal
+  - [ ] Set up production environment variables
+  - [ ] Configure GitHub OAuth app for production domain
+  - [ ] Set up database backups
+  - [ ] Configure SSL/TLS with Let's Encrypt
 - [ ] Verify Solid Queue jobs running
 - [ ] Monitor first 24 hours for errors
-- [ ] Check AI spending tracking
-- [ ] Share with initial users for feedback
+  - [ ] Check error monitoring (Sentry or logs)
+  - [ ] Monitor AI spending (should be minimal with 3-5 users)
+  - [ ] Check authentication flow (OAuth working correctly)
+  - [ ] Verify rate limiting (no false positives)
+- [ ] Share with initial whitelisted users
+  - [ ] Send access confirmation email
+  - [ ] Share public repo URL (code is open source)
+  - [ ] Request feedback on UX and comparison quality
+  - [ ] Monitor their usage patterns and costs
 
 ---
 
@@ -495,28 +787,27 @@ Track progress towards MVP release.
 
 ## Notes
 
-**Current Status**: ✅ Phase 1 & 2 COMPLETE! ✅ Phase 3.5 Tier 3 Steps 1 & 2 COMPLETE! 🚧 Ready for Step 3
+**Current Status**: ✅ Phases 1, 2, & 3.5 COMPLETE! 🎯 Ready for Phase 3.6 (Core Infrastructure Hardening)
 
-**What's Working**:
+**What's Working** (Fully Functional MVP):
+- ✅ **Tier 3 Comparative Evaluation** - End-to-end working!
+  - ✅ UserQueryParser service (Step 1) with 100% test success rate
+  - ✅ RepositoryFetcher service (Step 2) with multi-query and smart caching
+  - ✅ RepositoryComparer service (Step 3) with gpt-4o comparison
+  - ✅ Beautiful comparison UI with rankings, pros/cons, scoring
+  - ✅ Full flow: search → parse → fetch → analyze → compare → display
 - ✅ GitHub API integration and sync job
-- ✅ Database schema with all 9 tables (original 6 + 3 Tier 3 tables)
+- ✅ Database schema with 9 tables (6 original + 3 Tier 3)
 - ✅ OpenAI Tier 1 categorization (gpt-4o-mini)
 - ✅ Smart category auto-creation with duplicate detection
-- ✅ Beautiful Tailwind UI with pagination and filtering
-- ✅ Automatic cost tracking with `OpenAi` service wrapper
-- ✅ Cost tracking precision (6 decimals) - tracks micro-dollar costs accurately
-- ✅ Tier 3 database migrations and models complete
-- ✅ `UserQueryParser` service with gpt-4o-mini integration
-- ✅ Multi-query strategy implemented (handles edge cases with 2-3 GitHub queries)
+- ✅ Automatic cost tracking with `OpenAi` service wrapper (6 decimal precision)
+- ✅ Multi-query strategy (2-3 GitHub queries for comprehensive results)
 - ✅ Language-agnostic query support (infrastructure/DevOps/charting/monitoring)
-- ✅ Comprehensive testing infrastructure (`analyze:test_suite`, `analyze:compare`, `analyze:repo`, `analyze:fetch`)
-- ✅ **100% success rate on 30-query test suite** (30/30 queries valid, all return good results)
-- ✅ Query parser working for ALL scenarios (backend, frontend, ORMs, testing, infrastructure, cross-language)
-- ✅ `RepositoryFetcher` service with multi-query execution and smart caching
+- ✅ Comprehensive testing infrastructure (4 rake tasks, 30-query test suite)
 - ✅ Smart prioritization: Top 5 analyzed (synchronous), bottom 5 shown as "Other Options"
-- ✅ Performance optimization: Second query run 4x faster (cached repos skip AI analysis)
-- ✅ Category auto-creation via `find_or_create_by!` (AI returns slug, we look up or create)
+- ✅ Performance optimization: 4x faster on cached repos
 - ✅ GitHub quality signals: stars/day, activity, forks, issues, archived status
+- ✅ Responsive Tailwind UI with excellent UX
 
 **What We Learned**:
 - AI can create its own categories intelligently - no need to pre-define everything
@@ -552,43 +843,89 @@ Track progress towards MVP release.
   - Fixed subtle bugs: wrong method names (`last_analysis` vs `analysis_last`), missing columns
   - Quality signals should be calculated, not stored: stars/day changes daily, calculate on-demand
 
-**Next Steps - Path to MVP**:
+**Next Steps - Immediate Path to Launch**:
 
-🎯 **Currently Building: Tier 3 Comparative Evaluation** (Option A - chosen path)
+---
 
-**Immediate Next Steps**:
-1. ✅ **Step 1 COMPLETE** - Query parser with multi-query strategy working at 100% success rate!
+## 🎯 PHASE 3.6 - CORE INFRASTRUCTURE HARDENING (DO THIS FIRST!)
 
-2. ✅ **Step 2 COMPLETE** - Repository fetcher with smart caching:
-   - ✅ Created `RepositoryFetcher` service that executes multi-query GitHub searches
-   - ✅ Multi-query execution with deduplication by `full_name`
-   - ✅ Fetches top 10 repos (configurable), filters archived/disabled
-   - ✅ Smart prioritization: analyzes top 5, shows bottom 5 as "Other Options"
-   - ✅ Auto-triggers Tier 1 analysis for unanalyzed repos (synchronous)
-   - ✅ Collects GitHub quality signals (stars/day, activity, forks, issues)
-   - ✅ Returns prepared data structure for Step 3 comparison
-   - ✅ Added `analyze:fetch` rake task for testing
-   - ✅ Fixed critical bugs: `needs_analysis?` method, category lookup, timestamp persistence
-   - ✅ Performance: Second run 4x faster (no AI calls for cached repos)
+**Why This Is Priority #1**:
+Before adding user management complexity, we need a rock-solid foundation:
+1. **Query caching** - Saves 80%+ of AI costs from duplicate queries
+2. **Input validation** - Prevents abuse before multiple users arrive
+3. **Error handling** - App doesn't crash when APIs fail
+4. **Cost transparency** - Users understand what they're using
+5. **Hard limits** - Prevents runaway costs
 
-3. 🚧 **Build Step 3: CompareRepositoriesJob** (NEXT):
-   - Create `app/jobs/compare_repositories_job.rb`
-   - Uses gpt-4o for comprehensive comparison
-   - Takes user query + 5 repos + Tier 1 analyses
-   - Returns ranking with pros/cons/scoring
-   - ~3000 tokens = $0.045 per comparison
+**Estimated Time**: 2-3 hours total (one focused work session)
 
-4. **Build /evaluate UI page**:
-   - Create routes and controller
-   - Search input page with examples
-   - Show parsed extraction for verification
-   - Loading states during GitHub search + analysis
-   - Display ranked comparison results
+**Implementation Order**:
+1. ✅ **Query Caching** (30 min) - Check for cached comparisons before creating new ones
+2. ✅ **Input Validation** (15 min) - Validate query length, sanitize input at controller level
+3. ✅ **Error Handling** (1 hour) - Graceful degradation for GitHub/OpenAI API failures
+4. ✅ **Cost Display** (10 min) - Show cost estimate on homepage
+5. ✅ **Max Repos Limit** (5 min) - Enforce maximum 15 repos per comparison
+6. ✅ **Testing** (30 min) - Verify all edge cases and error scenarios
 
-**Original Options** (for reference):
-- ~~Option A~~: Skip Tier 2, jump to Tier 3 ← **CURRENT PATH (85% complete - Steps 1 & 2 done)**
-- Option B: Build Tier 2 first, then Tier 3 ← Deferred
+**Why This Can't Wait**:
+- Without caching: 10 users searching "Rails jobs" = $0.45 wasted on duplicates
+- Without validation: Malicious user pastes 10KB prompt = expensive API call
+- Without error handling: GitHub rate limit = app crashes for everyone
+- Without limits: Someone tries to compare 100 repos = $5 query
 
-**Cost Target**: Keep under $10/month for AI API calls during MVP phase
+---
 
-**MVP Philosophy**: The comparative evaluation feature (Tier 3) is the killer feature that makes this tool genuinely useful - like having an experienced tech lead help you choose the right library. This is what we're building toward.
+## 🎯 PHASE 3.7 - SECURITY & ACCESS CONTROL (DO THIS SECOND!)
+
+**Prerequisites**: ✅ Phase 3.6 must be complete first!
+
+**Why This Matters**:
+With a solid infrastructure, we can now safely add users:
+1. Control costs (only whitelisted users can run comparisons)
+2. Prevent abuse (rate limiting per user)
+3. Track usage (per-user analytics and cost tracking)
+4. Enable controlled beta (invite-only access)
+
+**Estimated Time**: 6-8 hours total (2-3 focused work sessions)
+
+**Implementation Order**:
+1. **User Authentication** (2-3 hours)
+   - GitHub OAuth with OmniAuth
+   - Users table with whitelist flag
+   - Session management and current_user helpers
+   - Link comparisons and ai_costs to users
+
+2. **Authorization & Whitelist** (2-3 hours)
+   - Only whitelisted users can create comparisons
+   - Waitlist page for non-whitelisted users
+   - Admin interface for whitelist management
+   - Whitelist yourself + 3-5 beta testers
+
+3. **Rate Limiting & Monitoring** (1-2 hours)
+   - Rack::Attack configuration
+   - Per-user daily limits (10/day)
+   - Admin cost dashboard
+   - Budget alerts
+
+4. **Security Hardening** (1 hour)
+   - Brakeman scan
+   - CSP and security headers
+   - Final testing and checklist
+
+5. **Deploy & Monitor** (1 hour)
+   - Production deployment with Kamal
+   - Monitor beta users for 1 week
+   - Gather feedback and iterate
+
+**Why Public Repo + Invite-Only Access Works**:
+- Code is open source (transparency, community contributions welcome)
+- Only whitelisted users can USE the app (cost control)
+- Public can view comparison results (anonymous read-only access)
+- Easy to expand whitelist as we validate costs and quality
+
+**Post-Security Phase**:
+Once Phase 3.7 is complete and we have 1 week of controlled beta data:
+- Add comparison caching (exact query match saves $0.045)
+- Add browsable comparisons list (Recent, Popular, By Category)
+- Improve admin dashboard (analytics, trends, top users)
+- Consider Tier 2 Deep Analysis feature (if budget allows)
