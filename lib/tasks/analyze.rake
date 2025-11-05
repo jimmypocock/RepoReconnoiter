@@ -120,71 +120,60 @@ namespace :analyze do
     puts "User Query: #{query}"
     puts "=" * 80
 
-    # Step 1: Parse the query
-    puts "\n📋 Step 1: Parsing query..."
-    parser = UserQueryParser.new
-    parsed = parser.parse(query)
+    # Run comparison pipeline via ComparisonCreator service
+    puts "\n🔄 Running comparison pipeline (parse → fetch → analyze → compare)..."
+    puts "   This will take ~10-15 seconds and cost ~$0.05"
 
-    unless parsed[:valid]
-      puts "\n❌ Invalid Query"
-      puts "Message: #{parsed[:validation_message]}"
-      puts ""
-      exit
-    end
+    begin
+      result = ComparisonCreator.call(query: query, force_refresh: true)
+      comparison = result.record
 
-    puts "  ✅ Tech Stack: #{parsed[:tech_stack] || 'Language-agnostic'}"
-    puts "  ✅ Problem: #{parsed[:problem_domain]}"
-    puts "  ✅ Constraints: #{parsed[:constraints].join(', ')}" if parsed[:constraints].any?
-    puts "  ✅ GitHub Queries: #{parsed[:github_queries].join(' | ')}"
-
-    # Step 2: Fetch and prepare repositories
-    puts "\n📡 Step 2: Fetching and preparing repositories..."
-    fetcher = RepositoryFetcher.new
-    result = fetcher.fetch_and_prepare(
-      github_queries: parsed[:github_queries],
-      limit: 10
-    )
-
-    puts "  ✅ Found #{result[:total_found]} repos, analyzed top #{result[:top_repositories].size}"
-
-    # Step 3: Compare repositories
-    puts "\n🤖 Step 3: Comparing repositories with AI (gpt-4o)..."
-    puts "  (This will take ~10-15 seconds and cost ~$0.05)"
-
-    comparer = RepositoryComparer.new
-    comparison = comparer.compare_repositories(
-      user_query: query,
-      parsed_query: parsed,
-      repositories: result[:top_repositories]
-    )
-
-    # Display results
-    puts "\n" + "=" * 80
-    puts "🏆 COMPARISON RESULTS"
-    puts "=" * 80
-
-    puts "\n✨ RECOMMENDATION: #{comparison.recommended_repo_full_name}"
-    puts "#{comparison.recommendation_reasoning}"
-
-    puts "\n📊 RANKING:"
-    comparison.comparison_repositories.order(:rank).each do |cr|
-      puts "\n#{cr.rank}. #{cr.repository.full_name} (Score: #{cr.score}/100)"
-      puts "   👍 Pros:"
-      cr.pros.each { |pro| puts "      • #{pro}" }
-      if cr.cons.any?
-        puts "   👎 Cons:"
-        cr.cons.each { |con| puts "      • #{con}" }
+      if result.newly_created
+        puts "\n✅ Created new comparison"
+      else
+        puts "\n💾 Found cached result (#{(result.similarity * 100).round}% similarity)"
       end
-      puts "   💡 Fit: #{cr.fit_reasoning}"
+
+      # Display results
+      puts "\n" + "=" * 80
+      puts "🏆 COMPARISON RESULTS"
+      puts "=" * 80
+
+      puts "\n✨ RECOMMENDATION: #{comparison.recommended_repo_full_name}"
+      puts "#{comparison.recommendation_reasoning}"
+
+      puts "\n📊 RANKING:"
+      comparison.comparison_repositories.order(:rank).each do |cr|
+        puts "\n#{cr.rank}. #{cr.repository.full_name} (Score: #{cr.score}/100)"
+        puts "   👍 Pros:"
+        cr.pros.each { |pro| puts "      • #{pro}" }
+        if cr.cons.any?
+          puts "   👎 Cons:"
+          cr.cons.each { |con| puts "      • #{con}" }
+        end
+        puts "   💡 Fit: #{cr.fit_reasoning}"
+      end
+
+      puts "\n💰 Cost: $#{comparison.cost_usd.round(6)} (#{comparison.input_tokens} in / #{comparison.output_tokens} out)"
+      puts "\n✅ Comparison saved! ID: #{comparison.id}"
+      puts "🔗 View at: http://localhost:3000/comparisons/#{comparison.id}"
+
+      puts "\n" + "=" * 80
+      puts "✅ Full comparison pipeline complete"
+      puts "=" * 80
+      puts ""
+    rescue ComparisonCreator::InvalidQueryError => e
+      puts "\n❌ Invalid Query: #{e.message}"
+      exit 1
+    rescue ComparisonCreator::NoRepositoriesFoundError => e
+      puts "\n❌ No repositories found"
+      puts "   Try different keywords or be more specific"
+      exit 1
+    rescue => e
+      puts "\n❌ Error: #{e.class} - #{e.message}"
+      puts e.backtrace.first(5).join("\n")
+      exit 1
     end
-
-    puts "\n💰 Cost: $#{comparison.cost_usd.round(6)} (#{comparison.input_tokens} in / #{comparison.output_tokens} out)"
-    puts "\n✅ Comparison saved! ID: #{comparison.id}"
-
-    puts "\n" + "=" * 80
-    puts "✅ Full comparison pipeline complete"
-    puts "=" * 80
-    puts ""
   end
 
   desc "Run comprehensive test suite with 30 diverse queries"

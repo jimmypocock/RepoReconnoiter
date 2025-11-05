@@ -1,4 +1,8 @@
 class RepositoryFetcher
+  # Maximum repositories to fetch per comparison (cost control)
+  DEFAULT_LIMIT = 10
+  MAX_LIMIT = 15
+
   attr_reader :github
 
   def initialize
@@ -9,7 +13,9 @@ class RepositoryFetcher
   # PUBLIC INSTANCE METHODS
   #--------------------------------------
 
-  def fetch_and_prepare(github_queries:, limit: 10)
+  def fetch_and_prepare(github_queries:, limit: DEFAULT_LIMIT)
+    # Enforce maximum limit to prevent runaway costs
+    limit = [[limit, MAX_LIMIT].min, 1].max  # Clamp between 1 and MAX_LIMIT
     # Step 1: Execute multi-query GitHub search and merge results
     all_repos = execute_searches(github_queries, limit)
 

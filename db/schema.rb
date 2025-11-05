@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_10_31_193127) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_04_205721) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "pg_trgm"
 
   create_table "ai_costs", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -100,6 +101,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_31_193127) do
     t.text "github_search_query"
     t.integer "input_tokens"
     t.string "model_used"
+    t.string "normalized_query"
     t.integer "output_tokens"
     t.string "problem_domain"
     t.jsonb "ranking_results"
@@ -111,6 +113,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_31_193127) do
     t.text "user_query", null: false
     t.integer "view_count", default: 0
     t.index ["created_at"], name: "index_comparisons_on_created_at"
+    t.index ["normalized_query"], name: "index_comparisons_on_normalized_query_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["problem_domain"], name: "index_comparisons_on_problem_domain"
     t.index ["view_count"], name: "index_comparisons_on_view_count"
   end

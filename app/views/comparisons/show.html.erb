@@ -39,6 +39,40 @@
       </div>
     </div>
 
+    <!-- Cache Status Indicator (Always shown for debugging) -->
+    <div class="mb-6 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
+      <div class="flex items-start gap-2">
+        <svg class="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div class="flex-1">
+          <p class="text-sm text-gray-700">
+            Created <%= time_ago_in_words(@comparison.created_at) %> ago (<%= @comparison.created_at.strftime("%B %d, %Y at %l:%M %p") %>)
+            <% if @comparison.newly_created %>
+              <span class="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded">Newly Created</span>
+            <% elsif @comparison.newly_created == false %>
+              <span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">From Cache</span>
+            <% end %>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Refresh Button (Development Only) -->
+    <% if @comparison.can_refresh? %>
+      <div class="mb-6">
+        <%= button_to comparisons_path(query: @comparison.user_query, refresh: true),
+          method: :post,
+          class: "text-sm text-gray-600 hover:text-gray-900 underline flex items-center gap-1",
+          data: { turbo_submits_with: "Refreshing..." } do %>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          Re-run with Fresh Data
+        <% end %>
+      </div>
+    <% end %>
+
     <!-- Recommendation Card -->
     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 mb-8">
       <div class="flex items-start gap-3 mb-3">

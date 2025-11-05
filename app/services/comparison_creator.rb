@@ -1,0 +1,119 @@
+# ComparisonCreator - Orchestrates the comparison creation pipeline
+#
+# Coordinates UserQueryParser, RepositoryFetcher, and RepositoryComparer
+# to create repository comparisons from user queries.
+#
+# Usage:
+#   result = ComparisonCreator.call(query: "Rails background jobs")
+#   result.record         # The Comparison record
+#   result.newly_created  # Boolean - was this just created (vs retrieved from cache)?
+#   result.similarity     # Float - cache similarity score (1.0 if new)
+class ComparisonCreator
+  attr_reader :query, :force_refresh, :record, :newly_created, :similarity
+
+  def initialize(query:, force_refresh: false)
+    @query = query
+    @force_refresh = force_refresh
+  end
+
+  #--------------------------------------
+  # PUBLIC INSTANCE METHODS
+  #--------------------------------------
+
+  def call
+    result = find_cached_comparison || create_new_comparison
+    @record = result[:record]
+    @newly_created = result[:newly_created]
+    @similarity = result[:similarity]
+    self
+  end
+
+  #--------------------------------------
+  # CLASS METHODS
+  #--------------------------------------
+
+  class << self
+    # Convenience method for one-liner usage
+    def call(query:, force_refresh: false)
+      new(query: query, force_refresh: force_refresh).call
+    end
+  end
+
+  private
+
+  #--------------------------------------
+  # PRIVATE METHODS
+  #--------------------------------------
+
+  def create_new_comparison
+    # Step 1: Parse query into structured data
+    parsed = parse_query
+
+    # Step 2: Fetch and prepare repositories
+    repositories = fetch_repositories(parsed)
+
+    # Step 3: Compare repositories and create comparison record
+    comparison_record = compare_repositories(parsed, repositories)
+
+    {
+      record: comparison_record,
+      newly_created: true,
+      similarity: 1.0
+    }
+  end
+
+  def fetch_repositories(parsed)
+    fetcher = RepositoryFetcher.new
+    result = fetcher.fetch_and_prepare(
+      github_queries: parsed[:github_queries],
+      limit: 10
+    )
+
+    # Raise error if no repositories found
+    if result[:top_repositories].empty?
+      raise NoRepositoriesFoundError, "No repositories found for query: #{query}"
+    end
+
+    result[:top_repositories]
+  end
+
+  def find_cached_comparison
+    return nil if force_refresh
+
+    cached_comparison, similarity = Comparison.find_similar_cached(query)
+    return nil unless cached_comparison
+
+    {
+      record: cached_comparison,
+      newly_created: false,
+      similarity: similarity
+    }
+  end
+
+  def compare_repositories(parsed, repositories)
+    comparer = RepositoryComparer.new
+    comparer.compare_repositories(
+      user_query: query,
+      parsed_query: parsed,
+      repositories: repositories
+    )
+  end
+
+  def parse_query
+    parser = UserQueryParser.new
+    parsed = parser.parse(query)
+
+    unless parsed[:valid]
+      raise InvalidQueryError, parsed[:validation_message] || "Invalid query"
+    end
+
+    parsed
+  end
+
+  #--------------------------------------
+  # CUSTOM EXCEPTIONS
+  #--------------------------------------
+
+  class InvalidQueryError < StandardError; end
+  class NoRepositoriesFoundError < StandardError; end
+end
