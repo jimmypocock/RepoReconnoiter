@@ -12,7 +12,7 @@ class ComparisonSimilarityTester
                           #{ActiveRecord::Base.connection.quote(q2)}) AS score"
       ).first
 
-      result['score'].to_f
+      result["score"].to_f
     end
 
     # Default test cases for threshold tuning
@@ -20,32 +20,32 @@ class ComparisonSimilarityTester
     def default_test_cases
       [
         # Exact duplicates - MUST match
-        ["Rails background jobs", "Rails background jobs", true],
-        ["React state management", "React state management", true],
+        [ "Rails background jobs", "Rails background jobs", true ],
+        [ "React state management", "React state management", true ],
 
         # Near-exact (minor wording changes) - SHOULD match
-        ["rails background jobs", "Rails job processing", true],
-        ["react state management", "React state manager", true],
-        ["python authentication", "Python auth library", true],
+        [ "rails background jobs", "Rails job processing", true ],
+        [ "react state management", "React state manager", true ],
+        [ "python authentication", "Python auth library", true ],
 
         # Same topic, different constraints - DEBATABLE
-        ["Rails background job library with retry logic", "Rails background job that doesn't require redis", true],
-        ["Python ORM for PostgreSQL", "Python ORM for MySQL", true],
+        [ "Rails background job library with retry logic", "Rails background job that doesn't require redis", true ],
+        [ "Python ORM for PostgreSQL", "Python ORM for MySQL", true ],
 
         # Different tech stacks - MUST NOT match
-        ["rails jobs", "python django", false],
-        ["React state management", "rails based gem for state management", false],
-        ["Go web framework", "Node.js web framework", false],
+        [ "rails jobs", "python django", false ],
+        [ "React state management", "rails based gem for state management", false ],
+        [ "Go web framework", "Node.js web framework", false ],
 
         # Infrastructure (language-agnostic) - SHOULD match
-        ["docker monitoring", "kubernetes monitoring", true],
+        [ "docker monitoring", "kubernetes monitoring", true ],
 
         # Different languages - MUST NOT match
-        ["golang web framework", "go http server", true],  # Same language (Go)
-        ["Ruby authentication", "Python authentication", false],  # Different languages
+        [ "golang web framework", "go http server", true ],  # Same language (Go)
+        [ "Ruby authentication", "Python authentication", false ],  # Different languages
 
         # Typos - SHOULD match
-        ["typo example: backgrond jobs", "background jobs rails", true],
+        [ "typo example: backgrond jobs", "background jobs rails", true ]
       ]
     end
 
@@ -103,7 +103,7 @@ namespace :comparison_cache do
     puts "(This shows WHAT WOULD HAPPEN at each threshold, not what's currently active)"
     puts "-"*80
 
-    [0.3, 0.5, 0.8, Comparison::SIMILARITY_THRESHOLD].uniq.sort.each do |threshold|
+    [ 0.3, 0.5, 0.8, Comparison::SIMILARITY_THRESHOLD ].uniq.sort.each do |threshold|
       puts "\n📊 Threshold: #{threshold}"
       duplicates = []
 
@@ -139,7 +139,7 @@ namespace :comparison_cache do
   desc "Test similarity threshold with sample queries"
   task test_threshold: :environment do
     test_cases = ComparisonSimilarityTester.default_test_cases
-    thresholds = [0.3, 0.4, 0.5, 0.6, 0.7]
+    thresholds = [ 0.3, 0.4, 0.5, 0.6, 0.7 ]
 
     puts "\n" + "="*80
     puts "SIMILARITY THRESHOLD TESTING"
@@ -152,10 +152,10 @@ namespace :comparison_cache do
       analysis = ComparisonSimilarityTester.test_threshold(threshold, test_cases)
 
       analysis[:results].each do |r|
-        status = case [r[:matched], r[:correct]]
-        when [true, true] then "✅ CORRECT MATCH"
-        when [false, true] then "✅ CORRECT SKIP"
-        when [true, false] then "❌ FALSE POSITIVE"
+        status = case [ r[:matched], r[:correct] ]
+        when [ true, true ] then "✅ CORRECT MATCH"
+        when [ false, true ] then "✅ CORRECT SKIP"
+        when [ true, false ] then "❌ FALSE POSITIVE"
         else "❌ FALSE NEGATIVE"
         end
 
@@ -173,7 +173,7 @@ namespace :comparison_cache do
   end
 
   desc "Test specific query similarity"
-  task :test_query, [:query1, :query2] => :environment do |t, args|
+  task :test_query, [ :query1, :query2 ] => :environment do |t, args|
     unless args[:query1] && args[:query2]
       puts "\n❌ Usage: bin/rails comparison_cache:test_query['query1','query2']"
       puts "Example: bin/rails comparison_cache:test_query['rails jobs','Rails background processing']"
@@ -198,7 +198,7 @@ namespace :comparison_cache do
   task stats: :environment do
     total = Comparison.count
     cached = Comparison.cached.count
-    stale = Comparison.stale.count
+    stale = Comparison.where("created_at <= ?", Comparison::CACHE_TTL_DAYS.days.ago).count
 
     puts "\n" + "="*80
     puts "COMPARISON CACHE STATISTICS"
@@ -210,7 +210,7 @@ namespace :comparison_cache do
     puts "  TTL: #{Comparison::CACHE_TTL_DAYS} days"
     puts "  Similarity Threshold: #{(Comparison::SIMILARITY_THRESHOLD * 100).round(1)}%"
     puts "\nMost Viewed:"
-    Comparison.popular.limit(5).each_with_index do |c, i|
+    Comparison.order(view_count: :desc).limit(5).each_with_index do |c, i|
       days_ago = ((Time.current - c.created_at) / 1.day).round
       time_desc = days_ago == 0 ? "today" : "#{days_ago} days ago"
       puts "  #{i + 1}. \"#{c.user_query}\" (#{c.view_count} views, #{time_desc})"

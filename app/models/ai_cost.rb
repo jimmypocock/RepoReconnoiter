@@ -1,5 +1,11 @@
 class AiCost < ApplicationRecord
   #--------------------------------------
+  # ASSOCIATIONS
+  #--------------------------------------
+
+  belongs_to :user, optional: true
+
+  #--------------------------------------
   # VALIDATIONS
   #--------------------------------------
 
@@ -26,11 +32,13 @@ class AiCost < ApplicationRecord
 
   def average_cost_per_request
     return 0 if total_requests.zero?
+
     (total_cost_usd / total_requests).round(6)
   end
 
   def average_tokens_per_request
     return 0 if total_requests.zero?
+
     (total_tokens / total_requests).round(0)
   end
 
@@ -42,43 +50,8 @@ class AiCost < ApplicationRecord
   # CLASS METHODS
   #--------------------------------------
   class << self
-    def budget_status(budget_per_month: 10.0)
-      spent = total_cost_this_month
-      percentage = (spent / budget_per_month * 100).round(1)
-
-      status = case percentage
-      when 0...50 then :healthy
-      when 50...75 then :warning
-      when 75...90 then :critical
-      else :exceeded
-      end
-
-      {
-        budget: budget_per_month,
-        spent: spent,
-        remaining: budget_per_month - spent,
-        percentage: percentage,
-        status: status
-      }
-    end
-
-    def daily_average_this_month
-      days = Time.current.day
-      return 0 if days.zero?
-
-      (total_cost_this_month / days).round(4)
-    end
-
-    def projected_monthly_cost
-      daily_average = daily_average_this_month
-      days_in_month = Time.current.end_of_month.day
-
-      (daily_average * days_in_month).round(2)
-    end
-
     def rollup_for_date(date, model)
-      analyses = Analysis.where(model_used: model)
-        .where("DATE(created_at) = ?", date)
+      analyses = Analysis.by_model(model).created_on(date)
 
       record = find_or_initialize_by(date: date, model_used: model)
       record.total_requests = analyses.count
@@ -88,22 +61,6 @@ class AiCost < ApplicationRecord
       record.save!
 
       record
-    end
-
-    def total_cost_by_model
-      group(:model_used).sum(:total_cost_usd)
-    end
-
-    def total_cost_this_month
-      this_month.sum(:total_cost_usd)
-    end
-
-    def total_cost_this_week
-      this_week.sum(:total_cost_usd)
-    end
-
-    def total_cost_today
-      for_date(Date.current).sum(:total_cost_usd)
     end
   end
 end

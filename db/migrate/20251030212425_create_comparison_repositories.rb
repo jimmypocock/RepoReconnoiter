@@ -12,6 +12,6 @@ class CreateComparisonRepositories < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :comparison_repositories, [:comparison_id, :rank]
+    add_index :comparison_repositories, [ :comparison_id, :rank ]
   end
 end

@@ -28,6 +28,14 @@ gem "faraday-retry"
 gem "openssl", ">= 3.3.1"
 # Pagination [https://github.com/ddnexus/pagy]
 gem "pagy"
+# Authentication [https://github.com/heartcombo/devise]
+gem "devise"
+# GitHub OAuth [https://github.com/omniauth/omniauth-github]
+gem "omniauth-github"
+# OmniAuth CSRF protection [https://github.com/cookpad/omniauth-rails_csrf_protection]
+gem "omniauth-rails_csrf_protection"
+# Rate limiting and throttling [https://github.com/rack/rack-attack]
+gem "rack-attack"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
@@ -39,6 +47,9 @@ gem "tzinfo-data", platforms: %i[ windows jruby ]
 gem "solid_cache"
 gem "solid_queue"
 gem "solid_cable"
+
+# Mission Control for job monitoring [https://github.com/basecamp/mission_control-jobs]
+gem "mission_control-jobs"
 
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false

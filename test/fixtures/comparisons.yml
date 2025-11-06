@@ -1,11 +1,13 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+one:
+  user: one
+  user_query: "Rails background job library with retry logic"
+  normalized_query: "rails background job library with retry logic"
+  view_count: 10
+  recommended_repo_full_name: "sidekiq/sidekiq"
 
-# This model initially had no columns defined. If you add columns to the
-# model remove the "{}" from the fixture names and add the columns immediately
-# below each fixture, per the syntax in the comments below
-#
-one: {}
-# column: value
-#
-two: {}
-# column: value
+two:
+  user: one
+  user_query: "Python ORM for PostgreSQL"
+  normalized_query: "python orm for postgresql"
+  view_count: 5
+  recommended_repo_full_name: "sqlalchemy/sqlalchemy"

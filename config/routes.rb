@@ -1,4 +1,14 @@
 Rails.application.routes.draw do
+  # Devise routes for users
+  # Skip everything except OmniAuth - we're OAuth-only (no email/password, no password resets)
+  devise_for :users, skip: [ :registrations, :sessions, :passwords ],
+    controllers: { omniauth_callbacks: "users/omniauth_callbacks" }
+
+  # Custom sign out route (DELETE only, no sign in form)
+  devise_scope :user do
+    delete "users/sign_out", to: "devise/sessions#destroy", as: :destroy_user_session
+  end
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
@@ -12,5 +22,11 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   root "comparisons#index"
 
-  resources :comparisons, only: [:index, :create, :show]
+  # Comparison routes (no index - root serves that purpose)
+  resources :comparisons, only: [ :create, :show ]
+
+  # Mission Control for job monitoring (requires authentication)
+  authenticate :user do
+    mount MissionControl::Jobs::Engine, at: "/jobs"
+  end
 end

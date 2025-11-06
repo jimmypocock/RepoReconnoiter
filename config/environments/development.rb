@@ -29,16 +29,16 @@ Rails.application.configure do
   config.cache_store = :memory_store
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  # config.active_storage.service = :local  # ❌ Disabled - Active Storage not loaded
 
   # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
+  # config.action_mailer.raise_delivery_errors = false  # ❌ Disabled - Action Mailer not loaded
 
   # Make template changes take effect immediately.
-  config.action_mailer.perform_caching = false
+  # config.action_mailer.perform_caching = false  # ❌ Disabled - Action Mailer not loaded
 
   # Set localhost to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+  # config.action_mailer.default_url_options = { host: "localhost", port: 3000 }  # ❌ Disabled - Action Mailer not loaded
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log

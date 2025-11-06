@@ -1,7 +1,10 @@
 namespace :github do
   desc "Explore GitHub API and display available data"
   task explore: :environment do
-    service = Github.new
+    # Use Octokit client directly for exploration
+    client = Octokit::Client.new(
+      access_token: Rails.application.credentials.github&.personal_access_token
+    )
 
     puts "\n" + "=" * 80
     puts "GitHub API Explorer"
@@ -9,8 +12,8 @@ namespace :github do
 
     # Check authentication
     puts "\n📡 Authentication Status:"
-    if service.authenticated?
-      user = service.current_user
+    if client.access_token.present?
+      user = client.user
       puts "✅ Authenticated as: #{user.login}"
       puts "   Name: #{user.name}"
       puts "   Email: #{user.email}"
@@ -20,7 +23,7 @@ namespace :github do
 
     # Check rate limits
     puts "\n📊 Rate Limit Status:"
-    rate_limit = service.rate_limit_status
+    rate_limit = client.rate_limit
 
     puts "   Limit: #{rate_limit.limit} requests/hour"
     puts "   Remaining: #{rate_limit.remaining}"
@@ -31,7 +34,7 @@ namespace :github do
     puts "\n🔥 Trending Repositories (last 7 days, min 10 stars):"
     puts "-" * 80
 
-    results = service.search_trending(days_ago: 7, min_stars: 10, per_page: 5)
+    results = Github.search_trending(days_ago: 7, min_stars: 10, per_page: 5)
 
     puts "Total found: #{results.total_count}"
     puts "Showing: #{results.items.count} repositories\n\n"
@@ -63,7 +66,7 @@ namespace :github do
       puts "\n📖 Sample README fetch:"
       puts "-" * 80
       begin
-        readme = service.readme(first_repo.full_name)
+        readme = client.readme(first_repo.full_name, accept: "application/vnd.github.v3.html")
         puts "✅ README fetched successfully"
         puts "   Length: #{readme.length} characters"
         puts "   Preview: #{readme[0..200]}..."
@@ -76,7 +79,7 @@ namespace :github do
       puts "\n🐛 Sample Issues fetch:"
       puts "-" * 80
       begin
-        issues = service.issues(first_repo.full_name, per_page: 3)
+        issues = client.issues(first_repo.full_name, state: "all", sort: "created", direction: "desc", per_page: 3)
         puts "✅ Found #{issues.count} recent issues"
         issues.first(3).each do |issue|
           puts "   - ##{issue.number}: #{issue.title.truncate(60)}"

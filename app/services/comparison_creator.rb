@@ -9,11 +9,12 @@
 #   result.newly_created  # Boolean - was this just created (vs retrieved from cache)?
 #   result.similarity     # Float - cache similarity score (1.0 if new)
 class ComparisonCreator
-  attr_reader :query, :force_refresh, :record, :newly_created, :similarity
+  attr_reader :query, :force_refresh, :user, :record, :newly_created, :similarity
 
-  def initialize(query:, force_refresh: false)
+  def initialize(query:, force_refresh: false, user: nil)
     @query = query
     @force_refresh = force_refresh
+    @user = user
   end
 
   #--------------------------------------
@@ -34,8 +35,8 @@ class ComparisonCreator
 
   class << self
     # Convenience method for one-liner usage
-    def call(query:, force_refresh: false)
-      new(query: query, force_refresh: force_refresh).call
+    def call(query:, force_refresh: false, user: nil)
+      new(query: query, force_refresh: force_refresh, user: user).call
     end
   end
 
@@ -44,6 +45,16 @@ class ComparisonCreator
   #--------------------------------------
   # PRIVATE METHODS
   #--------------------------------------
+
+  def compare_repositories(parsed, repositories)
+    comparer = RepositoryComparer.new
+    comparer.compare_repositories(
+      user_query: query,
+      parsed_query: parsed,
+      repositories: repositories,
+      user: user
+    )
+  end
 
   def create_new_comparison
     # Step 1: Parse query into structured data
@@ -88,15 +99,6 @@ class ComparisonCreator
       newly_created: false,
       similarity: similarity
     }
-  end
-
-  def compare_repositories(parsed, repositories)
-    comparer = RepositoryComparer.new
-    comparer.compare_repositories(
-      user_query: query,
-      parsed_query: parsed,
-      repositories: repositories
-    )
   end
 
   def parse_query

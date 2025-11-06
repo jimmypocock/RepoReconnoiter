@@ -17,6 +17,7 @@ class Comparison < ApplicationRecord
   # ASSOCIATIONS
   #--------------------------------------
 
+  belongs_to :user, optional: true
   has_many :comparison_categories, dependent: :restrict_with_error
   has_many :categories, through: :comparison_categories
   has_many :comparison_repositories, dependent: :restrict_with_error
@@ -46,37 +47,29 @@ class Comparison < ApplicationRecord
   # SCOPES
   #--------------------------------------
 
-  scope :by_problem_domain, ->(domain) { where(problem_domain: domain) }
   scope :cached, -> { where("created_at > ?", CACHE_TTL_DAYS.days.ago) }
-  scope :popular, -> { order(view_count: :desc) }
-  scope :recent, -> { order(created_at: :desc) }
-  scope :stale, -> { where("created_at <= ?", CACHE_TTL_DAYS.days.ago) }
+
+  # Fuzzy match against normalized_query using PostgreSQL's pg_trgm SIMILARITY function
+  # Returns records with similarity_score attribute ordered by best match first
+  # @param query [String] The query string to match against
+  # @param threshold [Float] Minimum similarity score (0.0-1.0)
+  scope :with_similarity_to, ->(query, threshold) {
+    normalized = normalize_query_string(query)
+    select("comparisons.*, SIMILARITY(normalized_query, #{connection.quote(normalized)}) AS similarity_score")
+      .where("SIMILARITY(normalized_query, ?) > ?", normalized, threshold)
+      .order("similarity_score DESC, created_at DESC")
+  }
 
   #--------------------------------------
   # PUBLIC INSTANCE METHODS
   #--------------------------------------
-
-  def cache_fresh?
-    created_at > CACHE_TTL_DAYS.days.ago
-  end
-
-  def cache_stale?
-    !cache_fresh?
-  end
 
   def increment_view_count!
     increment!(:view_count)
   end
 
   def recommended_repository
-    repositories.joins(:comparison_repositories)
-      .where(comparison_repositories: { comparison_id: id })
-      .order("comparison_repositories.rank ASC")
-      .first
-  end
-
-  def total_tokens
-    (input_tokens || 0) + (output_tokens || 0)
+    comparison_repositories.order(:rank).first&.repository
   end
 
   #--------------------------------------
@@ -84,20 +77,21 @@ class Comparison < ApplicationRecord
   #--------------------------------------
 
   class << self
+    # Fetch comparisons for homepage display with hybrid sorting
+    # Returns up to 20 unique comparisons (recent popular + all-time backfill)
+    # Delegates to HomepageComparisonsQuery for complex SQL logic
+    def for_homepage(limit: 20, recent_days: 7)
+      HomepageComparisonsQuery.call(limit:, recent_days:)
+    end
+
     # Find similar cached comparison using fuzzy matching
+    # Uses PostgreSQL's pg_trgm SIMILARITY() for fuzzy text matching
     # Returns: [comparison, similarity_score] or [nil, 0.0]
     def find_similar_cached(query)
-      normalized = normalize_query_string(query)
-
-      result = cached
-        .select("comparisons.*, SIMILARITY(normalized_query, #{connection.quote(normalized)}) AS similarity_score")
-        .where("SIMILARITY(normalized_query, ?) > ?", normalized, SIMILARITY_THRESHOLD)
-        .order("similarity_score DESC, created_at DESC")
-        .first
-
+      result = cached.with_similarity_to(query, SIMILARITY_THRESHOLD).first
       return [ nil, 0.0 ] unless result
 
-      # similarity_score is available as an attribute on the result
+      # similarity_score is available as an attribute added by with_similarity_to scope
       [ result, result.similarity_score ]
     end
 
@@ -115,16 +109,11 @@ class Comparison < ApplicationRecord
   #--------------------------------------
 
   def calculate_cost
-    rates = case model_used
-    when "gpt-4o-mini"
-      { input: 0.150 / 1_000_000, output: 0.600 / 1_000_000 }
-    when "gpt-4o"
-      { input: 2.50 / 1_000_000, output: 10.00 / 1_000_000 }
-    else
-      return
-    end
-
-    self.cost_usd = (input_tokens * rates[:input]) + (output_tokens * rates[:output])
+    self.cost_usd = OpenAi.calculate_cost(
+      input_tokens:,
+      model: model_used,
+      output_tokens:
+    )
   end
 
   def normalize_query

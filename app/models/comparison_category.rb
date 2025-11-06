@@ -10,15 +10,14 @@ class ComparisonCategory < ApplicationRecord
   # VALIDATIONS
   #--------------------------------------
 
-  validates :comparison_id, presence: true
-  validates :category_id, presence: true
-  validates :comparison_id, uniqueness: { scope: :category_id }
   validates :assigned_by, inclusion: { in: %w[inferred ai] }
+  validates :category_id, presence: true
+  validates :comparison_id, presence: true, uniqueness: { scope: :category_id }
 
   #--------------------------------------
   # SCOPES
   #--------------------------------------
 
-  scope :inferred, -> { where(assigned_by: "inferred") }
   scope :ai_assigned, -> { where(assigned_by: "ai") }
+  scope :inferred, -> { where(assigned_by: "inferred") }
 end

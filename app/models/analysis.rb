@@ -13,9 +13,9 @@ class Analysis < ApplicationRecord
     in: %w[tier1_categorization tier2_deep_dive],
     message: "%{value} is not a valid analysis type"
   }
-  validates :model_used, presence: true
   validates :cost_usd, numericality: { greater_than_or_equal_to: 0, allow_nil: true }
   validates :input_tokens, numericality: { greater_than_or_equal_to: 0, allow_nil: true }
+  validates :model_used, presence: true
   validates :output_tokens, numericality: { greater_than_or_equal_to: 0, allow_nil: true }
 
   #--------------------------------------
@@ -23,19 +23,20 @@ class Analysis < ApplicationRecord
   #--------------------------------------
 
   before_save :calculate_cost, if: -> { input_tokens_changed? || output_tokens_changed? }
-  after_create :rollup_daily_cost
   before_save :mark_previous_as_not_current, if: -> { is_current? && is_current_changed? }
+  after_create :rollup_daily_cost
 
   #--------------------------------------
   # SCOPES
   #--------------------------------------
 
+  scope :by_model, ->(model) { where(model_used: model) }
+  scope :created_on, ->(date) { where("DATE(created_at) = ?", date) }
   scope :current, -> { where(is_current: true) }
+  scope :expired, -> { where("expires_at < ?", Time.current) }
+  scope :recent, -> { order(created_at: :desc) }
   scope :tier1, -> { where(analysis_type: "tier1_categorization") }
   scope :tier2, -> { where(analysis_type: "tier2_deep_dive") }
-  scope :recent, -> { order(created_at: :desc) }
-  scope :by_model, ->(model) { where(model_used: model) }
-  scope :expired, -> { where("expires_at < ?", Time.current) }
 
   #--------------------------------------
   # PUBLIC INSTANCE METHODS
@@ -43,6 +44,7 @@ class Analysis < ApplicationRecord
 
   def cost_per_token
     return 0 if total_tokens.zero? || cost_usd.nil?
+
     (cost_usd / total_tokens).round(6)
   end
 
@@ -91,21 +93,13 @@ class Analysis < ApplicationRecord
   #--------------------------------------
 
   def calculate_cost
-    # OpenAI pricing as of 2025 (adjust as needed)
-    # gpt-4o-mini: $0.150/1M input, $0.600/1M output
-    # gpt-4o: $2.50/1M input, $10.00/1M output
     return unless input_tokens && output_tokens
 
-    rates = case model_used
-    when "gpt-4o-mini"
-      { input: 0.150 / 1_000_000, output: 0.600 / 1_000_000 }
-    when "gpt-4o"
-      { input: 2.50 / 1_000_000, output: 10.00 / 1_000_000 }
-    else
-      { input: 0, output: 0 }
-    end
-
-    self.cost_usd = (input_tokens * rates[:input]) + (output_tokens * rates[:output])
+    self.cost_usd = OpenAi.calculate_cost(
+      model: model_used,
+      input_tokens: input_tokens,
+      output_tokens: output_tokens
+    )
   end
 
   def mark_previous_as_not_current

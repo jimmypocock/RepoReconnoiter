@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_04_205721) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_06_033521) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -24,8 +24,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_04_205721) do
     t.bigint "total_output_tokens", default: 0
     t.integer "total_requests", default: 0
     t.datetime "updated_at", null: false
+    t.bigint "user_id"
     t.index ["date", "model_used"], name: "index_ai_costs_on_date_and_model_used", unique: true
     t.index ["date"], name: "index_ai_costs_on_date"
+    t.index ["user_id"], name: "index_ai_costs_on_user_id"
   end
 
   create_table "analyses", force: :cascade do |t|
@@ -65,7 +67,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_04_205721) do
     t.datetime "updated_at", null: false
     t.index ["category_type", "repositories_count"], name: "index_categories_on_category_type_and_repositories_count"
     t.index ["category_type"], name: "index_categories_on_category_type"
-    t.index ["slug"], name: "index_categories_on_slug", unique: true
+    t.index ["slug", "category_type"], name: "index_categories_on_slug_and_category_type", unique: true
   end
 
   create_table "comparison_categories", force: :cascade do |t|
@@ -110,11 +112,13 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_04_205721) do
     t.integer "repos_compared_count"
     t.string "tech_stack"
     t.datetime "updated_at", null: false
+    t.bigint "user_id"
     t.text "user_query", null: false
     t.integer "view_count", default: 0
     t.index ["created_at"], name: "index_comparisons_on_created_at"
     t.index ["normalized_query"], name: "index_comparisons_on_normalized_query_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["problem_domain"], name: "index_comparisons_on_problem_domain"
+    t.index ["user_id"], name: "index_comparisons_on_user_id"
     t.index ["view_count"], name: "index_comparisons_on_view_count"
   end
 
@@ -198,12 +202,49 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_04_205721) do
     t.index ["repository_id"], name: "index_repository_categories_on_repository_id"
   end
 
+  create_table "users", force: :cascade do |t|
+    t.boolean "admin", default: false, null: false
+    t.datetime "created_at", null: false
+    t.string "email", default: "", null: false
+    t.string "encrypted_password", default: "", null: false
+    t.string "github_avatar_url"
+    t.integer "github_id"
+    t.string "github_name"
+    t.string "github_username"
+    t.string "provider"
+    t.datetime "remember_created_at"
+    t.datetime "reset_password_sent_at"
+    t.string "reset_password_token"
+    t.string "uid"
+    t.datetime "updated_at", null: false
+    t.bigint "whitelisted_user_id"
+    t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["github_id"], name: "index_users_on_github_id", unique: true
+    t.index ["provider", "uid"], name: "index_users_on_provider_and_uid", unique: true
+    t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["whitelisted_user_id"], name: "index_users_on_whitelisted_user_id"
+  end
+
+  create_table "whitelisted_users", force: :cascade do |t|
+    t.string "added_by"
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.integer "github_id"
+    t.string "github_username"
+    t.text "notes"
+    t.datetime "updated_at", null: false
+    t.index ["github_id"], name: "index_whitelisted_users_on_github_id", unique: true
+  end
+
+  add_foreign_key "ai_costs", "users"
   add_foreign_key "analyses", "repositories"
   add_foreign_key "comparison_categories", "categories"
   add_foreign_key "comparison_categories", "comparisons"
   add_foreign_key "comparison_repositories", "comparisons"
   add_foreign_key "comparison_repositories", "repositories"
+  add_foreign_key "comparisons", "users"
   add_foreign_key "queued_analyses", "repositories"
   add_foreign_key "repository_categories", "categories"
   add_foreign_key "repository_categories", "repositories"
+  add_foreign_key "users", "whitelisted_users"
 end

@@ -45,23 +45,13 @@ class QueuedAnalysis < ApplicationRecord
   # PUBLIC INSTANCE METHODS
   #--------------------------------------
 
-  def tier1?
-    analysis_type == "tier1_categorization"
-  end
-
-  def tier2?
-    analysis_type == "tier2_deep_dive"
-  end
-
-  def mark_processing!
-    update!(status: :processing, processed_at: Time.current)
-  end
-
-  def mark_completed!
-    update!(status: :completed, processed_at: Time.current)
+  def can_retry?
+    status_failed? && retry_count < 3
   end
 
   def mark_failed!(error)
+    raise "Can only fail processing items" unless status_processing?
+
     update!(
       status: :failed,
       error_message: error.to_s,
@@ -70,8 +60,20 @@ class QueuedAnalysis < ApplicationRecord
     )
   end
 
-  def can_retry?
-    status_failed? && retry_count < 3
+  def mark_processing!
+    raise "Can only process pending items" unless status_pending?
+
+    update!(status: :processing, processed_at: Time.current)
+  end
+
+  def mark_completed!
+    raise "Can only complete processing items" unless status_processing?
+
+    update!(status: :completed, processed_at: Time.current)
+  end
+
+  def overdue?
+    scheduled_for.present? && scheduled_for < Time.current && status_pending?
   end
 
   def retry!
@@ -88,8 +90,12 @@ class QueuedAnalysis < ApplicationRecord
     scheduled_for.present? && scheduled_for > Time.current
   end
 
-  def overdue?
-    scheduled_for.present? && scheduled_for < Time.current && status_pending?
+  def tier1?
+    analysis_type == "tier1_categorization"
+  end
+
+  def tier2?
+    analysis_type == "tier2_deep_dive"
   end
 
   #--------------------------------------
@@ -98,9 +104,9 @@ class QueuedAnalysis < ApplicationRecord
   class << self
     def enqueue_for_repository(repository, analysis_type:, priority: 0)
       create!(
-        repository: repository,
-        analysis_type: analysis_type,
-        priority: priority,
+        analysis_type:,
+        priority:,
+        repository:,
         scheduled_for: Time.current
       )
     end

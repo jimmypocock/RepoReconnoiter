@@ -15,7 +15,7 @@ class RepositoryFetcher
 
   def fetch_and_prepare(github_queries:, limit: DEFAULT_LIMIT)
     # Enforce maximum limit to prevent runaway costs
-    limit = [[limit, MAX_LIMIT].min, 1].max  # Clamp between 1 and MAX_LIMIT
+    limit = [ [ limit, MAX_LIMIT ].min, 1 ].max  # Clamp between 1 and MAX_LIMIT
     # Step 1: Execute multi-query GitHub search and merge results
     all_repos = execute_searches(github_queries, limit)
 

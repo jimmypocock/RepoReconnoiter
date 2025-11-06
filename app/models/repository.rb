@@ -21,63 +21,6 @@ class Repository < ApplicationRecord
   validates :html_url, presence: true
 
   #--------------------------------------
-  # SCOPES
-  #--------------------------------------
-
-  scope :active, -> { where(archived: false, disabled: false) }
-  scope :recently_updated, -> { order(github_pushed_at: :desc) }
-  scope :popular, -> { order(stargazers_count: :desc) }
-  scope :by_language, ->(language) { where(language: language) }
-  scope :needs_analysis, -> {
-    where("last_analyzed_at IS NULL OR last_analyzed_at < ?", 7.days.ago)
-  }
-
-  #--------------------------------------
-  # PUBLIC INSTANCE METHODS
-  #--------------------------------------
-
-  def analysis_current
-    analyses.where(is_current: true).order(created_at: :desc).first
-  end
-
-  def analysis_last
-    analyses.order(created_at: :desc).first
-  end
-
-  def display_name
-    full_name
-  end
-
-  def github_url
-    html_url
-  end
-
-  def needs_analysis?
-    return true if last_analyzed_at.nil?
-    return true if readme_changed?
-    return true if last_analyzed_at < 7.days.ago
-    # TODO: Add star growth check when stargazers_at_analysis column is added
-    # return true if stargazers_count > (analysis_last&.stargazers_at_analysis || 0) * 1.5
-    false
-  end
-
-  def readme_changed?
-    # If we have a cached README but no SHA, assume it changed
-    return true if readme_content.present? && readme_sha.blank?
-
-    # Compare current SHA with cached SHA (would need to fetch from API)
-    false # Placeholder - implement when fetching README
-  end
-
-  def trending_score
-    # Simple trending score based on stars and recent activity
-    days_since_created = (Time.current - github_created_at) / 1.day
-    return 0 if days_since_created.zero?
-
-    (stargazers_count / days_since_created).round(2)
-  end
-
-  #--------------------------------------
   # CLASS METHODS
   #--------------------------------------
   class << self

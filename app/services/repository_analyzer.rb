@@ -11,13 +11,13 @@ class RepositoryAnalyzer
 
   # Tier 1: Analyzes and categorizes a repository using gpt-4o-mini
   # Returns: { categories: [...], summary: "...", use_cases: "...", input_tokens:, output_tokens: }
-  def analyze_repository(repository)
+  def analyze(repository)
     available_categories = Category.all.group_by(&:category_type)
 
     response = ai.chat(
       messages: [
         { role: "system", content: Prompter.render("repository_analyzer_system") },
-        { role: "user", content: Prompter.render("repository_analyzer_build", repository: repository, available_categories: available_categories) }
+        { role: "user", content: Prompter.render("repository_analyzer_build", repository:, available_categories:) }
       ],
       model: "gpt-4o-mini",
       temperature: 0.3,
@@ -41,5 +41,9 @@ class RepositoryAnalyzer
   def deep_dive_analysis(repository)
     # TODO: Implement with gpt-4o
     raise NotImplementedError, "Tier 2 analysis not yet implemented"
+  end
+
+  class << self
+    delegate :analyze, to: :new
   end
 end

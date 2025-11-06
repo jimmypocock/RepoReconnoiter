@@ -11,7 +11,7 @@ class RepositoryComparer
 
   # Tier 3: Compares multiple repositories and creates comparison record
   # Returns: Comparison model instance with all associations
-  def compare_repositories(user_query:, parsed_query:, repositories:)
+  def compare_repositories(user_query:, parsed_query:, repositories:, user: nil)
     # Prepare repository data with analyses
     repo_data = prepare_repository_data(repositories)
 
@@ -41,7 +41,8 @@ class RepositoryComparer
       comparison_data: content,
       repositories: repositories,
       input_tokens: response.usage.prompt_tokens,
-      output_tokens: response.usage.completion_tokens
+      output_tokens: response.usage.completion_tokens,
+      user: user
     )
   end
 
@@ -62,7 +63,7 @@ class RepositoryComparer
     end
   end
 
-  def create_comparison_record(user_query:, parsed_query:, comparison_data:, repositories:, input_tokens:, output_tokens:)
+  def create_comparison_record(user_query:, parsed_query:, comparison_data:, repositories:, input_tokens:, output_tokens:, user: nil)
     # Calculate cost for gpt-4o
     # Pricing: $2.50 per 1M input tokens, $10.00 per 1M output tokens
     input_cost = (input_tokens / 1_000_000.0) * 2.50
@@ -71,6 +72,7 @@ class RepositoryComparer
 
     # Create comparison record
     comparison = Comparison.create!(
+      user: user,
       user_query: user_query,
       tech_stack: parsed_query[:tech_stack],
       problem_domain: parsed_query[:problem_domain],

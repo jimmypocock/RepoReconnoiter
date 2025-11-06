@@ -110,7 +110,7 @@ Track progress towards MVP release.
 
 ### AI Categorization Job (Tier 1 - Cheap)
 
-- [x] Create `CategorizeRepositoryJob` (uses gpt-4o-mini via `OpenAi` service)
+- [x] Create `AnalyzeRepositoryJob` (uses gpt-4o-mini via `OpenAi` service)
 - [x] Create `RepositoryAnalyzer` service (`app/services/repository_analyzer.rb`)
 - [x] Create `Prompter` service for AI prompt template rendering (`app/prompts/`)
 - [x] Implement prompt for quick categorization

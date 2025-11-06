@@ -1,0 +1,26 @@
+<!-- Individual Comparison Card -->
+<%= link_to comparison_path(comparison), class: "block bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl hover:border-blue-300 transition-all" do %>
+  <!-- Query Text -->
+  <h3 class="text-xl font-semibold text-gray-900 mb-3">
+    <%= comparison.user_query %>
+  </h3>
+
+  <!-- Top Recommendation -->
+  <% if comparison.recommended_repository %>
+    <div class="mb-4 flex items-center gap-2">
+      <span class="text-2xl">🏆</span>
+      <span class="text-lg font-medium text-blue-600">
+        <%= comparison.recommended_repository.full_name %>
+      </span>
+    </div>
+  <% end %>
+
+  <!-- Metadata -->
+  <div class="flex items-center gap-4 text-sm text-gray-500">
+    <span><%= pluralize(comparison.repositories.count, 'repo') %> compared</span>
+    <span>•</span>
+    <span><%= pluralize(comparison.view_count, 'view') %></span>
+    <span>•</span>
+    <span><%= time_ago_in_words(comparison.created_at) %> ago</span>
+  </div>
+<% end %>

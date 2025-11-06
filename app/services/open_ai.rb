@@ -70,17 +70,13 @@ class OpenAi
         (output_tokens * pricing[:output_cost_per_million] / 1_000_000.0)
     end
 
+    private
+
     # Get model pricing information
     # @param model [String] Model identifier
     # @return [Hash] Pricing information
     def model_pricing(model)
       MODELS[model] || raise(ModelNotWhitelistedError, "Model #{model} not whitelisted")
-    end
-
-    # List all whitelisted models
-    # @return [Array<String>] Array of model identifiers
-    def whitelisted_models
-      MODELS.keys
     end
   end
 

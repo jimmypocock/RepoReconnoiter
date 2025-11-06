@@ -37,6 +37,7 @@ class RepositoryCategory < ApplicationRecord
 
   def confidence_percentage
     return nil if confidence_score.nil?
+
     (confidence_score * 100).round(1)
   end
 

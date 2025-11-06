@@ -1,11 +1,21 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+one:
+  full_name: "sidekiq/sidekiq"
+  name: "sidekiq"
+  github_id: 123456
+  node_id: "MDEwOlJlcG9zaXRvcnkxMjM0NTY="
+  html_url: "https://github.com/sidekiq/sidekiq"
+  description: "Simple, efficient background processing for Ruby"
+  language: "Ruby"
+  stargazers_count: 13000
+  owner_login: "sidekiq"
 
-# This model initially had no columns defined. If you add columns to the
-# model remove the "{}" from the fixture names and add the columns immediately
-# below each fixture, per the syntax in the comments below
-#
-one: {}
-# column: value
-#
-two: {}
-# column: value
+two:
+  full_name: "sqlalchemy/sqlalchemy"
+  name: "sqlalchemy"
+  github_id: 234567
+  node_id: "MDEwOlJlcG9zaXRvcnkyMzQ1Njc="
+  html_url: "https://github.com/sqlalchemy/sqlalchemy"
+  description: "The Database Toolkit for Python"
+  language: "Python"
+  stargazers_count: 9000
+  owner_login: "sqlalchemy"

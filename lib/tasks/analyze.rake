@@ -346,32 +346,32 @@ namespace :analyze do
     test_cases = [
       {
         query: "I need a Rails background job library with retry logic",
-        expected_repos: ["sidekiq/sidekiq", "bensheldon/good_job"],
+        expected_repos: [ "sidekiq/sidekiq", "bensheldon/good_job" ],
         expected_strategy: "single"
       },
       {
         query: "Looking for a Python authentication library that supports OAuth",
-        expected_repos: ["pennersr/django-allauth", "lepture/authlib"],
+        expected_repos: [ "pennersr/django-allauth", "lepture/authlib" ],
         expected_strategy: "single"
       },
       {
         query: "Need a React state management library for large applications",
-        expected_repos: ["reduxjs/redux", "pmndrs/zustand", "mobxjs/mobx"],
+        expected_repos: [ "reduxjs/redux", "pmndrs/zustand", "mobxjs/mobx" ],
         expected_strategy: "single"
       },
       {
         query: "I need a Python ORM for PostgreSQL",
-        expected_repos: ["sqlalchemy/sqlalchemy", "encode/orm", "django/django"],
+        expected_repos: [ "sqlalchemy/sqlalchemy", "encode/orm", "django/django" ],
         expected_strategy: "multi"
       },
       {
         query: "Looking for a Node.js web framework",
-        expected_repos: ["expressjs/express", "fastify/fastify", "koajs/koa"],
+        expected_repos: [ "expressjs/express", "fastify/fastify", "koajs/koa" ],
         expected_strategy: "multi"
       },
       {
         query: "I need a JavaScript testing framework",
-        expected_repos: ["jestjs/jest", "mochajs/mocha", "vitest-dev/vitest"],
+        expected_repos: [ "jestjs/jest", "mochajs/mocha", "vitest-dev/vitest" ],
         expected_strategy: "multi"
       }
     ]
@@ -478,8 +478,10 @@ namespace :analyze do
     unless repo
       puts "\n📡 Fetching from GitHub API..."
       begin
-        github = Github.new
-        gh_repo = github.repository(full_name)
+        client = Octokit::Client.new(
+          access_token: Rails.application.credentials.github&.personal_access_token
+        )
+        gh_repo = client.repository(full_name)
         repo = Repository.from_github_api(gh_repo.to_attrs)
         repo.save!
         puts "✅ Repository saved to database"

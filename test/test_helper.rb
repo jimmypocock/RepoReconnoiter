@@ -1,6 +1,11 @@
 ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
+require "minitest/mock"
+require "ostruct"
+
+# Configure OmniAuth for testing
+OmniAuth.config.test_mode = true
 
 module ActiveSupport
   class TestCase
@@ -10,6 +15,40 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
-    # Add more helper methods to be used by all tests here...
+    # Stub OpenAI API calls to prevent hitting real API in tests
+    # Call this in your test setup or individual tests
+    def stub_openai_chat(response_content: '{"github_queries":["test query"],"query_strategy":"single","valid":true}')
+      mock_response = OpenStruct.new(
+        choices: [
+          OpenStruct.new(
+            message: OpenStruct.new(content: response_content)
+          )
+        ],
+        usage: OpenStruct.new(
+          prompt_tokens: 100,
+          completion_tokens: 50,
+          total_tokens: 150
+        )
+      )
+
+      # Stub the chat method on OpenAi instances
+      OpenAi.class_eval do
+        define_method(:chat) do |**args|
+          mock_response
+        end
+      end
+    end
+
+    # Stub GitHub API calls to prevent hitting real API in tests
+    def stub_github_search
+      # Return empty search results
+      mock_result = OpenStruct.new(items: [])
+
+      Github.class_eval do
+        define_method(:search) do |*args, **kwargs|
+          mock_result
+        end
+      end
+    end
   end
 end
