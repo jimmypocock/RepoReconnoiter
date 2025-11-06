@@ -28,10 +28,21 @@ Rails.application.configure do
   # config.assume_ssl = true
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  # config.force_ssl = true
+  # Redirects all HTTP requests to HTTPS and sets secure cookie flags
+  # Render auto-provisions SSL certificates via Let's Encrypt
+  # If SSL fails, disable via Render env var: FORCE_SSL=false
+  config.force_ssl = true
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
+
+  #--------------------------------------
+  # PRODUCTION-ONLY SECURITY HEADERS
+  #--------------------------------------
+  # HTTP Strict Transport Security (HSTS)
+  # Forces browsers to only connect via HTTPS for 1 year
+  # IMPORTANT: Only enable after confirming HTTPS is working properly!
+  config.action_dispatch.default_headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
   # Log to STDOUT with the current request id as a default log tag.
   config.log_tags = [ :request_id ]

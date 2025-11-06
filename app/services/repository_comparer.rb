@@ -31,8 +31,12 @@ class RepositoryComparer
       track_as: "repository_comparison"
     )
 
+    # Validate output for suspicious patterns (defense-in-depth)
+    raw_content = response.choices[0].message.content
+    Prompter.validate_output(raw_content)
+
     # Parse AI response
-    content = JSON.parse(response.choices[0].message.content)
+    content = JSON.parse(raw_content)
 
     # Create comparison record and associations
     create_comparison_record(

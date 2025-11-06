@@ -11,6 +11,18 @@
 
     <%= yield :head %>
 
+    <%# Microsoft Clarity Analytics - loads when CLARITY_PROJECT_ID is set %>
+    <% if ENV["CLARITY_PROJECT_ID"].present? %>
+      <!-- Microsoft Clarity -->
+      <%= javascript_tag do %>
+        (function(c,l,a,r,i,t,y){
+          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+          t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "<%= ENV['CLARITY_PROJECT_ID'] %>");
+      <% end %>
+    <% end %>
+
     <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
     <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
 

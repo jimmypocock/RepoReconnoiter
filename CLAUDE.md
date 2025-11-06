@@ -424,7 +424,11 @@ end
   - `analyze:repo[full_name]`: Test Tier 1 analysis on single repo
 
 **Documentation:**
-- `OVERVIEW.md`: Detailed project concept, database schema, and cost optimization strategies
-- `PLAN.md`: Phased build order from foundation to deployment
-- `TODO.md`: Current development status and next steps
-- `CLAUDE.md`: This file - coding standards and architecture guide
+- `README.md`: Project overview and getting started guide
+- `TODO.md`: Current development status and next steps (root level)
+- `CLAUDE.md`: This file - coding standards and architecture guide (root level)
+- `docs/OVERVIEW.md`: Detailed project concept, database schema, and cost optimization strategies
+- `docs/PLAN.md`: Phased build order from foundation to deployment
+- `docs/SCHEMA.md`: Database schema documentation
+- `docs/GITHUB_SEARCH_RESEARCH.md`: GitHub API search research and golden queries
+- `docs/SECURITY_REVIEW.md`: Security audit summary and compliance documentation

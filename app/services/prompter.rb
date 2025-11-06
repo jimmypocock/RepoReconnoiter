@@ -44,6 +44,7 @@ class Prompter
     end
 
     # Sanitizes user input to prevent prompt injection attacks
+    # Based on OWASP LLM01:2025 recommendations (https://genai.owasp.org/llmrisk/llm01-prompt-injection/)
     # Call this before sending user-provided text to AI models
     # @param text [String] User input to sanitize
     # @return [String] Sanitized text
@@ -65,6 +66,23 @@ class Prompter
         # Remove attempts to end system context
         .gsub(/\[\/?(system|assistant|user)\]/i, "[FILTERED]")
         .gsub(/<\/?system>/i, "[FILTERED]")
+        # OWASP LLM01: Model-specific targeting
+        .gsub(/chatgpt:?\s*/i, "[FILTERED]")
+        .gsub(/gpt-?\d*:?\s*/i, "[FILTERED]")
+        .gsub(/(openai|anthropic|claude):?\s*/i, "[FILTERED]")
+        # OWASP LLM01: Credential extraction attempts (specific patterns only)
+        .gsub(/(show|reveal|display|print|get)\s+(me\s+)?(your|the|my)?\s*(api|access|auth)[\s_-]*(key|token|secret)/i, "[FILTERED]")
+        .gsub(/what\s+(is|are)\s+(your|the|my)\s*(api|access|auth)[\s_-]*(key|token|secret)/i, "[FILTERED]")
+        .gsub(/(show|reveal|display|print|get)\s+(me\s+)?(your|the|my)\s*(password|credential)/i, "[FILTERED]")
+        .gsub(/env\[/i, "[FILTERED]")
+        .gsub(/process\.env/i, "[FILTERED]")
+        .gsub(/rails\.application\.credentials/i, "[FILTERED]")
+        # OWASP LLM01: System information extraction
+        .gsub(/show\s+(me\s+)?(all\s+)?env(ironment)?[\s_]*(var|variable)/i, "[FILTERED]")
+        .gsub(/(print|display|show|reveal)\s+(the\s+)?(system|database|config)/i, "[FILTERED]")
+        # OWASP LLM01: Data exfiltration attempts
+        .gsub(/send\s+(this|data|info|information)\s+to/i, "[FILTERED]")
+        .gsub(/https?:\/\//i, "[FILTERED]")  # Block URLs (GitHub search doesn't need them)
         # Limit excessive repetition (potential DOS)
         .gsub(/(.{10,}?)\1{5,}/, '\1\1\1')  # Max 3 repetitions of any 10+ char pattern
 
@@ -73,6 +91,35 @@ class Prompter
       sanitized = sanitized[0...max_length] if sanitized.length > max_length
 
       sanitized.strip
+    end
+
+    # Validates AI output to detect potential prompt injection leakage
+    # Based on OWASP LLM01:2025 defense-in-depth strategy
+    # This is a monitoring layer - logs suspicious patterns but doesn't block (to avoid false positives)
+    # @param text [String] AI-generated output to validate
+    # @return [String] The original text (unmodified)
+    def validate_output(text)
+      return text if text.blank?
+
+      # Patterns that might indicate leaked system information
+      suspicious_patterns = {
+        system_prompt: /system\s+prompt/i,
+        instruction_leak: /instruction/i,
+        api_key_mention: /api[\s_-]*(key|token)/i,
+        secret_mention: /secret/i,
+        password_mention: /password/i,
+        env_variable: /env\[/i,
+        credentials_mention: /credentials/i
+      }
+
+      suspicious_patterns.each do |pattern_name, pattern|
+        if text.match?(pattern)
+          # Log warning but don't block (false positives could break legitimate responses)
+          Rails.logger.warn "🚨 [SECURITY] Suspicious AI output detected: #{pattern_name} (pattern: #{pattern.inspect})"
+        end
+      end
+
+      text
     end
 
     private

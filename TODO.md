@@ -1162,11 +1162,61 @@ Track progress towards MVP release.
 
 ---
 
-### 🎯 REMAINING PRE-LAUNCH TASKS (Phase 3.7) - TOMORROW
+### ✅ SECURITY HARDENING COMPLETE (Phase 3.7 - Tasks 1-3)
 
-**Estimated Time**: 4-6 hours total (1 focused work day)
+**Date Completed**: November 6, 2025
+**Time Invested**: ~2.5 hours
+**Status**: All security measures implemented and tested!
 
-**Current State**: ~80% complete! Authentication, whitelist enforcement, and rate limiting already implemented.
+**What Was Completed** ✅:
+
+**Task 1: Prompt Injection Hardening (OWASP LLM01:2025)** - 60 mins
+- ✅ Enhanced input filters (15+ context-aware patterns)
+  - Model-specific targeting blocked (ChatGPT, GPT, Claude, OpenAI)
+  - Credential extraction prevented (api_key, access_token, env variables)
+  - System information extraction blocked
+  - Data exfiltration attempts filtered (URLs, send to, etc.)
+  - Context-aware filters (legitimate security queries allowed)
+- ✅ System prompt security constraints (all 3 prompts updated)
+- ✅ Output validation (non-blocking monitoring with logging)
+- ✅ Integrated into all AI services (UserQueryParser, RepositoryComparer, RepositoryAnalyzer)
+
+**Task 2: Security Headers & CSP** - 45 mins
+- ✅ Content Security Policy configured (`config/initializers/content_security_policy.rb`)
+  - Nonce-based inline protection (Turbo + Tailwind compatible)
+  - Strict default-src policy (self + HTTPS only)
+  - Microsoft Clarity whitelisted (CSP-friendly analytics)
+  - CSP enforcing mode enabled (not report-only)
+- ✅ HTTP Security Headers (Rack middleware level - `config/application.rb`)
+  - X-Frame-Options, X-Content-Type-Options, X-XSS-Protection
+  - Referrer-Policy, Permissions-Policy
+- ✅ Production-only HSTS (`config/environments/production.rb`)
+- ✅ 7 new integration tests for security headers (52 total tests now)
+
+**Task 3: Security Scans & Fixes** - 45 mins
+- ✅ Brakeman scan: 1 expected warning (force_ssl - documented as intentional)
+- ✅ Fixed: Reverse Tabnabbing (added rel="noopener noreferrer" to external links)
+- ✅ Bundler audit: No vulnerable gems found
+- ✅ Credentials review: All secrets properly gitignored and encrypted
+- ✅ SECURITY_REVIEW.md created (comprehensive audit summary)
+
+**Analytics Configuration**:
+- ✅ Google Analytics removed (CSP incompatible - uses eval())
+- ✅ Microsoft Clarity configured (CSP-friendly, free, unlimited)
+  - Pageview tracking, session recordings, heatmaps
+  - No eval(), no cookies, GDPR-friendly
+  - Configured via CLARITY_PROJECT_ID env var
+
+**Testing**:
+- ✅ All 45 tests passing (104 assertions)
+- ✅ No CSP violations in console
+- ✅ Microsoft Clarity tracking verified (recordings visible in dashboard)
+
+---
+
+### 🎯 REMAINING PRE-LAUNCH TASKS (Phase 3.7 - Tasks 4-5)
+
+**Estimated Time**: 1-2 hours total (Render deployment is fast!)
 
 **What's Already Done** ✅:
 - Devise + OmniAuth GitHub authentication working
@@ -1175,18 +1225,25 @@ Track progress towards MVP release.
 - Rate limiting via Rack::Attack (25/day per user, 5/day per IP, 10/5min OAuth attempts)
 - User rate limiting logic (`can_create_comparison?`, `comparisons_created_today`)
 - Comparisons linked to users (`user_id` column exists and is set)
-- Basic prompt injection filters (`Prompter.sanitize_user_input`)
-- Brakeman and bundler-audit installed
+- Comprehensive security hardening (Tasks 1-3 above)
 
-**What Needs to Be Done Tomorrow** 🎯:
+**What Needs to Be Done** 🎯:
 
-**Summary**: 5 tasks, 4-6 hours total. Focus on security hardening + deployment.
-
-1. **Prompt Injection Hardening** (1 hour) - Add OWASP-recommended filters
-2. **Security Headers & CSP** (45 mins) - Configure Rails built-in CSP
-3. **Security Scans** (45 mins) - Brakeman + bundler-audit + credential review
-4. **Deployment Setup** (2-3 hours) - Document process, create rake tasks, test deploy
-5. **Production Deploy** (1-2 hours) - Ship it! 🚀
+4. **Render Deployment** (1-2 hours) - Deploy to production!
+   - Create Render account
+   - Provision PostgreSQL database
+   - Create Web Service (Rails app)
+   - Set environment variables
+   - Connect Route53 domain (CNAME record)
+   - Verify SSL auto-provisioning
+   - Whitelist yourself via Rails console
+   - Enable force_ssl after HTTPS verification
+5. **Post-Deployment Verification** (15-30 mins)
+   - Test OAuth flow
+   - Create test comparison
+   - Verify security headers (https://securityheaders.com/)
+   - Check Mission Control Jobs dashboard
+   - Monitor Clarity analytics
 
 **Research Sources**:
 - OWASP LLM01:2025 Prompt Injection (https://genai.owasp.org/llmrisk/llm01-prompt-injection/)

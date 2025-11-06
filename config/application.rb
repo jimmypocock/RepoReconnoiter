@@ -41,5 +41,38 @@ module RepoReconnoiter
 
     # Enable Rack::Attack for rate limiting
     config.middleware.use Rack::Attack
+
+    #--------------------------------------
+    # SECURITY HEADERS (OWASP Recommendations)
+    #--------------------------------------
+    # These headers are applied at Rack middleware level (before routing)
+    # More performant than controller-level headers
+    # See: https://owasp.org/www-project-secure-headers/
+
+    config.action_dispatch.default_headers.merge!(
+      {
+        # Prevent clickjacking attacks (deny all framing)
+        "X-Frame-Options" => "DENY",
+
+        # Prevent MIME type sniffing (force browser to respect Content-Type)
+        "X-Content-Type-Options" => "nosniff",
+
+        # Enable browser's XSS filter (legacy, CSP is primary defense)
+        "X-XSS-Protection" => "1; mode=block",
+
+        # Control referrer information sent to external sites
+        "Referrer-Policy" => "strict-origin-when-cross-origin",
+
+        # Permissions Policy - disable unnecessary browser features
+        "Permissions-Policy" => [
+          "geolocation=()",      # Block geolocation API
+          "microphone=()",       # Block microphone access
+          "camera=()",           # Block camera access
+          "payment=()",          # Block payment API
+          "usb=()",              # Block USB access
+          "interest-cohort=()"   # Block FLoC tracking (privacy)
+        ].join(", ")
+      }
+    )
   end
 end

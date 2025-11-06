@@ -26,7 +26,11 @@ class UserQueryParser
       track_as: "query_parsing"
     )
 
-    content = JSON.parse(response.choices[0].message.content)
+    # Validate output for suspicious patterns (defense-in-depth)
+    raw_content = response.choices[0].message.content
+    Prompter.validate_output(raw_content)
+
+    content = JSON.parse(raw_content)
 
     {
       tech_stack: content["tech_stack"],
