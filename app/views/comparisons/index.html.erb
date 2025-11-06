@@ -1,21 +1,42 @@
-<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 px-4 py-8">
-  <div class="w-full max-w-6xl mx-auto">
-    <!-- Header Section -->
-    <div class="text-center mb-12">
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+  <!-- Header Section -->
+  <div class="relative pt-8 pb-6 px-4">
+    <!-- User Menu (Top Right) -->
+    <% if user_signed_in? %>
+      <div class="absolute top-4 right-4 flex items-center gap-3">
+        <div class="flex items-center gap-2">
+          <% if current_user.github_avatar_url.present? %>
+            <%= image_tag current_user.github_avatar_url, class: "w-8 h-8 rounded-full", alt: current_user.github_username %>
+          <% end %>
+          <span class="text-sm font-medium text-gray-700"><%= current_user.github_username %></span>
+        </div>
+        <%= button_to "Sign Out", destroy_user_session_path, method: :delete, class: "text-sm text-gray-600 hover:text-gray-900 underline" %>
+      </div>
+    <% end %>
+
+    <!-- Title -->
+    <div class="text-center">
       <h1 class="text-5xl font-bold text-gray-900 mb-3">RepoReconnoiter</h1>
       <p class="text-xl text-gray-600">Find the perfect library for your project</p>
     </div>
+  </div>
+  <!-- Stats Bar -->
+  <%= render "stats_bar" %>
 
+  <div class="w-full max-w-6xl mx-auto px-4 py-8">
     <!-- Auth/Search Section -->
-    <div class="w-full max-w-3xl mx-auto mb-16">
+    <div class="w-full max-w-3xl mx-auto mb-12">
       <% if user_signed_in? %>
         <%= render "search_section" %>
       <% else %>
         <%= render "auth_section" %>
       <% end %>
     </div>
-
-    <!-- Comparisons List (visible to everyone) -->
+    <!-- Trending Comparisons -->
+    <%= render "trending_section" %>
+    <!-- Browse by Category -->
+    <%= render "browse_categories" %>
+    <!-- Comparisons List -->
     <%= render "comparisons_list" %>
   </div>
 </div>

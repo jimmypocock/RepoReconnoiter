@@ -24,31 +24,6 @@
   </head>
 
   <body>
-    <% if user_signed_in? %>
-      <!-- Navigation Bar for Signed-In Users -->
-      <nav class="bg-white border-b border-gray-200">
-        <div class="container mx-auto px-4">
-          <div class="flex items-center justify-between h-16">
-            <!-- Logo/Home Link -->
-            <%= link_to root_path, class: "text-lg font-semibold text-gray-900 hover:text-gray-700" do %>
-              RepoReconnoiter
-            <% end %>
-
-            <!-- User Menu -->
-            <div class="flex items-center gap-4">
-              <div class="flex items-center gap-2">
-                <% if current_user.github_avatar_url.present? %>
-                  <%= image_tag current_user.github_avatar_url, class: "w-8 h-8 rounded-full", alt: current_user.github_username %>
-                <% end %>
-                <span class="text-sm text-gray-700"><%= current_user.github_username %></span>
-              </div>
-              <%= button_to "Sign Out", destroy_user_session_path, method: :delete, class: "text-sm text-gray-600 hover:text-gray-900" %>
-            </div>
-          </div>
-        </div>
-      </nav>
-    <% end %>
-
     <!-- Flash Messages -->
     <% if flash[:notice] || flash[:alert] %>
       <div class="container mx-auto px-4 mt-4">

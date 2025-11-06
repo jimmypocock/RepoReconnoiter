@@ -5,13 +5,47 @@
     <%= comparison.user_query %>
   </h3>
 
-  <!-- Top Recommendation -->
+  <!-- Top Recommendation with Language Badge -->
   <% if comparison.recommended_repository %>
-    <div class="mb-4 flex items-center gap-2">
+    <div class="mb-3 flex items-center gap-2 flex-wrap">
       <span class="text-2xl">🏆</span>
       <span class="text-lg font-medium text-blue-600">
         <%= comparison.recommended_repository.full_name %>
       </span>
+      <% if comparison.recommended_repository.language.present? %>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          <%= comparison.recommended_repository.language %>
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- Tech Stack -->
+  <% if comparison.tech_stack.present? %>
+    <div class="mb-3 flex items-center gap-2 flex-wrap">
+      <span class="text-xs font-semibold text-gray-500">Tech Stack:</span>
+      <% comparison.tech_stack.split(',').first(3).each do |tech| %>
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+          <%= tech.strip %>
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- Category Tags -->
+  <% if comparison.categories.any? %>
+    <div class="mb-4 flex items-center gap-2 flex-wrap">
+      <% comparison.categories.limit(3).each do |category| %>
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+          <%= case category.category_type
+              when 'problem_domain' then 'bg-green-100 text-green-800'
+              when 'architecture_pattern' then 'bg-purple-100 text-purple-800'
+              when 'maturity' then 'bg-yellow-100 text-yellow-800'
+              else 'bg-gray-100 text-gray-800'
+              end %>">
+          <%= category.name %>
+        </span>
+      <% end %>
     </div>
   <% end %>
 
