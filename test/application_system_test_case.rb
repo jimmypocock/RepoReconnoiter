@@ -21,4 +21,12 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   def sign_in(user)
     login_as(user, scope: :user)
   end
+
+  # Ensure completely clean unauthenticated state
+  # Resets both browser session (cookies, localStorage) and Warden authentication
+  # Call this at the start of tests that expect unauthenticated users
+  def ensure_unauthenticated
+    Capybara.reset_sessions!  # Reset browser session (fixes CI test isolation)
+    Warden.test_reset!         # Reset Warden authentication state
+  end
 end

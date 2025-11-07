@@ -11,9 +11,7 @@ class HomepageTest < ApplicationSystemTestCase
   end
 
   test "unauthenticated user sees auth section and comparisons" do
-    # Ensure clean unauthenticated state
-    Capybara.reset_sessions!
-    Warden.test_reset!
+    ensure_unauthenticated
 
     visit root_path
 
@@ -108,11 +106,7 @@ class HomepageTest < ApplicationSystemTestCase
   end
 
   test "empty state when no comparisons exist" do
-    # Ensure clean authentication state (unauthenticated)
-    Capybara.reset_sessions!  # Reset browser session (fixes CI test isolation)
-    Warden.test_reset!         # Reset Warden authentication state
-
-    # Delete all comparisons
+    ensure_unauthenticated
     Comparison.destroy_all
 
     visit root_path
