@@ -54,7 +54,7 @@ class RepositoryFetcher
       next unless repo.needs_analysis?
 
       begin
-        result = analyzer.analyze_repository(repo)
+        result = analyzer.analyze(repo)
 
         # Create analysis record
         repo.analyses.create!(

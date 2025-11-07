@@ -497,7 +497,7 @@ namespace :analyze do
     puts "\n🤖 Running Tier 1 Analysis (gpt-4o-mini)..."
 
     analyzer = RepositoryAnalyzer.new
-    result = analyzer.analyze_repository(repo)
+    result = analyzer.analyze(repo)
 
     # Create analysis record
     analysis = repo.analyses.create!(
