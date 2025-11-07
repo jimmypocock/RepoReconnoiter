@@ -87,13 +87,14 @@ test:
 production:
   primary:
     url: <%= ENV["DATABASE_URL"] %>
+    schema_search_path: public
     migrations_paths: db/migrate
   cache:
     url: <%= ENV["DATABASE_URL"] %>
-    migrations_paths: db/cache_migrate
+    schema_search_path: public
   queue:
     url: <%= ENV["DATABASE_URL"] %>
-    migrations_paths: db/queue_migrate
+    schema_search_path: public
   cable:
     url: <%= ENV["DATABASE_URL"] %>
-    migrations_paths: db/cable_migrate
+    schema_search_path: public
