@@ -89,4 +89,7 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+
+  # Block all HTTP requests during tests to prevent accidental API calls
+  gem "webmock"
 end
