@@ -1029,7 +1029,7 @@ Track progress towards MVP release.
 
 ## Notes
 
-**Current Status**: ✅ Phases 1, 2, 3.5, 3.6, & 3.8 COMPLETE! 🎯 Ready for Phase 3.7 (Security & Access Control)
+**Current Status**: ✅ Phases 1, 2, 3.5, 3.6, 3.8 COMPLETE! 🚀 **DEPLOYED TO PRODUCTION** at https://reporeconnoiter.onrender.com! Phase 3.7 Tasks 1-4 done, ready for Task 5 (Post-Deployment Verification)
 
 **What's Working** (Production-Ready MVP Core):
 - ✅ **Tier 3 Comparative Evaluation** - End-to-end working!
@@ -1069,6 +1069,26 @@ Track progress towards MVP release.
 - ✅ Performance optimization: 4x faster on cached repos
 - ✅ GitHub quality signals: stars/day, activity, forks, issues, archived status
 - ✅ Responsive Tailwind UI with excellent UX
+
+**Production Deployment Status** 🚀:
+- ✅ **Live URL**: https://reporeconnoiter.onrender.com
+- ✅ **Hosting**: Render.com (Starter plan - $14/month)
+  - PostgreSQL 17 database (1GB storage, 97 connections)
+  - Web Service (512MB RAM, always-on, shell access)
+- ✅ **Security**: All Phase 3.7 Tasks 1-4 complete
+  - Prompt injection hardening (OWASP LLM01:2025)
+  - Content Security Policy with Microsoft Clarity
+  - Security headers (HSTS, X-Frame-Options, CSP, etc.)
+  - Brakeman scan clean, Bundler audit clean
+  - Force SSL enabled with HSTS
+- ✅ **Authentication**: Devise + GitHub OAuth (invite-only whitelist)
+- ✅ **Rate Limiting**: Rack::Attack configured (25/day per user, 5/day per IP)
+- ✅ **Database**: All schemas loaded (primary, cache, queue, cable)
+- ✅ **Background Jobs**: Solid Queue configured
+- ✅ **Analytics**: Microsoft Clarity tracking configured
+- ✅ **Cost Tracking**: OpenAI API integration with automatic cost rollup
+- ✅ **Documentation**: Comprehensive deployment guide (`docs/RENDER_DEPLOYMENT.md`)
+- 🎯 **Next**: Whitelist admin user, test production, setup custom domain
 
 **What We Learned**:
 - AI can create its own categories intelligently - no need to pre-define everything
@@ -1136,6 +1156,17 @@ Track progress towards MVP release.
   - Grid layouts need divisible pagination (18 items for 3-column grid, not 20)
   - Admin features should be gated (stats visible only to admin users)
   - 47 tests with 117 assertions gives production confidence
+- **Deployment insights** (Phase 3.7 Task 4 - Render):
+  - Rails 8 multi-database setup requires all connections to use same DATABASE_URL on Render
+  - Solid Cache/Queue/Cable use schema files (db/*_schema.rb) instead of migrations
+  - Schema files need manual loading on first deploy via `db:schema:load:cache/queue/cable`
+  - `DISABLE_DATABASE_ENVIRONMENT_CHECK=1` safe for initial schema loading (empty databases)
+  - ActionMailer easier to enable now than add workarounds (future-proof for emails)
+  - Render Starter plan ($7/month) worth it for shell access during troubleshooting
+  - `RAILS_MASTER_KEY` required in production to decrypt credentials.yml.enc
+  - Free tier limitations: No shell access, no release commands (paid tier needed for ease)
+  - Database eager loading in production catches issues (ActionMailer, Devise mailers)
+  - Re-enabling disabled frameworks better than complex workarounds (YAGNI principle)
 
 **Next Steps - Production Release Checklist**:
 
@@ -1214,36 +1245,94 @@ Track progress towards MVP release.
 
 ---
 
-### 🎯 REMAINING PRE-LAUNCH TASKS (Phase 3.7 - Tasks 4-5)
+### ✅ RENDER DEPLOYMENT COMPLETE (Phase 3.7 - Task 4)
 
-**Estimated Time**: 1-2 hours total (Render deployment is fast!)
+**Date Completed**: November 6-7, 2025
+**Time Invested**: ~3 hours (including troubleshooting and documentation)
+**Status**: App deployed and live at https://reporeconnoiter.onrender.com! 🎉
 
-**What's Already Done** ✅:
-- Devise + OmniAuth GitHub authentication working
-- User and WhitelistedUser models with associations
-- Whitelist enforcement in `User.from_omniauth` (raises error if not whitelisted)
-- Rate limiting via Rack::Attack (25/day per user, 5/day per IP, 10/5min OAuth attempts)
-- User rate limiting logic (`can_create_comparison?`, `comparisons_created_today`)
-- Comparisons linked to users (`user_id` column exists and is set)
-- Comprehensive security hardening (Tasks 1-3 above)
+**What Was Completed** ✅:
 
-**What Needs to Be Done** 🎯:
+**Task 4: Render Deployment** - COMPLETE
+- ✅ Created Render account (Starter plan - $14/month for PostgreSQL + Web Service)
+- ✅ Provisioned PostgreSQL 17 database
+- ✅ Created Web Service with correct build/start commands
+- ✅ Set all required environment variables (DATABASE_URL, SECRET_KEY_BASE, RAILS_MASTER_KEY, GitHub OAuth, OpenAI, etc.)
+- ✅ Fixed database.yml to use single DATABASE_URL for all connections (primary, cache, queue, cable)
+- ✅ Re-enabled ActionMailer (decided to enable now for future use instead of workarounds)
+- ✅ Removed app/mailers directory causing eager loading errors
+- ✅ One-time database setup via Render Shell:
+  - `DISABLE_DATABASE_ENVIRONMENT_CHECK=1 bin/rails db:schema:load:cache`
+  - `DISABLE_DATABASE_ENVIRONMENT_CHECK=1 bin/rails db:schema:load:queue`
+  - `DISABLE_DATABASE_ENVIRONMENT_CHECK=1 bin/rails db:schema:load:cable`
+  - `bin/rails db:seed`
+- ✅ Created comprehensive deployment documentation (`docs/RENDER_DEPLOYMENT.md`)
+- ✅ App successfully deployed and accessible
+- ✅ force_ssl enabled in production (HSTS configured)
 
-4. **Render Deployment** (1-2 hours) - Deploy to production!
-   - Create Render account
-   - Provision PostgreSQL database
-   - Create Web Service (Rails app)
-   - Set environment variables
-   - Connect Route53 domain (CNAME record)
-   - Verify SSL auto-provisioning
-   - Whitelist yourself via Rails console
-   - Enable force_ssl after HTTPS verification
-5. **Post-Deployment Verification** (15-30 mins)
-   - Test OAuth flow
-   - Create test comparison
-   - Verify security headers (https://securityheaders.com/)
-   - Check Mission Control Jobs dashboard
-   - Monitor Clarity analytics
+**Deployment Lessons Learned**:
+- Rails 8 multi-database setup requires all connections to use same DATABASE_URL on Render
+- Solid Cache/Queue/Cable schema files need manual loading on first deploy
+- ActionMailer easier to enable now than add workarounds (future-proof)
+- Render Starter plan ($7/month) worth it for shell access during initial setup
+- `RAILS_MASTER_KEY` required to decrypt credentials.yml.enc in production
+- `DISABLE_DATABASE_ENVIRONMENT_CHECK=1` safe for initial schema loading (empty databases)
+
+---
+
+### 🎯 TOMORROW'S TASKS (Phase 3.7 - Task 5 + Infrastructure)
+
+**Estimated Time**: 2-3 hours total
+
+**5. Post-Deployment Verification & Production Setup** (2-3 hours)
+
+**A. User & Access Setup** (30 mins)
+- [ ] Whitelist yourself as admin user via Render Shell
+  ```ruby
+  bin/rails console
+  WhitelistedUser.create!(
+    github_id: YOUR_GITHUB_ID,
+    github_username: "your_username",
+    reason: "Admin user"
+  )
+  ```
+- [ ] Get your GitHub ID from https://api.github.com/users/YOUR_USERNAME
+- [ ] Add your GitHub ID to `MISSION_CONTROL_ADMIN_IDS` environment variable in Render
+
+**B. Production Testing** (45 mins)
+- [ ] Test OAuth flow (sign in with GitHub)
+- [ ] Create test comparison (verify full pipeline works)
+- [ ] Test daily sync job (`SyncTrendingRepositoriesJob`)
+- [ ] Test categorization job (`AnalyzeRepositoryJob`)
+- [ ] Test OpenAI API integration (verify cost tracking)
+- [ ] Check Mission Control Jobs dashboard at https://reporeconnoiter.onrender.com/jobs
+- [ ] Verify security headers at https://securityheaders.com/
+- [ ] Monitor Clarity analytics (verify tracking working)
+- [ ] Check Render logs for any errors
+
+**C. Custom Domain Setup** (30 mins)
+- [ ] Configure DNS for reporeconnoiter.com in Route53
+  - Add CNAME record pointing to `reporeconnoiter.onrender.com`
+- [ ] Add custom domain in Render Dashboard → Settings → Custom Domains
+- [ ] Wait for SSL certificate auto-provisioning via Let's Encrypt (5-10 mins)
+- [ ] Verify HTTPS working on custom domain
+- [ ] Update GitHub OAuth App callback URL to use custom domain:
+  - `https://reporeconnoiter.com/users/auth/github/callback`
+
+**D. Dependency Updates & CI** (45 mins)
+- [ ] Review and update gems flagged by Dependabot in GitHub
+- [ ] Run `bundle update` for security patches
+- [ ] Test locally after updates
+- [ ] Setup GitHub Actions for CI/CD
+  - [ ] Create `.github/workflows/ci.yml`
+  - [ ] Fix test environment - stub OAuth so GITHUB_CLIENT_ID not required
+  - [ ] Verify tests pass in GitHub Actions
+- [ ] Commit and push changes
+
+**E. Documentation** (15 mins)
+- [ ] Update README.md with production URL
+- [ ] Document admin access setup in RENDER_DEPLOYMENT.md
+- [ ] Add "Known Issues" section if any issues discovered
 
 **Research Sources**:
 - OWASP LLM01:2025 Prompt Injection (https://genai.owasp.org/llmrisk/llm01-prompt-injection/)

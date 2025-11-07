@@ -18,11 +18,18 @@ RepoReconnoiter is an Open Source Intelligence Dashboard that analyzes GitHub tr
 ## Tech Stack
 
 - **Framework**: Rails 8.1 with Hotwire/Turbo + Stimulus
-- **Database**: PostgreSQL
+- **Database**: PostgreSQL 17 (production: Render managed)
 - **Background Jobs**: Solid Queue (database-backed, no Redis needed)
 - **Job Scheduling**: Solid Queue recurring tasks (see `config/recurring.yml`)
-- **AI Provider**: OpenAI (gpt-4o-mini for categorization, gpt-4o for deep dives)
-- **Deployment**: Kamal (containerized deployment)
+- **AI Provider**: OpenAI (gpt-4o-mini for categorization, gpt-4o for comparisons)
+- **Authentication**: Devise + OmniAuth GitHub (invite-only whitelist system)
+- **Rate Limiting**: Rack::Attack (25/day per user, 5/day per IP)
+- **Analytics**: Microsoft Clarity (CSP-friendly, free)
+- **Deployment**: Render.com (Starter plan - $14/month)
+- **Hosting**:
+  - Production URL: https://reporeconnoiter.onrender.com
+  - PostgreSQL 17 database (1GB storage, 97 connections)
+  - Web Service (512MB RAM, always-on, shell access)
 - **Styling**: Tailwind CSS
 - **Ruby Version**: 3.4.7
 
@@ -67,12 +74,18 @@ bin/rails solid_queue:start    # Start Solid Queue worker
 bin/rails solid_queue:stop     # Stop Solid Queue worker
 ```
 
-### Deployment
+### Production (Render.com)
 ```bash
-bin/kamal deploy          # Deploy to production servers
-bin/kamal console         # Open Rails console on production
-bin/kamal logs            # Tail production logs
-bin/kamal shell           # SSH into production container
+# Access via Render Dashboard → Shell tab
+bin/rails console         # Open Rails console on production
+bin/rails db:migrate      # Run migrations (done automatically on deploy)
+
+# Deploy via Git push (auto-deploys on push to main)
+git push origin main      # Triggers automatic deployment
+
+# Monitoring
+# View logs: Render Dashboard → Logs tab
+# View jobs: https://reporeconnoiter.onrender.com/jobs (admin only)
 ```
 
 ## Code Organization Standards
@@ -302,6 +315,8 @@ authenticated = gh.authenticated?
 - **analyses**: Versioned AI-generated insights (Tier 1/Tier 2) with token/cost tracking
 - **categories**: Categorization taxonomy (Problem Domain, Architecture Pattern, Maturity Level)
 - **comparisons**: User queries with AI-generated repo comparisons (Tier 3)
+- **users**: Authenticated users via GitHub OAuth (email, github_id, github_username, etc.)
+- **whitelisted_users**: Invite-only access control (github_id, reason, added_by)
 
 **Join Tables:**
 - **repository_categories**: Many-to-many with confidence scores, assignment method (ai/manual/github_topics)
@@ -310,7 +325,69 @@ authenticated = gh.authenticated?
 
 **Processing:**
 - **queued_analyses**: Queue for batch Tier 1/Tier 2 analysis (priority, retry logic, scheduling)
-- **ai_costs**: Daily rollup of AI API spending by model (auto-updated by OpenAi service)
+- **ai_costs**: Daily rollup of AI API spending by model and user (auto-updated by OpenAi service)
+
+### Authentication & Authorization
+
+**Invite-Only Whitelist System:**
+- Users authenticate via GitHub OAuth (Devise + OmniAuth)
+- `WhitelistedUser` model controls who can access the app
+- `User.from_omniauth` checks whitelist before allowing sign in
+- Raises error if GitHub user not in whitelist (handled gracefully with redirect)
+
+**Access Control:**
+- Unauthenticated users: Can view homepage and existing comparisons (read-only)
+- Authenticated users: Can create comparisons (rate limited to 25/day)
+- Admin users: Unrestricted access + Mission Control dashboard access
+
+**Rate Limiting (Rack::Attack):**
+- 25 comparisons per day per authenticated user
+- 5 comparisons per day per IP address (anonymous users)
+- 10 OAuth login attempts per 5 minutes per IP
+- Throttling prevents abuse and controls AI costs
+
+**Admin Access:**
+- Mission Control Jobs dashboard: `/jobs` (restricted to admins)
+- Admin status determined by `MISSION_CONTROL_ADMIN_IDS` env var (GitHub IDs)
+- Helper method: `current_user_admin?` for view-level checks
+- Fail-closed security: Empty admin IDs raises error (won't allow all users)
+
+### Security Features
+
+**Prompt Injection Prevention (OWASP LLM01:2025):**
+- Multi-layered defense in `Prompter.sanitize_user_input`
+- Context-aware filters (15+ patterns for credential extraction, system info leaks)
+- System prompt security constraints in all AI prompts
+- Output validation with suspicious pattern monitoring
+- Applied to all user inputs before AI processing
+
+**Content Security Policy (CSP):**
+- Strict CSP enforced via `config/initializers/content_security_policy.rb`
+- Nonce-based inline script/style protection (Turbo + Tailwind compatible)
+- Microsoft Clarity whitelisted (CSP-friendly analytics)
+- Blocks eval(), inline scripts, and untrusted sources
+- Enforcing mode enabled (not report-only)
+
+**HTTP Security Headers:**
+- X-Frame-Options: DENY (clickjacking prevention)
+- X-Content-Type-Options: nosniff (MIME sniffing prevention)
+- X-XSS-Protection: 1; mode=block (legacy XSS filter)
+- Referrer-Policy: strict-origin-when-cross-origin
+- Permissions-Policy: Disables geolocation, camera, microphone, payment APIs
+- HSTS (production only): max-age=31536000; includeSubDomains
+- Force SSL enabled in production with secure cookies
+
+**Security Scanning:**
+- Brakeman: Static security analysis (0 warnings)
+- Bundler Audit: Vulnerable gem detection (clean)
+- All credentials encrypted in `config/credentials.yml.enc`
+- Secrets never committed to git (`.gitignore` enforced)
+
+**Input Validation:**
+- User queries: 500 character max, whitespace prevention
+- Model-level validations with custom validators
+- Controller-level guard clauses with early returns
+- Flash messages for validation errors
 
 ### Cost Optimization Strategy
 
@@ -323,6 +400,9 @@ The app implements several strategies to keep AI API costs under $10/month:
 5. **Aggressive Caching**: Track `readme_sha` to detect changes; don't re-analyze unless content changed or 7+ days passed
 6. **Batch Processing**: Queue repos during the day, process in nightly batches (limit 50/day)
 7. **Multi-Query Strategy**: Use 2-3 GitHub queries to get comprehensive results, reducing need for expensive AI filtering
+8. **Query Caching with pg_trgm**: Fuzzy query matching (0.8 threshold) prevents duplicate AI comparisons (~99% accuracy)
+9. **Hard Limits**: Max 15 repos per comparison (prevents runaway costs)
+10. **Cost Transparency**: Display cost estimate on homepage ($0.05 per search)
 
 ### Key Model Methods Pattern
 
@@ -395,15 +475,23 @@ end
 - **Solid Queue**: Database-backed job processing (no Redis required). Job queues configured in `config/queue.yml`
 - **Solid Cache**: Database-backed caching configured in `config/cache.yml`
 - **Solid Cable**: Database-backed Action Cable for WebSocket connections
-- **Thruster**: HTTP asset caching/compression (runs in production via Dockerfile)
-- **Kamal**: Zero-downtime deployments with Docker containers (config in `config/deploy.yml`)
+- **Multi-Database Setup**: Single PostgreSQL database with separate schema files for primary, cache, queue, and cable
+  - `db/schema.rb` - Primary application data
+  - `db/cache_schema.rb` - Solid Cache tables
+  - `db/queue_schema.rb` - Solid Queue tables
+  - `db/cable_schema.rb` - Solid Cable tables
+  - All connections share same `DATABASE_URL` in production (Render requirement)
 
 ## Configuration Files & Directories
 
 **Configuration:**
-- `config/deploy.yml`: Kamal deployment configuration (servers, registry, environment variables)
 - `config/recurring.yml`: Solid Queue recurring task definitions for scheduled jobs
 - `config/queue.yml`: Solid Queue configuration
+- `config/initializers/devise.rb`: Devise authentication configuration (GitHub OAuth)
+- `config/initializers/rack_attack.rb`: Rate limiting configuration
+- `config/initializers/content_security_policy.rb`: CSP configuration with Microsoft Clarity
+- `config/initializers/mission_control.rb`: Mission Control Jobs authentication
+- `.env.example`: Environment variable documentation (copy to `.env` for development)
 
 **AI Prompts:**
 - `app/prompts/`: ERB templates for AI prompts (rendered by Prompter service)
@@ -424,7 +512,7 @@ end
   - `analyze:repo[full_name]`: Test Tier 1 analysis on single repo
 
 **Documentation:**
-- `README.md`: Project overview and getting started guide
+- `README.md`: Project overview and getting started guide (root level)
 - `TODO.md`: Current development status and next steps (root level)
 - `CLAUDE.md`: This file - coding standards and architecture guide (root level)
 - `docs/OVERVIEW.md`: Detailed project concept, database schema, and cost optimization strategies
@@ -432,3 +520,70 @@ end
 - `docs/SCHEMA.md`: Database schema documentation
 - `docs/GITHUB_SEARCH_RESEARCH.md`: GitHub API search research and golden queries
 - `docs/SECURITY_REVIEW.md`: Security audit summary and compliance documentation
+- `docs/RENDER_DEPLOYMENT.md`: Complete Render.com deployment guide (step-by-step)
+
+## Production Deployment
+
+**Status**: ✅ Live in production at https://reporeconnoiter.onrender.com
+
+**Deployment Process:**
+1. Push to `main` branch on GitHub
+2. Render auto-deploys (build command runs: `bundle install && rails assets:precompile && rails db:migrate`)
+3. Web service restarts with new code
+4. Monitor via Render Dashboard → Logs tab
+
+**Initial Setup (One-Time):**
+- See `docs/RENDER_DEPLOYMENT.md` for complete step-by-step guide
+- PostgreSQL database created and schemas loaded
+- Environment variables configured (DATABASE_URL, SECRET_KEY_BASE, RAILS_MASTER_KEY, GitHub OAuth, OpenAI)
+- SSL auto-provisioned via Let's Encrypt
+- Force SSL enabled with HSTS
+
+**Post-Deployment Tasks:**
+- Whitelist admin user via Rails console
+- Test OAuth flow and comparison creation
+- Verify security headers at https://securityheaders.com/
+- Check Mission Control Jobs dashboard
+
+**Monitoring:**
+- Logs: Render Dashboard → Logs tab
+- Jobs: https://reporeconnoiter.onrender.com/jobs (admin only)
+- Analytics: Microsoft Clarity dashboard
+- Costs: Check `ai_costs` table via Rails console
+
+## Testing
+
+**Test Suite:**
+- 47 tests, 117 assertions (all passing)
+- Run with: `bin/rails test`
+
+**Test Coverage:**
+- Security tests (OAuth whitelist, rate limiting, Mission Control access)
+- Cost control tests (fuzzy cache matching with pg_trgm)
+- Data integrity tests (repository deduplication)
+- Presenter tests (homepage stats, trending, categories)
+- System tests (homepage UI for authenticated/unauthenticated users)
+
+**Test Philosophy:**
+- Test custom logic, not framework features
+- Focus on security, cost control, and data integrity
+- Fail-closed security (empty admin IDs should error, not allow all)
+
+## Environment Variables
+
+**Required for Production:**
+- `DATABASE_URL` - PostgreSQL connection string from Render
+- `SECRET_KEY_BASE` - Rails encryption key (generate with `bin/rails secret`)
+- `RAILS_MASTER_KEY` - Master key to decrypt credentials (from `config/master.key`)
+- `GITHUB_CLIENT_ID` - GitHub OAuth App ID
+- `GITHUB_CLIENT_SECRET` - GitHub OAuth App Secret
+- `OPENAI_ACCESS_TOKEN` - OpenAI API key
+- `MISSION_CONTROL_ADMIN_IDS` - Comma-separated GitHub IDs for admin access
+
+**Optional:**
+- `CLARITY_PROJECT_ID` - Microsoft Clarity analytics project ID
+- `COMPARISON_SIMILARITY_THRESHOLD` - Query fuzzy matching threshold (default: 0.8)
+- `COMPARISON_CACHE_DAYS` - Cache TTL in days (default: 7)
+- `RAILS_LOG_LEVEL` - Logging verbosity (default: info)
+
+See `.env.example` for complete documentation.
