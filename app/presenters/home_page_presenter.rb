@@ -1,5 +1,11 @@
 class HomePagePresenter
   #--------------------------------------
+  # CONSTANTS
+  #--------------------------------------
+
+  STATS_CACHE_KEY = "homepage_stats"
+
+  #--------------------------------------
   # PUBLIC INSTANCE METHODS
   #--------------------------------------
 
@@ -9,8 +15,9 @@ class HomePagePresenter
   end
 
   # Stats (cached for performance)
+  # Accepts up to 5 minutes of staleness for better performance
   def stats
-    @stats ||= Rails.cache.fetch("homepage_stats", expires_in: 10.minutes) do
+    @stats ||= Rails.cache.fetch(STATS_CACHE_KEY, expires_in: 5.minutes) do
       {
         repositories_count: Repository.count,
         comparisons_count: Comparison.count,
@@ -62,7 +69,7 @@ class HomePagePresenter
   class << self
     # Invalidate cached stats when data changes
     def invalidate_stats_cache
-      Rails.cache.delete("homepage_stats")
+      Rails.cache.delete(STATS_CACHE_KEY)
     end
   end
 end
