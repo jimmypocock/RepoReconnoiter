@@ -45,7 +45,7 @@ class ApplicationController < ActionController::Base
     return if request.host == canonical_host
 
     # Redirect from www or Render subdomain to canonical domain (non-www)
-    if request.host.in?(["www.reporeconnoiter.com", "reporeconnoiter.onrender.com"])
+    if request.host.in?([ "www.reporeconnoiter.com", "reporeconnoiter.onrender.com" ])
       redirect_to "https://#{canonical_host}#{request.fullpath}", status: :moved_permanently, allow_other_host: true
     end
   end

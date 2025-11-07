@@ -1332,18 +1332,15 @@ Track progress towards MVP release.
 
 **5. Post-Deployment Verification & Production Setup** (2-3 hours)
 
-**A. User & Access Setup** (30 mins) - PARTIALLY COMPLETE
+**A. User & Access Setup** (10 mins) - PARTIALLY COMPLETE
 - [ ] Whitelist yourself as admin user via Render Shell
-  ```ruby
-  bin/rails console
-  WhitelistedUser.create!(
-    github_id: YOUR_GITHUB_ID,
-    github_username: "jimmypocock",
-    reason: "Admin user"
-  )
+  ```bash
+  bin/rails whitelist:add[jimmypocock]
+  # Or run interactively: bin/rails whitelist:add
+  # The task automatically fetches GitHub ID and email from GitHub API
   ```
-- [ ] Get your GitHub ID from https://api.github.com/users/jimmypocock
 - [x] Add your GitHub ID to `MISSION_CONTROL_ADMIN_IDS` environment variable in Render
+  - Note: You'll get your GitHub ID after running whitelist:add task
 
 **B. Production Testing** (45 mins) - NEXT UP
 - [ ] Test OAuth flow (sign in with GitHub)
