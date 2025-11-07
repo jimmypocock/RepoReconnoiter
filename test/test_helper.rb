@@ -3,7 +3,6 @@ ENV["RAILS_ENV"] ||= "test"
 # Set required environment variables for test environment
 ENV["COMPARISON_SIMILARITY_THRESHOLD"] ||= "0.8"
 ENV["COMPARISON_CACHE_DAYS"] ||= "7"
-ENV["OPENAI_API_KEY"] ||= "test_key"  # OpenAI gem needs this even though we stub API calls
 
 require_relative "../config/environment"
 require "rails/test_help"
@@ -14,6 +13,11 @@ require "webmock/minitest"
 # Block all HTTP requests during tests (prevents accidental API calls)
 # Allow localhost for test server (Capybara, Puma)
 WebMock.disable_net_connect!(allow_localhost: true)
+
+# Stub credentials for test environment
+Rails.application.credentials.define_singleton_method(:openai) do
+  OpenStruct.new(api_key: "test_openai_key")
+end
 
 # Configure OmniAuth for testing
 OmniAuth.config.test_mode = true
