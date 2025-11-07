@@ -10,6 +10,9 @@ require "minitest/mock"
 require "ostruct"
 require "webmock/minitest"
 
+# Load test support files
+Dir[Rails.root.join("test/support/**/*.rb")].each { |f| require f }
+
 # Block all HTTP requests during tests (prevents accidental API calls)
 # Allow localhost for test server (Capybara, Puma)
 WebMock.disable_net_connect!(allow_localhost: true)
@@ -29,6 +32,9 @@ module ActiveSupport
 
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
+
+    # Include test helpers
+    include GithubHelpers
 
     # Stub OpenAI API calls to prevent hitting real API in tests
     # Call this in your test setup or individual tests
@@ -50,18 +56,6 @@ module ActiveSupport
       OpenAi.class_eval do
         define_method(:chat) do |**args|
           mock_response
-        end
-      end
-    end
-
-    # Stub GitHub API calls to prevent hitting real API in tests
-    def stub_github_search
-      # Return empty search results
-      mock_result = OpenStruct.new(items: [])
-
-      Github.class_eval do
-        define_method(:search) do |*args, **kwargs|
-          mock_result
         end
       end
     end

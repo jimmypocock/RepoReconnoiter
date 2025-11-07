@@ -21,6 +21,23 @@ class Repository < ApplicationRecord
   validates :html_url, presence: true
 
   #--------------------------------------
+  # PUBLIC INSTANCE METHODS
+  #--------------------------------------
+
+  def needs_analysis?
+    return true if last_analyzed_at.nil?
+    return true if readme_changed?
+    return true if last_analyzed_at < 7.days.ago
+    false
+  end
+
+  def readme_changed?
+    return false if readme_sha.blank?  # No cached README to compare
+    # If cached README exists, check if SHA changed (would need to fetch from GitHub API)
+    false  # For now, rely on time-based re-analysis
+  end
+
+  #--------------------------------------
   # CLASS METHODS
   #--------------------------------------
   class << self
