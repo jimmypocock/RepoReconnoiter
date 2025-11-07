@@ -10,7 +10,7 @@ require "active_job/railtie"
 require "active_record/railtie"
 # require "active_storage/engine"  # ❌ Disabled - no file uploads
 require "action_controller/railtie"
-# require "action_mailer/railtie"  # ❌ Disabled - no outgoing emails (yet)
+require "action_mailer/railtie"  # ✅ Enabled - not configured yet, but ready for future use
 # require "action_mailbox/engine"  # ❌ Disabled - no incoming email processing
 # require "action_text/engine"  # ❌ Disabled - no rich text editing (depends on Active Storage)
 require "action_view/railtie"
