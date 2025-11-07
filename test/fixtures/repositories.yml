@@ -19,3 +19,14 @@ two:
   language: "Python"
   stargazers_count: 9000
   owner_login: "sqlalchemy"
+
+no_analyses:
+  full_name: "test/repo-without-analyses"
+  name: "repo-without-analyses"
+  github_id: 345678
+  node_id: "MDEwOlJlcG9zaXRvcnkzNDU2Nzg="
+  html_url: "https://github.com/test/repo-without-analyses"
+  description: "Test repository with no analyses"
+  language: "Ruby"
+  stargazers_count: 100
+  owner_login: "test"

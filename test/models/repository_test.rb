@@ -135,6 +135,93 @@ class RepositoryTest < ActiveSupport::TestCase
     assert_equal "Organization", repo.owner_type
   end
 
+  #--------------------------------------
+  # ANALYSIS: Current Analysis Retrieval
+  #--------------------------------------
+
+  test "analysis_current returns current tier1 analysis" do
+    repo = repositories(:no_analyses)
+
+    # Create a current tier1 analysis
+    current_analysis = repo.analyses.create!(
+      analysis_type: "tier1_categorization",
+      model_used: "gpt-4o-mini",
+      summary: "Current analysis",
+      is_current: true
+    )
+
+    # Create old tier1 analysis
+    repo.analyses.create!(
+      analysis_type: "tier1_categorization",
+      model_used: "gpt-4o-mini",
+      summary: "Old analysis",
+      is_current: false
+    )
+
+    assert_equal current_analysis.id, repo.analysis_current.id
+    assert_equal "Current analysis", repo.analysis_current.summary
+  end
+
+  test "analysis_current returns nil when no current tier1 analysis exists" do
+    repo = repositories(:no_analyses)
+
+    # Create only non-current analysis
+    repo.analyses.create!(
+      analysis_type: "tier1_categorization",
+      model_used: "gpt-4o-mini",
+      summary: "Old analysis",
+      is_current: false
+    )
+
+    assert_nil repo.analysis_current
+  end
+
+  test "analysis_current ignores tier2 analyses" do
+    repo = repositories(:no_analyses)
+
+    # Create current tier2 analysis (should be ignored)
+    repo.analyses.create!(
+      analysis_type: "tier2_deep_dive",
+      model_used: "gpt-4o",
+      summary: "Tier 2 analysis",
+      is_current: true
+    )
+
+    assert_nil repo.analysis_current
+  end
+
+  #--------------------------------------
+  # ANALYSIS: Needs Re-Analysis Logic
+  #--------------------------------------
+
+  test "needs_analysis? returns true when never analyzed" do
+    repo = repositories(:no_analyses)
+    repo.update!(last_analyzed_at: nil)
+
+    assert repo.needs_analysis?
+  end
+
+  test "needs_analysis? returns true when last analyzed over 7 days ago" do
+    repo = repositories(:no_analyses)
+    repo.update!(last_analyzed_at: 8.days.ago)
+
+    assert repo.needs_analysis?
+  end
+
+  test "needs_analysis? returns false when recently analyzed" do
+    repo = repositories(:no_analyses)
+    repo.update!(last_analyzed_at: 3.days.ago)
+
+    refute repo.needs_analysis?
+  end
+
+  test "needs_analysis? returns false when analyzed exactly 6 days ago" do
+    repo = repositories(:no_analyses)
+    repo.update!(last_analyzed_at: 6.days.ago)
+
+    refute repo.needs_analysis?
+  end
+
   private
 
   def build_github_api_response(id:, full_name: "test/repo", stars: 100, owner: nil)

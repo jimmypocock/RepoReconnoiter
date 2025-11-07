@@ -24,6 +24,10 @@ class Repository < ApplicationRecord
   # PUBLIC INSTANCE METHODS
   #--------------------------------------
 
+  def analysis_current
+    analyses.tier1.current.first
+  end
+
   def needs_analysis?
     return true if last_analyzed_at.nil?
     return true if readme_changed?
