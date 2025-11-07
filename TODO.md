@@ -1029,7 +1029,7 @@ Track progress towards MVP release.
 
 ## Notes
 
-**Current Status**: ✅ Phases 1, 2, 3.5, 3.6, 3.8 COMPLETE! 🚀 **DEPLOYED TO PRODUCTION** at https://reporeconnoiter.onrender.com! Phase 3.7 Tasks 1-4 done, ready for Task 5 (Post-Deployment Verification)
+**Current Status**: ✅ Phases 1, 2, 3.5, 3.6, 3.8 COMPLETE! 🚀 **DEPLOYED TO PRODUCTION** at https://reporeconnoiter.com! Phase 3.7 Tasks 1-5C done (custom domain live with SSL), Task 5B next (production testing)
 
 **What's Working** (Production-Ready MVP Core):
 - ✅ **Tier 3 Comparative Evaluation** - End-to-end working!
@@ -1071,7 +1071,8 @@ Track progress towards MVP release.
 - ✅ Responsive Tailwind UI with excellent UX
 
 **Production Deployment Status** 🚀:
-- ✅ **Live URL**: https://reporeconnoiter.onrender.com
+- ✅ **Live URL**: https://reporeconnoiter.com (custom domain with SSL)
+- ✅ **Canonical Domain**: reporeconnoiter.com (redirects from www and onrender subdomain)
 - ✅ **Hosting**: Render.com (Starter plan - $14/month)
   - PostgreSQL 17 database (1GB storage, 97 connections)
   - Web Service (512MB RAM, always-on, shell access)
@@ -1167,8 +1168,18 @@ Track progress towards MVP release.
   - Free tier limitations: No shell access, no release commands (paid tier needed for ease)
   - Database eager loading in production catches issues (ActionMailer, Devise mailers)
   - Re-enabling disabled frameworks better than complex workarounds (YAGNI principle)
+- **Custom domain & SSL insights** (Phase 3.7 Task 5C):
+  - Render auto-provisions SSL via Let's Encrypt (no AWS Certificate Manager needed)
+  - SSL provisioning takes 5-10 minutes after DNS propagates
+  - Route53 requires A record for root domain (can't CNAME apex)
+  - Modern convention: non-www canonical domain (shorter, cleaner)
+  - Rails-level redirect works fine for managed platforms like Render
+  - 301 permanent redirect for SEO (tells search engines which is canonical)
+  - GitHub Actions won't pass without stub OAuth env vars in test environment
+  - Render waits for green CI before auto-deploying (good safety feature)
+  - Bot scanners (WordPress, phpMyAdmin) hit all public IPs constantly (normal noise)
 
-**Next Steps - Production Release Checklist**:
+**Next Steps**: Phase 3.7 - Task 5B (Production Testing) - whitelist admin user and test full production deployment
 
 ---
 
@@ -1245,6 +1256,41 @@ Track progress towards MVP release.
 
 ---
 
+### ✅ CUSTOM DOMAIN & CI COMPLETE (Phase 3.7 - Task 5C & 5D)
+
+**Date Completed**: November 7, 2025
+**Time Invested**: ~2 hours
+**Status**: Custom domain live with SSL, CI passing, auto-deploy working!
+
+**What Was Completed** ✅:
+
+**Task 5C: Custom Domain Setup** - COMPLETE
+- ✅ Configured DNS in Route53 (A record for root, CNAME for www)
+- ✅ Added custom domains in Render (reporeconnoiter.com + www.reporeconnoiter.com)
+- ✅ SSL certificate auto-provisioned via Let's Encrypt
+- ✅ Created production GitHub OAuth App with custom domain callback
+- ✅ Updated Render environment variables with production OAuth credentials
+- ✅ Added canonical domain redirect in ApplicationController
+  - Redirects www.reporeconnoiter.com → reporeconnoiter.com (301)
+  - Redirects reporeconnoiter.onrender.com → reporeconnoiter.com (301)
+  - Production-only, preserves full path, SEO-friendly
+
+**Task 5D: CI Fixes** - COMPLETE
+- ✅ Fixed GitHub Actions by adding stub OAuth env vars to test/system-test jobs
+- ✅ Verified tests pass locally (45 runs, 104 assertions)
+- ✅ Enabled Render auto-deploy (waits for green CI checkmark)
+
+**Code Changes**:
+- `app/controllers/application_controller.rb`: Added `redirect_to_canonical_domain` before_action
+- `.github/workflows/ci.yml`: Added `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` stub env vars
+
+**Testing**:
+- All 45 tests passing locally
+- CI deploying to production with auto-deploy enabled
+- Custom domain accessible with valid SSL certificate
+
+---
+
 ### ✅ RENDER DEPLOYMENT COMPLETE (Phase 3.7 - Task 4)
 
 **Date Completed**: November 6-7, 2025
@@ -1280,54 +1326,54 @@ Track progress towards MVP release.
 
 ---
 
-### 🎯 TOMORROW'S TASKS (Phase 3.7 - Task 5 + Infrastructure)
+### 🎯 CURRENT TASKS (Phase 3.7 - Task 5 + Infrastructure)
 
-**Estimated Time**: 2-3 hours total
+**Estimated Time**: 1-2 hours remaining
 
 **5. Post-Deployment Verification & Production Setup** (2-3 hours)
 
-**A. User & Access Setup** (30 mins)
+**A. User & Access Setup** (30 mins) - PARTIALLY COMPLETE
 - [ ] Whitelist yourself as admin user via Render Shell
   ```ruby
   bin/rails console
   WhitelistedUser.create!(
     github_id: YOUR_GITHUB_ID,
-    github_username: "your_username",
+    github_username: "jimmypocock",
     reason: "Admin user"
   )
   ```
-- [ ] Get your GitHub ID from https://api.github.com/users/YOUR_USERNAME
-- [ ] Add your GitHub ID to `MISSION_CONTROL_ADMIN_IDS` environment variable in Render
+- [ ] Get your GitHub ID from https://api.github.com/users/jimmypocock
+- [x] Add your GitHub ID to `MISSION_CONTROL_ADMIN_IDS` environment variable in Render
 
-**B. Production Testing** (45 mins)
+**B. Production Testing** (45 mins) - NEXT UP
 - [ ] Test OAuth flow (sign in with GitHub)
 - [ ] Create test comparison (verify full pipeline works)
 - [ ] Test daily sync job (`SyncTrendingRepositoriesJob`)
 - [ ] Test categorization job (`AnalyzeRepositoryJob`)
 - [ ] Test OpenAI API integration (verify cost tracking)
-- [ ] Check Mission Control Jobs dashboard at https://reporeconnoiter.onrender.com/jobs
+- [ ] Check Mission Control Jobs dashboard at https://reporeconnoiter.com/jobs
 - [ ] Verify security headers at https://securityheaders.com/
 - [ ] Monitor Clarity analytics (verify tracking working)
 - [ ] Check Render logs for any errors
 
-**C. Custom Domain Setup** (30 mins)
-- [ ] Configure DNS for reporeconnoiter.com in Route53
-  - Add CNAME record pointing to `reporeconnoiter.onrender.com`
-- [ ] Add custom domain in Render Dashboard → Settings → Custom Domains
-- [ ] Wait for SSL certificate auto-provisioning via Let's Encrypt (5-10 mins)
-- [ ] Verify HTTPS working on custom domain
-- [ ] Update GitHub OAuth App callback URL to use custom domain:
+**C. Custom Domain Setup** (30 mins) - ✅ COMPLETE
+- [x] Configure DNS for reporeconnoiter.com in Route53
+  - Added A record for root domain and CNAME for www
+- [x] Add custom domain in Render Dashboard → Settings → Custom Domains
+- [x] Wait for SSL certificate auto-provisioning via Let's Encrypt (5-10 mins)
+- [x] Verify HTTPS working on custom domain
+- [x] Create production GitHub OAuth App with custom domain callback URL:
   - `https://reporeconnoiter.com/users/auth/github/callback`
+- [x] Update Render environment variables with production OAuth credentials
+- [x] Add canonical domain redirect in Rails (www and onrender → reporeconnoiter.com)
 
-**D. Dependency Updates & CI** (45 mins)
-- [ ] Review and update gems flagged by Dependabot in GitHub
-- [ ] Run `bundle update` for security patches
-- [ ] Test locally after updates
-- [ ] Setup GitHub Actions for CI/CD
-  - [ ] Create `.github/workflows/ci.yml`
-  - [ ] Fix test environment - stub OAuth so GITHUB_CLIENT_ID not required
-  - [ ] Verify tests pass in GitHub Actions
-- [ ] Commit and push changes
+**D. Dependency Updates & CI** (45 mins) - PARTIALLY COMPLETE
+- [ ] Review and update gems flagged by Dependabot in GitHub (OPTIONAL - can defer)
+- [ ] Run `bundle update` for security patches (OPTIONAL - can defer)
+- [ ] Test locally after updates (OPTIONAL - can defer)
+- [x] Setup GitHub Actions for CI/CD (already existed)
+- [x] Fix test environment - stub OAuth env vars in CI workflow
+- [x] Verify tests pass in GitHub Actions (deploying now)
 
 **E. Documentation** (15 mins)
 - [ ] Update README.md with production URL
