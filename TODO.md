@@ -73,14 +73,15 @@ Track progress towards MVP release.
 - [ ] Create repository show page with full details
 - [ ] Add Hotwire Turbo frames for dynamic updates
 
-### Background Jobs - GitHub Sync
+### Background Jobs - GitHub Sync (DEFERRED - Not critical for MVP)
 
 - [x] Create `SyncTrendingRepositoriesJob`
-- [ ] Configure Solid Queue recurring task in `config/recurring.yml`
-- [ ] Add job to fetch trending repos every 20 minutes
-- [ ] Implement smart caching (only update if repo changed)
-- [ ] Add error handling and retry logic
+- [ ] Configure Solid Queue recurring task in `config/recurring.yml` (DEFERRED)
+- [ ] Add job to fetch trending repos every 20 minutes (DEFERRED)
+- [ ] Implement smart caching (only update if repo changed) (DEFERRED)
+- [ ] Add error handling and retry logic (DEFERRED)
 - [x] Test job execution manually
+- **Note**: MVP focuses on user-driven comparisons, not auto-syncing trending repos
 
 ---
 
@@ -660,7 +661,7 @@ Track progress towards MVP release.
     - Empty state when no comparisons exist
     - Different empty state for authenticated users
     - Search form submits query
-- [x] **Test Results**: 47 tests, 117 assertions, all passing ✅
+- [x] **Test Results**: 63 tests, 152 assertions, all passing ✅
 
 ### Mission Control Configuration ✅ COMPLETE
 
@@ -764,6 +765,90 @@ Track progress towards MVP release.
 - Mission Control dashboard secured for production use
 - Homepage UI polished and ready for users
 - Admin features properly gated behind authentication
+
+---
+
+## Phase 3.9: Production Stabilization & Bug Fixes ✅ COMPLETE
+
+**Goal**: Fix production bugs discovered during initial testing and improve code quality.
+
+**Date Completed**: November 7, 2025
+**Time Invested**: ~3 hours
+**Status**: All critical production bugs fixed, test coverage expanded!
+
+### Production Bug Fixes ✅ COMPLETE
+
+- [x] Fixed missing `Repository#analysis_current` method (caused 500 errors)
+  - Method was accidentally removed during Phase 3.8 refactoring
+  - Returns current Tier 1 analysis: `analyses.tier1.current.first`
+  - Added to app/models/repository.rb:27
+- [x] Fixed wrong method name in RepositoryFetcher
+  - Was calling `analyzer.analyze_repository` (doesn't exist)
+  - Fixed to `analyzer.analyze` (correct method name)
+  - Updated app/services/repository_fetcher.rb:57
+  - Updated lib/tasks/analyze.rake:500
+- [x] Fixed CLAUDE.md documentation
+  - Updated examples to use correct method name (`analyze` not `analyze_repository`)
+  - Updated test counts (63 tests, 152 assertions)
+  - Added test philosophy about using realistic fixtures
+
+### Test Coverage Expansion ✅ COMPLETE
+
+- [x] **Repository Model Tests** (7 new tests)
+  - `analysis_current` returns current Tier 1 analysis
+  - `analysis_current` returns nil when no current analysis exists
+  - `analysis_current` ignores Tier 2 analyses
+  - `needs_analysis?` returns true when never analyzed
+  - `needs_analysis?` returns true when last analyzed over 7 days ago
+  - `needs_analysis?` returns false when recently analyzed
+  - Created `:no_analyses` fixture for clean testing (no data destruction)
+- [x] **RepositoryFetcher Service Tests** (2 new tests)
+  - Tests that `analyzer.analyze` is called (not `analyze_repository`)
+  - Tests return value structure
+  - Catches method name bugs
+- [x] **GitHub Test Helpers Extraction**
+  - Created `test/support/github_helpers.rb` module
+  - Moved `stub_github_search` from test_helper.rb
+  - Returns realistic repository data instead of empty arrays
+  - Ensures tests exercise real code paths
+- [x] **Test Results**: 63 tests, 152 assertions, all passing ✅
+
+### Developer Experience Improvements ✅ COMPLETE
+
+- [x] **CI Rake Tasks** (lib/tasks/ci.rake)
+  - `bin/rails ci:all` - Run all CI checks (security, lint, tests)
+  - `bin/rails ci:security` - Security scans only
+  - `bin/rails ci:lint` - RuboCop only
+  - `bin/rails ci:test` - All tests only
+  - Mirrors GitHub Actions workflow exactly
+  - Allows pre-commit local validation
+- [x] **Cache Strategy Simplification**
+  - Removed `after_commit :clear_homepage_cache` callback
+  - Removed `clear_homepage_cache` private method
+  - Changed cache TTL from 10 minutes → 5 minutes
+  - Accepts staleness for better performance at scale
+  - Added `STATS_CACHE_KEY` constant in HomePagePresenter
+  - Kept `invalidate_stats_cache` class method for manual clearing
+- [x] **Code Quality**
+  - Added `.DS_Store` to .gitignore
+  - All code follows RuboCop conventions
+  - Array brackets: `[ "item" ]` not `["item"]`
+
+### Why These Bugs Happened (Lessons Learned)
+
+**Root Cause**: Test stubs returned empty data (`items: []`), so code paths calling production methods never executed in tests.
+
+**Prevention**:
+- ✅ Use realistic test data instead of empty stubs
+- ✅ Create dedicated fixtures (`:no_analyses`) instead of destroying data
+- ✅ Test actual behavior, not just "does it not crash"
+- ✅ Fixtures reset automatically on teardown (no manual cleanup needed)
+
+**Impact**:
+- Production is stable with all critical bugs fixed
+- Test coverage gives confidence in core functionality
+- CI rake tasks prevent pushing broken code
+- Cache strategy scales better (no invalidation on every write)
 
 ---
 
@@ -1029,7 +1114,7 @@ Track progress towards MVP release.
 
 ## Notes
 
-**Current Status**: ✅ Phases 1, 2, 3.5, 3.6, 3.8 COMPLETE! 🚀 **DEPLOYED TO PRODUCTION** at https://reporeconnoiter.com! Phase 3.7 Tasks 1-5D COMPLETE (custom domain, SSL, CI green), Task 5A/5B next (whitelist admin & production testing)
+**Current Status**: ✅ Phases 1, 2, 3.5, 3.6, 3.8, 3.9 COMPLETE! 🚀 **DEPLOYED TO PRODUCTION** at https://reporeconnoiter.com! Phase 3.7 Tasks 1-5D COMPLETE (custom domain, SSL, CI green), Task 5A partially done, Task 5B next (production testing)
 
 **What's Working** (Production-Ready MVP Core):
 - ✅ **Tier 3 Comparative Evaluation** - End-to-end working!
@@ -1047,16 +1132,20 @@ Track progress towards MVP release.
   - ✅ Cost transparency ($0.05 per search displayed on homepage)
   - ✅ Hard limits (max 15 repos per comparison)
   - ✅ Code organization (ComparisonCreator service, DRY rake tasks)
-- ✅ **Testing & Code Quality (Phase 3.8)** - Production-ready!
-  - ✅ 47 tests, 117 assertions - all passing
+- ✅ **Testing & Code Quality (Phase 3.8 + Phase 3.9)** - Production-ready!
+  - ✅ 63 tests, 152 assertions - all passing (54 unit + 9 system)
   - ✅ Security tests (OAuth whitelist, rate limiting, Mission Control access)
   - ✅ Cost control tests (fuzzy cache matching with pg_trgm)
   - ✅ Data integrity tests (repository deduplication)
+  - ✅ Model tests (Repository analysis_current, needs_analysis? logic)
+  - ✅ Service tests (RepositoryFetcher with realistic test data)
   - ✅ Presenter tests (homepage stats, trending, categories)
   - ✅ System tests (homepage UI for authenticated/unauthenticated users)
   - ✅ Code refactoring (single source of truth, query objects, state guards)
   - ✅ Mission Control Jobs dashboard secured (GitHub ID whitelist)
   - ✅ Homepage UI polished (user menu, admin stats, grid layout)
+  - ✅ CI rake tasks created (bin/rails ci:all for local pre-commit checks)
+  - ✅ Cache strategy simplified (5-minute TTL, no invalidation)
 - ✅ GitHub API integration and sync job
 - ✅ Database schema with 9 tables (6 original + 3 Tier 3)
 - ✅ OpenAI Tier 1 categorization (gpt-4o-mini)
@@ -1185,6 +1274,19 @@ Track progress towards MVP release.
   - Test isolation bugs often work locally but fail in CI (different cleanup behavior)
   - Helper methods better than copy-paste for test setup (DRY, self-documenting)
   - `ensure_unauthenticated` pattern prevents test pollution in system tests
+- **Production stabilization insights** (Phase 3.9):
+  - Empty test stubs (`items: []`) give false confidence - tests pass but production fails
+  - Methods removed during refactoring aren't caught if tests don't exercise code paths
+  - Realistic test data exposes bugs early (GitHub API response with all fields populated)
+  - Dedicated fixtures (`:no_analyses`) cleaner than destroying data in tests
+  - Fixtures auto-reset on teardown - no manual cleanup needed
+  - Test support files should live in `test/support/` not mixed with production code
+  - Cache invalidation on every write defeats caching at scale (accept staleness instead)
+  - 5-minute staleness acceptable for stats (Twitter, Reddit, YouTube all do this)
+  - CI rake tasks (`bin/rails ci:all`) prevent pushing broken code
+  - RuboCop style violations fail CI - easier to enforce locally before push
+  - Manual deployment acceptable for solo projects (auto-deploy adds complexity/cost)
+  - Render's free/hobby tier lacks features - Starter plan ($14/month) worth it for shell access
 
 **Next Steps**: Phase 3.7 - Task 5B (Production Testing) - whitelist admin user and test full production deployment
 

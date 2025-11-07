@@ -147,4 +147,53 @@ namespace :github do
 
     puts ""
   end
+
+  desc "Sync trending repositories to database (same as SyncTrendingRepositoriesJob)"
+  task :sync, [ :days, :min_stars, :per_page ] => :environment do |t, args|
+    args.with_defaults(days: 7, min_stars: 50, per_page: 10)
+
+    puts "\n🔄 Syncing Trending Repositories to Database"
+    puts "=" * 80
+    puts "Parameters:"
+    puts "   Days ago: #{args[:days]}"
+    puts "   Min stars: #{args[:min_stars]}"
+    puts "   Per page: #{args[:per_page]}"
+    puts "=" * 80
+
+    begin
+      start_time = Time.current
+      initial_count = Repository.count
+
+      # Call the same service the job uses
+      result = RepositorySyncer.sync_trending(
+        days_ago: args[:days].to_i,
+        min_stars: args[:min_stars].to_i,
+        per_page: args[:per_page].to_i
+      )
+
+      duration = (Time.current - start_time).round(2)
+
+      puts "\n✅ Sync Complete!"
+      puts "   Synced: #{result[:synced]} repositories"
+      puts "   Created: #{result[:created]} new repositories"
+      puts "   Updated: #{result[:updated]} existing repositories"
+      puts "   Database now has: #{Repository.count} total repositories (was #{initial_count})"
+      puts "   Duration: #{duration}s"
+
+      if result[:created] > 0
+        puts "\n📋 Newly Created Repositories:"
+        Repository.order(created_at: :desc).limit(result[:created]).each do |repo|
+          puts "   • #{repo.full_name} (⭐ #{repo.stargazers_count})"
+        end
+      end
+
+      puts "\n💡 Tip: Run again to update existing repos with latest stars/forks/activity"
+
+    rescue => e
+      puts "\n❌ Error: #{e.message}"
+      puts e.backtrace.first(5).join("\n")
+    end
+
+    puts ""
+  end
 end

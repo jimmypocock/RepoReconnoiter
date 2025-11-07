@@ -6,7 +6,7 @@ namespace :ci do
 
   desc "Run security scans (Brakeman, Bundler Audit, Importmap)"
   task :security do
-    puts "🔒 Running security scans..."
+    puts "\n🔒 Running security scans..."
     sh "bin/brakeman --no-pager"
     sh "bin/bundler-audit"
     sh "bin/importmap audit"
@@ -14,13 +14,13 @@ namespace :ci do
 
   desc "Run RuboCop linter"
   task :lint do
-    puts "✨ Running linter..."
+    puts "\n✨ Running linter..."
     sh "bin/rubocop"
   end
 
   desc "Run all tests (unit + system)"
   task :test do
-    puts "🧪 Running tests..."
+    puts "\n🧪 Running tests..."
     sh "bin/rails db:test:prepare"
     sh "bin/rails test"
     sh "bin/rails test:system"
