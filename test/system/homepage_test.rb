@@ -104,6 +104,9 @@ class HomepageTest < ApplicationSystemTestCase
   end
 
   test "empty state when no comparisons exist" do
+    # Ensure clean authentication state (unauthenticated)
+    Warden.test_reset!
+
     # Delete all comparisons
     Comparison.destroy_all
 
