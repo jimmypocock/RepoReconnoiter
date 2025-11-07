@@ -1,4 +1,9 @@
 ENV["RAILS_ENV"] ||= "test"
+
+# Set required environment variables for test environment
+ENV["COMPARISON_SIMILARITY_THRESHOLD"] ||= "0.8"
+ENV["COMPARISON_CACHE_DAYS"] ||= "7"
+
 require_relative "../config/environment"
 require "rails/test_help"
 require "minitest/mock"

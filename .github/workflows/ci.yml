@@ -102,6 +102,8 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
           GITHUB_CLIENT_ID: test_client_id
           GITHUB_CLIENT_SECRET: test_client_secret
+          COMPARISON_SIMILARITY_THRESHOLD: 0.8
+          COMPARISON_CACHE_DAYS: 7
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test
@@ -143,6 +145,8 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
           GITHUB_CLIENT_ID: test_client_id
           GITHUB_CLIENT_SECRET: test_client_secret
+          COMPARISON_SIMILARITY_THRESHOLD: 0.8
+          COMPARISON_CACHE_DAYS: 7
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test:system
