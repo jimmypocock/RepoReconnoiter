@@ -1029,7 +1029,7 @@ Track progress towards MVP release.
 
 ## Notes
 
-**Current Status**: ✅ Phases 1, 2, 3.5, 3.6, 3.8 COMPLETE! 🚀 **DEPLOYED TO PRODUCTION** at https://reporeconnoiter.com! Phase 3.7 Tasks 1-5C done (custom domain live with SSL), Task 5B next (production testing)
+**Current Status**: ✅ Phases 1, 2, 3.5, 3.6, 3.8 COMPLETE! 🚀 **DEPLOYED TO PRODUCTION** at https://reporeconnoiter.com! Phase 3.7 Tasks 1-5D COMPLETE (custom domain, SSL, CI green), Task 5A/5B next (whitelist admin & production testing)
 
 **What's Working** (Production-Ready MVP Core):
 - ✅ **Tier 3 Comparative Evaluation** - End-to-end working!
@@ -1175,9 +1175,16 @@ Track progress towards MVP release.
   - Modern convention: non-www canonical domain (shorter, cleaner)
   - Rails-level redirect works fine for managed platforms like Render
   - 301 permanent redirect for SEO (tells search engines which is canonical)
+  - Bot scanners (WordPress, phpMyAdmin) hit all public IPs constantly (normal noise)
+- **CI/Testing insights** (Phase 3.7 Task 5D):
   - GitHub Actions won't pass without stub OAuth env vars in test environment
   - Render waits for green CI before auto-deploying (good safety feature)
-  - Bot scanners (WordPress, phpMyAdmin) hit all public IPs constantly (normal noise)
+  - Rails 8 models with `ENV.fetch` need defaults in test_helper.rb (set before require environment)
+  - CI environments have stricter Capybara session isolation than local
+  - `Capybara.reset_sessions!` required for CI test isolation (Warden reset not enough)
+  - Test isolation bugs often work locally but fail in CI (different cleanup behavior)
+  - Helper methods better than copy-paste for test setup (DRY, self-documenting)
+  - `ensure_unauthenticated` pattern prevents test pollution in system tests
 
 **Next Steps**: Phase 3.7 - Task 5B (Production Testing) - whitelist admin user and test full production deployment
 
@@ -1277,17 +1284,24 @@ Track progress towards MVP release.
 
 **Task 5D: CI Fixes** - COMPLETE
 - ✅ Fixed GitHub Actions by adding stub OAuth env vars to test/system-test jobs
+- ✅ Added required env vars for comparison caching (COMPARISON_SIMILARITY_THRESHOLD, COMPARISON_CACHE_DAYS)
+- ✅ Fixed system test isolation issue in CI (Capybara sessions persisting between tests)
+- ✅ Created `ensure_unauthenticated` helper method in ApplicationSystemTestCase
 - ✅ Verified tests pass locally (45 runs, 104 assertions)
 - ✅ Enabled Render auto-deploy (waits for green CI checkmark)
 
 **Code Changes**:
 - `app/controllers/application_controller.rb`: Added `redirect_to_canonical_domain` before_action
-- `.github/workflows/ci.yml`: Added `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` stub env vars
+- `.github/workflows/ci.yml`: Added stub env vars (OAuth + comparison caching)
+- `test/test_helper.rb`: Set required env vars for test environment
+- `test/application_system_test_case.rb`: Added `ensure_unauthenticated` helper
+- `test/system/homepage_test.rb`: Used helper in unauthenticated tests
 
 **Testing**:
-- All 45 tests passing locally
-- CI deploying to production with auto-deploy enabled
-- Custom domain accessible with valid SSL certificate
+- All 45 tests passing locally ✅
+- All 9 system tests passing locally ✅
+- CI fully green on GitHub Actions ✅
+- Custom domain accessible with valid SSL certificate ✅
 
 ---
 
@@ -1364,13 +1378,14 @@ Track progress towards MVP release.
 - [x] Update Render environment variables with production OAuth credentials
 - [x] Add canonical domain redirect in Rails (www and onrender → reporeconnoiter.com)
 
-**D. Dependency Updates & CI** (45 mins) - PARTIALLY COMPLETE
-- [ ] Review and update gems flagged by Dependabot in GitHub (OPTIONAL - can defer)
-- [ ] Run `bundle update` for security patches (OPTIONAL - can defer)
-- [ ] Test locally after updates (OPTIONAL - can defer)
+**D. Dependency Updates & CI** (45 mins) - ✅ COMPLETE
+- [ ] Review and update gems flagged by Dependabot in GitHub (OPTIONAL - deferred to Phase 4)
+- [ ] Run `bundle update` for security patches (OPTIONAL - deferred to Phase 4)
+- [ ] Test locally after updates (OPTIONAL - deferred to Phase 4)
 - [x] Setup GitHub Actions for CI/CD (already existed)
 - [x] Fix test environment - stub OAuth env vars in CI workflow
-- [x] Verify tests pass in GitHub Actions (deploying now)
+- [x] Fix system test isolation issue (Capybara sessions in CI)
+- [x] Verify tests pass in GitHub Actions ✅ GREEN
 
 **E. Documentation** (15 mins)
 - [ ] Update README.md with production URL

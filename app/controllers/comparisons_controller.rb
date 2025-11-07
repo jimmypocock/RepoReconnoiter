@@ -14,16 +14,8 @@ class ComparisonsController < ApplicationController
     redirect_to comparison_path(comparison_created.record), notice: build_notice(comparison_created)
   rescue ComparisonCreator::InvalidQueryError => e
     redirect_to root_path, alert: "Invalid query: #{e.message}"
-  rescue ComparisonCreator::NoRepositoriesFoundError => e
+  rescue ComparisonCreator::NoRepositoriesFoundError
     redirect_to root_path, alert: "No repositories found for your query. Try different keywords."
-  rescue Octokit::TooManyRequests => e
-    redirect_to root_path, alert: "GitHub rate limit exceeded. Please try again in a few minutes."
-  rescue Faraday::Error, Faraday::TimeoutError => e
-    redirect_to root_path, alert: "Network error occurred. Please check your connection and try again."
-  rescue OpenAI::Errors => e
-    redirect_to root_path, alert: "AI service temporarily unavailable. Please try again in a few moments."
-  rescue StandardError => e
-    redirect_to root_path, alert: "Something went wrong. Please try again or contact support if the issue persists."
   end
 
   def show

@@ -125,7 +125,10 @@ namespace :whitelist do
       puts "   GitHub ID: #{github_id}"
       puts "   Email: #{email || '(none)'}"
       puts "   Notes: #{notes}"
-      puts "\nThey can now sign in at: http://localhost:3000"
+
+      # Show environment-appropriate URL
+      app_url = Rails.env.production? ? "https://reporeconnoiter.com" : "http://localhost:3000"
+      puts "\nThey can now sign in at: #{app_url}"
     rescue StandardError => e
       puts "❌ Error creating whitelist entry: #{e.message}"
       exit 1
