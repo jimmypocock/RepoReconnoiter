@@ -63,6 +63,12 @@ bin/rails analyze:repo[owner/name]         # Test Tier 1 analysis on single repo
 
 ### Linting & Security
 ```bash
+bin/rails ci:all          # Run all CI checks (security, lint, tests) - mirrors GitHub Actions
+bin/rails ci:security     # Run security scans only (Brakeman, Bundler Audit, Importmap)
+bin/rails ci:lint         # Run RuboCop linter only
+bin/rails ci:test         # Run all tests only (unit + system)
+
+# Individual commands (if needed)
 bin/rubocop               # Run RuboCop linter
 bin/brakeman              # Run security vulnerability scanner
 bin/bundler-audit         # Check for vulnerable gem versions
@@ -151,6 +157,9 @@ end
 3. **Alphabetization**: Methods MUST be alphabetized within each section (except `initialize` which comes first)
 4. **Headers**: Use `#--------------------------------------` separators with section names
 5. **Models**: Same rules apply - ASSOCIATIONS, VALIDATIONS, CALLBACKS, SCOPES, then methods
+6. **RuboCop Style**: Follow RuboCop conventions (run `bin/rails ci:lint` before committing)
+   - Array brackets: `[ "item" ]` not `["item"]` (space inside brackets)
+   - CI will fail on style violations
 
 ## Service Naming Convention ("Doer" Pattern)
 
@@ -277,12 +286,12 @@ result[:valid]             # true
 Analyzes and categorizes repositories using AI (formerly `RepositoryCategorizationService`).
 
 **Methods:**
-- `analyze_repository(repository)` - Tier 1 analysis using metadata + description
+- `analyze(repository)` - Tier 1 analysis using metadata + description
 - `deep_dive_analysis(repository)` - Tier 2 analysis using README + issues (not yet implemented)
 
 ```ruby
 analyzer = RepositoryAnalyzer.new
-result = analyzer.analyze_repository(repo)
+result = analyzer.analyze(repo)
 
 result[:categories]      # [{ category_id: 1, confidence: 0.95, reasoning: "..." }]
 result[:summary]         # "Modern background job processor..."
@@ -438,7 +447,7 @@ class AnalyzeRepositoryJob < ApplicationJob
 
     # Use RepositoryAnalyzer service which uses OpenAi internally
     analyzer = RepositoryAnalyzer.new
-    result = analyzer.analyze_repository(repo)
+    result = analyzer.analyze(repo)
 
     # OpenAi service already tracked costs to ai_costs table
     # Just store the analysis results
@@ -554,13 +563,16 @@ end
 ## Testing
 
 **Test Suite:**
-- 47 tests, 117 assertions (all passing)
-- Run with: `bin/rails test`
+- 63 tests, 152 assertions (all passing)
+- 54 unit tests + 9 system tests
+- Run with: `bin/rails test && bin/rails test:system`
 
 **Test Coverage:**
 - Security tests (OAuth whitelist, rate limiting, Mission Control access)
 - Cost control tests (fuzzy cache matching with pg_trgm)
 - Data integrity tests (repository deduplication)
+- Model tests (Repository analysis logic, needs_analysis? behavior)
+- Service tests (RepositoryFetcher, correct method names)
 - Presenter tests (homepage stats, trending, categories)
 - System tests (homepage UI for authenticated/unauthenticated users)
 
@@ -568,6 +580,8 @@ end
 - Test custom logic, not framework features
 - Focus on security, cost control, and data integrity
 - Fail-closed security (empty admin IDs should error, not allow all)
+- Use realistic fixture data instead of empty stubs
+- Create dedicated fixtures (e.g., `:no_analyses`) instead of destroying data in tests
 
 ## Environment Variables
 

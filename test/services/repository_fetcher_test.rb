@@ -26,7 +26,7 @@ class RepositoryFetcherTest < ActiveSupport::TestCase
     # Should complete without NoMethodError
     assert_nothing_raised do
       result = fetcher.fetch_and_prepare(
-        github_queries: ["test query"],
+        github_queries: [ "test query" ],
         limit: 5
       )
 
@@ -41,7 +41,7 @@ class RepositoryFetcherTest < ActiveSupport::TestCase
     fetcher = RepositoryFetcher.new
 
     result = fetcher.fetch_and_prepare(
-      github_queries: ["test query"],
+      github_queries: [ "test query" ],
       limit: 5
     )
 
