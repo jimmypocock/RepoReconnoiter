@@ -12,19 +12,20 @@ namespace :ai do
     puts "\n🤖 Categorizing: #{repo.full_name}"
     puts "=" * 80
 
-    result = AnalyzeRepositoryJob.perform_now(repo.id)
+    # Use existing service to analyze
+    fetcher = RepositoryFetcher.new
+    fetcher.send(:analyze_repositories, [ repo ])
 
+    analysis = repo.analysis_current
     puts "\n✅ Analysis Complete!"
-    puts "   Analysis ID: #{result[:analysis_id]}"
-    puts "   Categories Linked: #{result[:categories_linked]} (#{result[:categories_created]} new)"
-    puts "   Cost: $#{result[:cost_usd].round(6)}"
+    puts "   Analysis ID: #{analysis.id}"
+    puts "   Categories: #{repo.categories.count}"
+    puts "   Cost: $#{analysis.cost_usd.round(6)}"
     puts "\n📊 Analysis Details:"
-
-    analysis = Analysis.find(result[:analysis_id])
     puts "   Summary: #{analysis.summary}"
     puts "\n   Use Cases:\n   #{analysis.use_cases}"
     puts "\n   Categories:"
-    repo.reload.categories.each do |cat|
+    repo.categories.each do |cat|
       rc = repo.repository_categories.find_by(category: cat)
       confidence = rc.confidence_score ? "(#{(rc.confidence_score * 100).round}%)" : ""
       puts "   - [#{cat.category_type}] #{cat.name} #{confidence}"
@@ -39,18 +40,12 @@ namespace :ai do
     puts "\n🤖 Found #{repos.count} repositories to categorize (limit: #{limit})"
     puts "=" * 80
 
-    total_cost = 0.0
-    repos.each_with_index do |repo, index|
-      puts "\n[#{index + 1}/#{repos.count}] #{repo.full_name}"
-      result = AnalyzeRepositoryJob.perform_now(repo.id)
-      total_cost += result[:cost_usd]
-      puts "   Cost: $#{result[:cost_usd].round(6)} (Total: $#{total_cost.round(4)})"
-    rescue => e
-      puts "   ❌ Failed: #{e.message}"
-    end
+    # Use existing service to analyze
+    fetcher = RepositoryFetcher.new
+    fetcher.send(:analyze_repositories, repos)
 
+    puts "\n✅ Batch complete!"
     uncategorized_remaining = Repository.where(last_analyzed_at: nil).count
-    puts "\n✅ Batch complete! Total cost: $#{total_cost.round(4)}"
     puts "📊 #{uncategorized_remaining} uncategorized repositories remaining" if uncategorized_remaining > 0
   end
 

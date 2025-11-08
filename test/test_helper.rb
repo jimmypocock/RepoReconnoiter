@@ -30,6 +30,27 @@ module ActiveSupport
     # Run tests in parallel with specified workers
     parallelize(workers: :number_of_processors)
 
+    # Rails multi-database setup requires manually loading all schemas for parallel workers
+    # Our setup: multi-database config (primary, cache, queue, cable) all point to same DATABASE_URL
+    # Rails doesn't automatically load all schemas when using multi-database pattern
+    parallelize_setup do |worker|
+      # Suppress schema loading noise
+      ActiveRecord::Base.connection.execute("SET client_min_messages TO WARNING")
+
+      # Check if primary tables exist (indicates schemas already loaded by another worker)
+      # This prevents race conditions when multiple workers start simultaneously
+      tables = ActiveRecord::Base.connection.tables
+      needs_schemas = !tables.include?("ai_costs")
+
+      if needs_schemas
+        # Load ALL schemas into the shared database (matching production setup)
+        [ "schema.rb", "cache_schema.rb", "queue_schema.rb", "cable_schema.rb" ].each do |schema_file|
+          schema_path = Rails.root.join("db", schema_file)
+          load(schema_path) if schema_path.exist?
+        end
+      end
+    end
+
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
