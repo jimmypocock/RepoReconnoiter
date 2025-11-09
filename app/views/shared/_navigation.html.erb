@@ -2,7 +2,7 @@
   class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50"
   data-controller="navbar"
   data-navbar-target="nav"
-  data-navbar-start-condensed-value="<%= local_assigns[:start_condensed] || false %>"
+  data-navbar-homepage-value="<%= local_assigns[:homepage] || false %>"
 >
   <div class="container mx-auto px-4">
     <!-- Top Row: Logo and User Controls -->
@@ -19,8 +19,9 @@
           data-navbar-target="searchInline"
         >
           <%= render "shared/search_form",
-            container_classes: "w-full max-w-2xl",
-            input_classes: "w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" %>
+          container_classes: "w-full max-w-2xl",
+          input_classes:
+            "w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" %>
         </div>
       <% else %>
         <div class="flex-1 flex justify-center px-8">
@@ -84,20 +85,5 @@
         <% end %>
       </div>
     </div>
-    <!-- Bottom Row: Search Bar (only when signed in, hidden on mobile, visible on desktop until scrolled) -->
-    <% if user_signed_in? %>
-      <div
-        class="overflow-hidden transition-all duration-300 ease-in-out hidden md:block pb-4"
-        data-navbar-target="searchSection"
-        style="max-height: 200px;"
-      >
-        <div class="max-w-2xl mx-auto">
-          <p class="text-sm text-gray-600 mb-2 text-center transition-all duration-300" data-navbar-target="tagline">Use AI to search the best open source library for your project</p>
-          <%= render "shared/search_form",
-            container_classes: "w-full",
-            input_classes: "w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" %>
-        </div>
-      </div>
-    <% end %>
   </div>
 </nav>

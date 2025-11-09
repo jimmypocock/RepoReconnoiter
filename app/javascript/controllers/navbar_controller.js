@@ -4,33 +4,40 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["topRow", "searchSection", "tagline", "searchInline"]
   static values = {
-    threshold: { type: Number, default: 10 }, // Scroll threshold in pixels
-    startCondensed: { type: Boolean, default: false } // Start in condensed state
+    threshold: { type: Number, default: 100 }, // Scroll threshold in pixels
+    homepage: { type: Boolean, default: false } // True only on homepage (enables scroll behavior)
   }
 
   connect() {
     this.handleScroll = this.handleScroll.bind(this)
-    this.isCondensed = false
+    this.isCondensed = true // Default to condensed (navbar search inline)
     this.ticking = false
     this.ignoreScrollUntil = 0 // Timestamp to ignore scroll events until (dead zone)
 
-    // Set initial state based on mobile/desktop and scroll position
+    // On mobile, always condensed
     if (this.isMobile()) {
       this.shrinkInstant()
       this.isCondensed = true
-    } else if (this.startCondensedValue) {
-      // Desktop: Start condensed if explicitly requested (non-homepage pages)
-      this.shrinkInstant()
-      this.isCondensed = true
-    } else if (window.scrollY > this.thresholdValue) {
-      // Desktop: If already scrolled down (refresh or anchor link), start condensed
+    }
+    // On homepage desktop: Enable expand/shrink scroll behavior
+    else if (this.homepageValue) {
+      if (window.scrollY > this.thresholdValue) {
+        // If already scrolled down (refresh or anchor link), start condensed
+        this.shrinkInstant()
+        this.isCondensed = true
+      } else {
+        // At top of page, start expanded
+        this.isCondensed = false
+        // Don't call expand() - already in correct state
+      }
+      // Add scroll listener for homepage only
+      window.addEventListener("scroll", this.onScroll.bind(this), { passive: true })
+    }
+    // On non-homepage desktop: Always condensed, no scroll behavior
+    else {
       this.shrinkInstant()
       this.isCondensed = true
     }
-    // Desktop at top on homepage starts expanded (default state)
-
-    // Add scroll listener
-    window.addEventListener("scroll", this.onScroll.bind(this), { passive: true })
   }
 
   onScroll() {
