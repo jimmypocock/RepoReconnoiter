@@ -35,7 +35,7 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="bg-gray-50">
+  <body class="bg-gray-50" data-controller="search-sync">
     <%= render "shared/navigation", homepage: (controller_name == "comparisons" && action_name == "index") %>
 
     <!-- Flash Messages -->
