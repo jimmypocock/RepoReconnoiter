@@ -21,17 +21,20 @@ Rails.application.configure do
     # Block all object/embed/applet (Flash, Java, etc.)
     policy.object_src :none
 
-    # Scripts: self + nonce for inline Turbo scripts + Microsoft Clarity
+    # Scripts: self + inline scripts with nonces + Microsoft Clarity
     # Note: Turbo requires some inline event handlers, nonce handles this safely
-    # Note: Clarity loads from both www.clarity.ms (tag) and scripts.clarity.ms (main library)
-    policy.script_src :self, "https://www.clarity.ms", "https://scripts.clarity.ms"
+    # Note: Clarity uses load balancing across multiple domains (a.clarity.ms, b.clarity.ms, etc)
+    # Official MS docs: https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-csp
+    # Nonces are automatically added to inline scripts via config.content_security_policy_nonce_generator
+    policy.script_src :self, "https://*.clarity.ms", "https://c.bing.com"
 
-    # Styles: self + nonce for inline Tailwind styles
+    # Styles: self + inline styles with nonces
     # Note: Tailwind may inject some inline styles, nonce handles this safely
+    # Nonces are automatically added to inline styles via config.content_security_policy_nonce_generator
     policy.style_src :self
 
     # Allow AJAX/WebSocket connections to same origin and HTTPS (for Turbo, API calls, Clarity)
-    policy.connect_src :self, :https, "https://*.clarity.ms"
+    policy.connect_src :self, :https, "https://*.clarity.ms", "https://c.bing.com"
 
     # Block framing except from same origin (clickjacking prevention)
     policy.frame_ancestors :self
@@ -40,7 +43,8 @@ Rails.application.configure do
     policy.base_uri :self
 
     # Form action restriction (prevent form hijacking)
-    policy.form_action :self
+    # Allow GitHub OAuth redirects
+    policy.form_action :self, "https://github.com"
 
     # Upgrade insecure requests (HTTP -> HTTPS)
     policy.upgrade_insecure_requests true if Rails.env.production?

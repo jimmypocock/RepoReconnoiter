@@ -1,7 +1,7 @@
 <!-- Stats Bar -->
 <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 mb-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="grid <%= current_user_admin? ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-1 md:grid-cols-2' %> gap-6 text-center">
+    <div class="grid <%= current_user&.admin? ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-1 md:grid-cols-2' %> gap-6 text-center">
       <!-- Repositories Indexed -->
       <div>
         <div class="text-3xl font-bold"><%= @homepage.stats[:repositories_count] %></div>
@@ -13,7 +13,7 @@
         <div class="text-sm text-blue-100">Comparisons Created</div>
       </div>
 
-      <% if current_user_admin? %>
+      <% if current_user&.admin? %>
         <!-- Total Views (Admin Only) -->
         <div>
           <div class="text-3xl font-bold"><%= @homepage.stats[:total_views] %></div>

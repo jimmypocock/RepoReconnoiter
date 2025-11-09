@@ -22,8 +22,13 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   root "comparisons#index"
 
-  # Comparison routes (no index - root serves that purpose)
+  # Comparison routes
   resources :comparisons, only: [ :create, :show ]
+
+  # Admin routes
+  namespace :admin do
+    get "stats", to: "stats#index"
+  end
 
   # Mission Control for job monitoring (requires authentication)
   authenticate :user do

@@ -25,6 +25,7 @@ class AiCost < ApplicationRecord
   scope :recent, -> { order(date: :desc) }
   scope :this_month, -> { where("date >= ?", Time.current.beginning_of_month) }
   scope :this_week, -> { where("date >= ?", Time.current.beginning_of_week) }
+  scope :today, -> { where(date: Date.today) }
 
   #--------------------------------------
   # PUBLIC INSTANCE METHODS
@@ -50,6 +51,14 @@ class AiCost < ApplicationRecord
   # CLASS METHODS
   #--------------------------------------
   class << self
+    def spend_today
+      today.sum(:total_cost_usd)
+    end
+
+    def total_spend
+      sum(:total_cost_usd)
+    end
+
     def rollup_for_date(date, model)
       analyses = Analysis.by_model(model).created_on(date)
 

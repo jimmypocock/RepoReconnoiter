@@ -1,42 +1,138 @@
-<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-  <!-- Header Section -->
-  <div class="relative pt-8 pb-6 px-4">
-    <!-- User Menu (Top Right) -->
-    <% if user_signed_in? %>
-      <div class="absolute top-4 right-4 flex items-center gap-3">
-        <div class="flex items-center gap-2">
-          <% if current_user.github_avatar_url.present? %>
-            <%= image_tag current_user.github_avatar_url, class: "w-8 h-8 rounded-full", alt: current_user.github_username %>
-          <% end %>
-          <span class="text-sm font-medium text-gray-700"><%= current_user.github_username %></span>
+<div class="container mx-auto px-4 py-8">
+    <!-- Trending Row (collapsible) -->
+    <% if @presenter.trending.any? %>
+      <div data-controller="trending-row" data-trending-row-has-filters-value="<%= @presenter.has_filters? %>">
+        <div data-trending-row-target="container" class="<%= @presenter.has_filters? ? 'mb-4' : 'mb-8' %> transition-all duration-300">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <span class="text-2xl">🔥</span>
+              Trending This Week
+            </h2>
+          </div>
+
+          <!-- Horizontal Scrollable Cards -->
+          <div class="relative">
+            <div class="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth" data-trending-row-target="scroll">
+              <% @presenter.trending.each do |comparison| %>
+                <%= link_to comparison_path(comparison), class: "flex-none w-80 snap-start" do %>
+                  <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition p-6 h-full border border-gray-200 hover:border-blue-300">
+                    <h3 class="font-semibold text-gray-900 mb-3 line-clamp-2"><%= comparison.user_query %></h3>
+                    <div class="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                      <span><%= comparison.repos_compared_count %> repos</span>
+                      <span>•</span>
+                      <span><%= comparison.view_count %> views</span>
+                      <span>•</span>
+                      <span><%= time_ago_in_words(comparison.created_at) %> ago</span>
+                    </div>
+                    <% if comparison.categories.any? %>
+                      <div class="flex flex-wrap gap-2">
+                        <% comparison.categories.first(3).each do |category| %>
+                          <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-md"><%= category.name %></span>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
         </div>
-        <%= button_to "Sign Out", destroy_user_session_path, method: :delete, class: "text-sm text-gray-600 hover:text-gray-900 underline" %>
       </div>
     <% end %>
 
-    <!-- Title -->
-    <div class="text-center">
-      <h1 class="text-5xl font-bold text-gray-900 mb-3">Repo Reconnoiter</h1>
-      <p class="text-xl text-gray-600">Find the perfect library for your project</p>
-    </div>
-  </div>
-  <!-- Stats Bar -->
-  <%= render "stats_bar" %>
+    <!-- Filter Bar -->
+    <div class="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <%= form_with url: root_path, method: :get, class: "flex flex-wrap gap-3 items-center" do |f| %>
+        <!-- Search -->
+        <div class="flex-1 min-w-64">
+          <%= f.text_field :search,
+              value: params[:search],
+              placeholder: "Search comparisons...",
+              class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+        </div>
 
-  <div class="w-full max-w-6xl mx-auto px-4 py-8">
-    <!-- Auth/Search Section -->
-    <div class="w-full max-w-3xl mx-auto mb-12">
-      <% if user_signed_in? %>
-        <%= render "search_section" %>
-      <% else %>
-        <%= render "auth_section" %>
+        <!-- Category Dropdown -->
+        <div>
+          <%= f.select :category,
+              options_for_select(
+                [["All Categories", ""]] + Category.all.order(:name).pluck(:name, :slug),
+                params[:category]
+              ),
+              {},
+              class: "px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+        </div>
+
+        <!-- Date Range -->
+        <div>
+          <%= f.select :date,
+              options_for_select(
+                [["All Time", ""], ["This Week", "week"], ["This Month", "month"]],
+                params[:date]
+              ),
+              {},
+              class: "px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+        </div>
+
+        <!-- Sort -->
+        <div>
+          <%= f.select :sort,
+              options_for_select(
+                [["Newest", "newest"], ["Most Popular", "popular"], ["Trending", "trending"]],
+                params[:sort]
+              ),
+              {},
+              class: "px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+        </div>
+
+        <%= f.submit "Apply Filters", class: "px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium" %>
+
+        <% if @presenter.has_filters? %>
+          <%= link_to "Clear", root_path, class: "px-4 py-2 text-gray-600 hover:text-gray-900" %>
+        <% end %>
       <% end %>
     </div>
-    <!-- Trending Comparisons -->
-    <%= render "trending_section" %>
-    <!-- Browse by Category -->
-    <%= render "browse_categories" %>
+
     <!-- Comparisons List -->
-    <%= render "comparisons_list" %>
-  </div>
+    <div class="space-y-4">
+      <% if @comparisons.any? %>
+        <% @comparisons.each do |comparison| %>
+          <%= link_to comparison_path(comparison), class: "block" do %>
+            <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition p-6 border border-gray-200 hover:border-blue-300">
+              <h3 class="text-xl font-semibold text-gray-900 mb-3"><%= comparison.user_query %></h3>
+              <div class="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                <span><%= comparison.repos_compared_count %> repositories compared</span>
+                <span>•</span>
+                <span><%= comparison.view_count %> views</span>
+                <span>•</span>
+                <span><%= time_ago_in_words(comparison.created_at) %> ago</span>
+              </div>
+              <% if comparison.categories.any? %>
+                <div class="flex flex-wrap gap-2">
+                  <% comparison.categories.first(5).each do |category| %>
+                    <span class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-md"><%= category.name %></span>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        <% end %>
+
+        <!-- Pagination -->
+        <div class="mt-8">
+          <%== pagy_nav(@pagy) if @pagy.pages > 1 %>
+        </div>
+      <% else %>
+        <!-- Empty State -->
+        <div class="bg-white rounded-xl shadow-sm p-12 text-center">
+          <div class="text-gray-400 mb-4">
+            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">No comparisons found</h3>
+          <p class="text-gray-600 mb-6">Try adjusting your filters or search terms</p>
+          <%= link_to "Clear Filters", root_path, class: "inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium" %>
+        </div>
+      <% end %>
+    </div>
 </div>

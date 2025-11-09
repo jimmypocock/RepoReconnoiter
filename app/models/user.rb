@@ -32,6 +32,11 @@ class User < ApplicationRecord
   # PUBLIC INSTANCE METHODS
   #--------------------------------------
 
+  def admin?
+    allowed_admin_github_ids = ENV.fetch("MISSION_CONTROL_ADMIN_IDS", "").split(",").map(&:strip).reject(&:empty?)
+    allowed_admin_github_ids.include?(github_id.to_s)
+  end
+
   def can_create_comparison?
     comparisons.where("created_at > ?", 24.hours.ago).count < daily_comparison_limit
   end

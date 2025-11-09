@@ -3,8 +3,8 @@ class ComparisonsController < ApplicationController
   before_action :check_rate_limit, only: [ :create ]
 
   def index
-    @homepage = HomePagePresenter.new
-    @pagy, @comparisons = pagy_array(@homepage.comparisons, items: 18)
+    @presenter = BrowseComparisonsPresenter.new(params)
+    @pagy, @comparisons = pagy(@presenter.comparisons, items: 20)
   end
 
   def create

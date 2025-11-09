@@ -1,102 +1,85 @@
 <nav class="bg-white shadow-sm border-b border-gray-200">
   <div class="container mx-auto px-4">
     <div class="flex items-center justify-between h-16">
-      <!-- Logo & Brand -->
-      <div class="flex items-center gap-8">
-        <%= link_to root_path, class: "flex items-center gap-3 hover:opacity-80 transition" do %>
-          <%= image_tag "/icon.png", alt: "Repo Reconnoiter", class: "w-8 h-8" %>
-          <span class="text-xl font-bold text-gray-900 hidden sm:block">Repo Reconnoiter</span>
-        <% end %>
+      <!-- Left: Logo & Brand -->
+      <%= link_to root_path, class: "flex items-center gap-3 hover:opacity-80 transition flex-shrink-0" do %>
+        <%= image_tag "/icon.png", alt: "Repo Reconnoiter", class: "w-8 h-8" %>
+        <span class="text-xl font-bold text-gray-900">Repo Reconnoiter</span>
+      <% end %>
 
-        <!-- Desktop Navigation Links -->
-        <div class="hidden md:flex items-center gap-6">
-          <!-- Browse Dropdown -->
-          <div class="relative" data-controller="dropdown">
-            <button type="button" data-action="click->dropdown#toggle" class="flex items-center gap-1 text-gray-700 hover:text-gray-900 font-medium">
-              Browse
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </button>
-            <div data-dropdown-target="menu" class="hidden absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-              <%= link_to "Comparisons", "#", class: "block px-4 py-2 text-gray-700 hover:bg-gray-50" %>
-              <%= link_to "Categories", "#", class: "block px-4 py-2 text-gray-700 hover:bg-gray-50" %>
-              <%= link_to "Trending", "#", class: "block px-4 py-2 text-gray-700 hover:bg-gray-50" %>
+      <!-- Center: Waitlist Link or Search Bar -->
+      <div class="flex-1 flex justify-center px-8">
+        <% if user_signed_in? %>
+          <!-- Search Bar -->
+          <%= form_with url: comparisons_path, method: :post, class: "w-full max-w-2xl" do |f| %>
+            <div class="relative">
+              <%= f.text_field :query,
+                  placeholder: "What library or tool are you looking for?",
+                  class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
+                  maxlength: 500 %>
             </div>
-          </div>
-        </div>
+          <% end %>
+        <% else %>
+          <!-- Waitlist Link -->
+          <%= link_to "Want to use AI to search repositories? Join the Waitlist",
+              "mailto:jimmycpocock+RepoReconnoiter@gmail.com?subject=I'd like to try Repo Reconnoiter!&body=Hi,%0D%0A%0D%0AI'd like to get access to Repo Reconnoiter.%0D%0A%0D%0AMy GitHub username is: [your_github_username]%0D%0A%0D%0AThanks!",
+              class: "text-md font-medium text-gray-700 hover:text-gray-900 transition" %>
+        <% end %>
       </div>
 
-      <!-- Right Side: Search & Auth -->
-      <div class="flex items-center gap-4">
-        <!-- Search Box (Desktop) -->
-        <div class="hidden lg:block">
-          <div class="relative">
-            <input
-              type="text"
-              placeholder="Search repositories..."
-              class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-          </div>
-        </div>
-
-        <!-- User Menu -->
+      <!-- Right: Sign In Button or User Menu -->
+      <div class="flex items-center gap-6 flex-shrink-0">
         <% if user_signed_in? %>
+          <!-- User Menu -->
           <div class="relative" data-controller="dropdown">
-            <button type="button" data-action="click->dropdown#toggle" class="flex items-center gap-2 hover:opacity-80 transition">
+            <div class="flex items-center gap-2">
               <% if current_user.github_avatar_url.present? %>
-                <%= image_tag current_user.github_avatar_url, class: "w-8 h-8 rounded-full", alt: current_user.github_username %>
+                <%= image_tag current_user.github_avatar_url, class: "w-10 h-10 rounded-full", alt: current_user.github_username %>
               <% end %>
-              <span class="hidden md:block text-sm font-medium text-gray-700"><%= current_user.github_username %></span>
-              <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </button>
-            <div data-dropdown-target="menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-              <%= link_to "My Comparisons", "#", class: "block px-4 py-2 text-gray-700 hover:bg-gray-50" %>
-              <% if current_user_admin? %>
-                <%= link_to "Job Dashboard", jobs_path, class: "block px-4 py-2 text-gray-700 hover:bg-gray-50" %>
+              <button
+                type="button"
+                data-action="click->dropdown#toggle"
+                class="
+                  w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition cursor-pointer
+                "
+              >
+                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+              </button>
+            </div>
+            <div
+              data-dropdown-target="menu"
+              class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+            >
+              <% if current_user.admin? %>
+                <%= link_to "Admin Stats", admin_stats_path, target: "_blank", class: "block px-4 py-2 text-gray-700 hover:bg-gray-50" %>
+                <%= link_to "Job Dashboard",
+                mission_control_jobs_path,
+                target: "_blank",
+                class: "block px-4 py-2 text-gray-700 hover:bg-gray-50" %>
+                <div class="border-t border-gray-200 my-1"></div>
               <% end %>
-              <div class="border-t border-gray-200 my-1"></div>
-              <%= button_to "Sign Out", destroy_user_session_path, method: :delete, class: "block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50" %>
+              <%= button_to "Sign Out",
+              destroy_user_session_path,
+              method: :delete,
+              class: "block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50" %>
             </div>
           </div>
         <% else %>
-          <%= button_to user_github_omniauth_authorize_path, method: :post, class: "inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition font-medium" do %>
+          <!-- Sign In with GitHub Button -->
+          <%= button_to user_github_omniauth_authorize_path,
+              method: :post,
+              class: "inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-900 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors cursor-pointer",
+              form: { class: "inline-block", data: { turbo: false } } do %>
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              <path
+                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+              />
             </svg>
             Sign in with GitHub
           <% end %>
         <% end %>
-
-        <!-- Mobile Menu Button -->
-        <button type="button" data-controller="mobile-menu" data-action="click->mobile-menu#toggle" class="md:hidden p-2 text-gray-700 hover:text-gray-900">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Mobile Navigation -->
-    <div data-mobile-menu-target="menu" class="hidden md:hidden border-t border-gray-200 py-4">
-      <div class="flex flex-col gap-2">
-        <%= link_to "Comparisons", "#", class: "px-4 py-2 text-gray-700 hover:bg-gray-50 rounded" %>
-        <%= link_to "Categories", "#", class: "px-4 py-2 text-gray-700 hover:bg-gray-50 rounded" %>
-        <%= link_to "Trending", "#", class: "px-4 py-2 text-gray-700 hover:bg-gray-50 rounded" %>
-
-        <!-- Mobile Search -->
-        <div class="px-4 py-2">
-          <input
-            type="text"
-            placeholder="Search repositories..."
-            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
       </div>
     </div>
   </div>
