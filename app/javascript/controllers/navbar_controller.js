@@ -4,7 +4,8 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["topRow", "searchSection", "tagline", "searchInline"]
   static values = {
-    threshold: { type: Number, default: 10 } // Scroll threshold in pixels
+    threshold: { type: Number, default: 10 }, // Scroll threshold in pixels
+    startCondensed: { type: Boolean, default: false } // Start in condensed state
   }
 
   connect() {
@@ -17,12 +18,16 @@ export default class extends Controller {
     if (this.isMobile()) {
       this.shrinkInstant()
       this.isCondensed = true
+    } else if (this.startCondensedValue) {
+      // Desktop: Start condensed if explicitly requested (non-homepage pages)
+      this.shrinkInstant()
+      this.isCondensed = true
     } else if (window.scrollY > this.thresholdValue) {
       // Desktop: If already scrolled down (refresh or anchor link), start condensed
       this.shrinkInstant()
       this.isCondensed = true
     }
-    // Desktop at top starts expanded (default state)
+    // Desktop at top on homepage starts expanded (default state)
 
     // Add scroll listener
     window.addEventListener("scroll", this.onScroll.bind(this), { passive: true })

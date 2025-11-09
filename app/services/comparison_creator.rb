@@ -77,7 +77,7 @@ class ComparisonCreator
     fetcher = RepositoryFetcher.new
     result = fetcher.fetch_and_prepare(
       github_queries: parsed[:github_queries],
-      limit: 10
+      limit: 15
     )
 
     # Raise error if no repositories found

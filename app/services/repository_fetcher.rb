@@ -25,11 +25,11 @@ class RepositoryFetcher
     # Step 3: Save to database using Repository.from_github_api
     repositories = save_repositories(sorted_repos)
 
-    # Step 4: Split into top 5 (for comparison) and others (lighter recommendations)
-    top_repos = repositories.first(5)
-    other_repos = repositories[5..-1] || []
+    # Step 4: Split into top N (for comparison) and others (lighter recommendations)
+    top_repos = repositories.first(limit)
+    other_repos = repositories[limit..-1] || []
 
-    # Step 5: Analyze top 5 synchronously (wait for completion)
+    # Step 5: Analyze top N synchronously (wait for completion)
     analyze_repositories(top_repos)
 
     # Return structured data for comparison

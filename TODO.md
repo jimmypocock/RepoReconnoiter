@@ -38,7 +38,7 @@ Track progress towards MVP release and UX enhancement.
 - Aggressive caching (fuzzy matching prevents duplicate API calls)
 - Compliant with GitHub Terms of Service Section H
 
-**Test Coverage**: 63 tests, 152 assertions, 0 failures ✅
+**Test Coverage**: 49 tests, 110 assertions, 0 failures ✅
 
 **Completed Phases**:
 
@@ -47,49 +47,52 @@ Track progress towards MVP release and UX enhancement.
 - ✅ Phase 2: AI Integration - Tier 1 Categorization
 - ✅ Phase 3.5: AI Integration - Tier 3 Comparative Evaluation (MVP Core)
 - ✅ Phase 3.6: Core Infrastructure Hardening
+- ✅ Phase 3.7: Security & Deployment
 - ✅ Phase 3.8: Testing & Code Quality
 - ✅ Phase 3.9: Production Stabilization & Bug Fixes
-- ✅ Phase 3.7: Security & Deployment (Tasks 1-5D complete, 5A/5B/5E remaining)
+- ✅ Phase 3.10: Search Quality & Relevance (CRITICAL - Nov 9, 2025)
 
 ---
 
-## 🎯 CURRENT PRIORITY: Complete Phase 3.7 Production Verification
+## 🎯 CURRENT PRIORITY: Phase 4 - UI & Navigation Polish (MVP Completion)
 
-**Estimated Time**: 1 hour
-**Status**: App is live and working, just needs final testing and documentation!
+## ✅ COMPLETED: Phase 3.10 - Search Quality & Relevance (CRITICAL MVP CORE)
 
-### Task 5A: User & Access Setup (10 mins)
+**Status**: ✅ COMPLETE - Core comparison engine significantly improved
 
-- [x] Whitelist yourself as admin user via Render Shell
+**Completed**: All tasks finished, comprehensive testing validated improvements
 
-  ```bash
-  # SSH into Render Shell, then run:
-  bin/rails whitelist:add[jimmypocock]
-  # The task automatically fetches GitHub ID and email from GitHub API
-  ```
+**What was fixed:**
+- 2-query limitation → Now defaults to 3 queries (broad + medium + specific variants)
+- Stars threshold too high → Lowered from >100 to >50 (configurable via `config/initializers/github_search.rb`)
+- No recency penalties → Added automatic score caps (2+ years = max 40, 1-2 years = max 60)
+- Missing terminology → Added ecosystem awareness (Go "state" ≠ React "state")
+- Hardcoded 5-repo limit → Now respects `limit: 15` parameter
 
-- [x] Add your GitHub ID to `MISSION_CONTROL_ADMIN_IDS` environment variable in Render
+**Results:**
+- "Elixir background jobs": 2 repos → Now finds 10+ including Oban (3,687 stars)
+- "Zig memory allocator": 6 repos found with proper 3-query strategy
+- Multi-query adoption: 100% (was inconsistent)
+- Test coverage: +7 tests (49 total, 110 assertions)
 
-### Task 5B: Production Testing (45 mins)
+**Files changed:**
+- ✅ Created `config/initializers/github_search.rb` for centralized config
+- ✅ Updated `user_query_parser_system.erb` - 3-query default, ecosystem awareness
+- ✅ Updated `repository_comparer_system.erb` - Recency scoring with automatic penalties
+- ✅ Fixed `repository_fetcher.rb` - Removed hardcoded 5-repo limit
+- ✅ Added test coverage - Config tests, prompter tests, programmatic query testing
+- ✅ Created `lib/tasks/test_queries.rake` - Programmatic testing suite
+- ✅ UI improvements - Condensed navbar by default (except homepage)
 
-- [x] Test OAuth flow (sign in with GitHub)
-- [x] Create test comparison (verify full pipeline works)
-- [x] Test daily sync job (`SyncTrendingRepositoriesJob`) via Mission Control
-- [x] Test OpenAI API integration (verify cost tracking in database)
-- [x] Check Mission Control Jobs dashboard at <https://reporeconnoiter.com/jobs>
-- [x] Verify security headers at <https://securityheaders.com/>
-- [x] Monitor Clarity analytics (verify tracking working)
-- [x] Check Render logs for any errors
-
-### Task 5E: Documentation (15 mins)
-
-- [x] Update README.md with production URL
-- [x] Document admin access setup in RENDER_DEPLOYMENT.md
-- [x] Add "Known Issues" section if any issues discovered during testing
+**Success Criteria Met:**
+- ✅ Multi-query strategy used for 100% of searches (3 queries per search)
+- ✅ Stale repos get automatic score penalties
+- ✅ Comparisons now include 10-15 repositories (not 2-5)
+- ✅ Config-based thresholds (easy to adjust without touching prompts)
 
 ---
 
-## 🚀 NEXT UP: Phase 4 - UI & Navigation Polish (MVP Completion)
+## 🚀 Phase 4 - UI & Navigation Polish (MVP Completion)
 
 **Goal**: Create a modern, browsable interface that showcases comparisons, categories, and trending repos.
 

@@ -38,10 +38,17 @@ Guidelines for comparison:
 
 **Ranking Criteria** (in order of importance):
 1. **Requirements Match**: How well does it satisfy the user's stated constraints?
-2. **Maturity & Stability**: Is it production-ready? Active maintenance? Community support?
-3. **Quality Signals**: Stars, activity, issues, documentation quality
-4. **Technical Fit**: Does it match their tech stack? Architecture? Scale needs?
-5. **Adoption**: Used in production by real companies? Battle-tested?
+2. **Maintenance & Recency** (CRITICAL):
+   - Is it actively maintained? Recent commits/releases?
+   - **AUTOMATIC PENALTIES**:
+     * No updates in 2+ years: Maximum score 40 (regardless of other factors)
+     * No updates in 1-2 years: Maximum score 60
+     * Updates in last 6 months: Eligible for 75+ scores
+     * Active development (updates in last 3 months): Eligible for 90+ scores
+   - Archived repos should be ranked last with score ≤ 30
+3. **Maturity & Stability**: Is it production-ready? Community support? Battle-tested?
+4. **Quality Signals**: Stars, forks, issues, documentation quality
+5. **Technical Fit**: Does it match their tech stack? Architecture? Scale needs?
 
 **Scoring** (0-100):
 - 90-100: Perfect fit, addresses all requirements, production-proven, excellent community
@@ -53,9 +60,11 @@ Guidelines for comparison:
 **Pros & Cons**:
 - Be specific and relevant to the user's needs
 - Pros: What makes this repo stand out? What does it do exceptionally well?
+  - If actively maintained (updates in last 3 months), include "Active development" or "Recently updated" as a pro
 - Cons: What are the real limitations? What might make someone NOT choose this?
+  - **REQUIRED**: If no updates in 1+ year, MUST include as first con: "⚠️ No updates in X years" or "⚠️ Last updated X months ago"
+  - **REQUIRED**: If archived, MUST include: "⚠️ Archived - no longer maintained"
 - Include 3-5 pros, 1-3 cons per repo
-- Mention if archived/unmaintained/low activity
 
 **Fit Reasoning**:
 - Explain how this repo addresses (or doesn't address) the user's specific constraints
@@ -70,8 +79,12 @@ Guidelines for comparison:
 
 **Important**:
 - Use the AI-generated summaries and categories to inform your analysis
-- Consider GitHub quality signals (stars, activity, open issues)
+- **CRITICAL: Last updated date is provided for EVERY repo - use it to enforce recency penalties**
+- Stale repos (2+ years) cannot score above 40, even if they have many stars
+- Active repos (updated in last 3 months) should be prioritized in rankings
 - Be objective - don't over-hype or dismiss repos unfairly
-- If a repo is archived or inactive, note this as a major con
-- Rank ALL repositories provided (1-N)
+- **CRITICAL: You MUST rank EVERY SINGLE repository provided in the "ranking" array - no exceptions**
+- If 15 repos are provided, your "ranking" array MUST contain all 15 entries
+- Even lower-quality options should be included - developers want comprehensive comparisons
 - Scores should reflect real differences (don't give everything 90+)
+- Technology moves fast - recent updates indicate the library keeps up with ecosystem changes

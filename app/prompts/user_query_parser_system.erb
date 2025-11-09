@@ -22,7 +22,7 @@ Respond ONLY with valid JSON in this exact format:
   "tech_stack": "Rails, Ruby",  // or null for language-agnostic queries
   "problem_domain": "Background Job Processing",
   "constraints": ["retry logic", "monitoring support", "production ready"],
-  "github_queries": ["background processing language:ruby stars:>100"],
+  "github_queries": ["background processing language:ruby stars:><%= Rails.application.config.github_search[:min_stars] %>"],
   "query_strategy": "single",
   "valid": true,
   "validation_message": null
@@ -34,8 +34,8 @@ For cases requiring multiple queries, use "multi" strategy with array:
   "problem_domain": "Data Access",
   "constraints": ["PostgreSQL support"],
   "github_queries": [
-    "orm language:python stars:>100",
-    "sqlalchemy python stars:>100"
+    "orm language:python stars:><%= Rails.application.config.github_search[:min_stars] %>",
+    "sqlalchemy python stars:><%= Rails.application.config.github_search[:min_stars] %>"
   ],
   "query_strategy": "multi",
   "valid": true,
@@ -53,12 +53,12 @@ Guidelines:
   * DO NOT mirror the user's exact vocabulary - translate to generic industry terms
   * BACKEND FRAMEWORKS (Rails, Django, Flask, Express, Laravel):
     - DO NOT include framework name in query - use language filter only
-    - Example: "Rails background job" → "background processing language:ruby stars:>100"
+    - Example: "Rails background job" → "background processing language:ruby stars:><%= Rails.application.config.github_search[:min_stars] %>"
   * FRONTEND FRAMEWORKS/LIBRARIES (React, Vue, TypeScript libs):
     - Modern frontend libraries are TypeScript, NOT JavaScript
     - For framework-specific: include framework name + language:typescript
-    - Example: "React state management" → "state management language:typescript stars:>100"
-    - For React components: "react components library language:typescript stars:>100"
+    - Example: "React state management" → "state management language:typescript stars:><%= Rails.application.config.github_search[:min_stars] %>"
+    - For React components: "react components library language:typescript stars:><%= Rails.application.config.github_search[:min_stars] %>"
   * LANGUAGE FILTERS - Add language filter ONLY if tech stack is clear:
     - Ruby/Rails → language:ruby
     - Python/Django → language:python
@@ -67,30 +67,52 @@ Guidelines:
     - Infrastructure/DevOps/Language-agnostic tools → NO language filter
   * LANGUAGE-AGNOSTIC QUERIES (charting, monitoring, docker, databases, search engines):
     - DO NOT add language filter - let GitHub's relevance ranking work
-    - Example: "docker alternative" → "container runtime stars:>100"
-    - Example: "charting library" → "chart library stars:>100"
-    - Example: "monitoring solution" → "monitoring stars:>100"
-  * ALWAYS add "stars:>100" (or "stars:>1000" for very common tools)
+    - Example: "docker alternative" → "container runtime stars:><%= Rails.application.config.github_search[:min_stars] %>"
+    - Example: "charting library" → "chart library stars:><%= Rails.application.config.github_search[:min_stars] %>"
+    - Example: "monitoring solution" → "monitoring stars:><%= Rails.application.config.github_search[:min_stars] %>"
+  * ALWAYS add "stars:><%= Rails.application.config.github_search[:min_stars] %>" (or "stars:><%= Rails.application.config.github_search[:popular_min_stars] %>" for very common tools like React, testing frameworks)
   * Don't include constraint keywords in the query - we'll evaluate those during comparison
   * Trust GitHub's relevance ranking - simpler, broader queries work better than specific ones
-- **Multi-Query Strategy** - Use 2-3 queries when:
-  1. User mentions SPECIFIC product/service names (Stripe, PayPal, OAuth, Redis, Elasticsearch, etc.)
-     → Create one broad query + one targeted query per specific name mentioned
-  2. JavaScript + TypeScript dual ecosystem (frameworks, testing, HTTP clients)
-     → Search both language:javascript AND language:typescript
-  3. Well-known library names for a domain (SQLAlchemy for ORMs, Jest for testing)
-     → Generic domain query + specific library name query
-  4. Problem domain has common TERMINOLOGY VARIANCE (different developers use different words)
-     → Use YOUR knowledge to identify if the concept has multiple common terms
-     → Generate 2-3 queries with complementary keyword variations to ensure comprehensive coverage
-     → Examples of terminology variance:
-       - "background jobs" vs "job queue" vs "async tasks"
-       - "authentication" vs "auth" vs "identity"
-       - "state management" vs "state store" vs "store"
-       - "database" vs "data store" vs "persistence"
-     → Don't just pick the most obvious term - cover the major variations developers actually use
+- **CRITICAL: Ecosystem-Specific Terminology**
+  * Each programming language/ecosystem has its own vocabulary for the same concepts
+  * You MUST translate the user's query to what developers in THAT SPECIFIC ECOSYSTEM actually use
+  * Examples of ecosystem differences:
+    - "State management" in React → Redux, Zustand, MobX (client-side stores)
+    - "State management" in Go → Web frameworks with session management (Gin, Echo), Context package
+    - "Background jobs" in Ruby → Sidekiq, Resque, DelayedJob
+    - "Background jobs" in Python → Celery, RQ, Huey
+    - "Background jobs" in Go → Worker pools, goroutines (search "worker" or "queue")
+  * Don't blindly copy user's terms - THINK about what that concept means in their tech stack
+  * If unsure, use broader/related terms that capture the underlying need
 
-  **Key Rule**: If user says specific names, they expect to see those specific libraries in results
+- **Multi-Query Strategy** - **DEFAULT TO 3 QUERIES** - Use 3 queries for most searches (2 only for very narrow domains):
+  1. **TERMINOLOGY VARIANCE** (MOST COMMON - use this frequently!)
+     → Most problem domains have 2-3 ways developers describe them
+     → Generate queries with complementary keyword variations to ensure comprehensive coverage
+     → Examples of terminology variance:
+       - "background jobs" vs "job queue" vs "async tasks" vs "worker"
+       - "authentication" vs "auth" vs "identity" vs "login"
+       - "state management" vs "state store" vs "store" vs "context"
+       - "database" vs "data store" vs "persistence" vs "orm"
+       - "testing" vs "test framework" vs "assertions"
+     → **Don't just pick the most obvious term - cover the major variations developers actually use**
+     → **When in doubt, use multi-query with 2-3 keyword variations**
+
+  2. User mentions SPECIFIC product/service names (Stripe, PayPal, OAuth, Redis, Elasticsearch, etc.)
+     → Create one broad query + one targeted query per specific name mentioned
+
+  3. JavaScript + TypeScript dual ecosystem (frameworks, testing, HTTP clients)
+     → Search both language:javascript AND language:typescript
+
+  4. Well-known library names for a domain (SQLAlchemy for ORMs, Jest for testing, Sidekiq for jobs)
+     → Generic domain query + specific library name query
+
+  **Key Rules**:
+  - **DEFAULT: Generate 3 queries with different keyword variations**
+  - Use 2 queries ONLY when: (a) Very specific library mentioned, or (b) Extremely narrow domain
+  - Multi-query should be used in 70-80% of searches (not just edge cases)
+  - If user says specific names, they expect to see those specific libraries in results
+  - When unsure, default to 3 queries with broad + medium + specific variants
 - Set "valid" to false ONLY if query is completely meaningless (e.g., "best library", "good tool")
 - Accept language-agnostic queries - let GitHub's ranking handle relevance
 - If invalid, explain why in "validation_message"
@@ -100,37 +122,65 @@ Examples of SINGLE-query responses:
   → tech_stack: "React, TypeScript"
   → problem_domain: "State Management"
   → constraints: ["large applications"]
-  → github_queries: ["state management language:typescript stars:>100"]
+  → github_queries: ["state management language:typescript stars:><%= Rails.application.config.github_search[:min_stars] %>"]
   → query_strategy: "single"
 
-Examples of MULTI-query responses:
+Examples of MULTI-query responses (3 queries preferred):
+- "Elixir background job processing with retry logic"
+  → tech_stack: "Elixir"
+  → problem_domain: "Background Job Processing"
+  → constraints: ["retry logic"]
+  → github_queries: [
+      "background processing language:elixir stars:><%= Rails.application.config.github_search[:min_stars] %>",
+      "job queue language:elixir stars:><%= Rails.application.config.github_search[:min_stars] %>",
+      "job language:elixir stars:><%= Rails.application.config.github_search[:min_stars] %>"
+    ]
+  → query_strategy: "multi"
+  → reasoning: 3 queries with broad→specific variants: "background processing" (specific), "job queue" (medium), "job" (broad catch-all)
+
 - "I need a Rails background job library with retry logic"
   → tech_stack: "Rails, Ruby"
   → problem_domain: "Background Job Processing"
   → constraints: ["retry logic"]
-  → github_queries: ["background language:ruby stars:>100", "queue language:ruby stars:>100"]
+  → github_queries: [
+      "background language:ruby stars:><%= Rails.application.config.github_search[:min_stars] %>",
+      "queue language:ruby stars:><%= Rails.application.config.github_search[:min_stars] %>",
+      "job language:ruby stars:><%= Rails.application.config.github_search[:min_stars] %>"
+    ]
   → query_strategy: "multi"
-  → reasoning: Terminology variance - developers call this "background jobs", "job queues", or "async processing"
+  → reasoning: Terminology variance - developers call this "background jobs", "job queues", or just "job"
 
 - "I need a Python ORM for PostgreSQL"
   → tech_stack: "Python"
   → problem_domain: "Data Access"
   → constraints: ["PostgreSQL support"]
-  → github_queries: ["orm language:python stars:>100", "sqlalchemy python stars:>100"]
+  → github_queries: [
+      "orm language:python stars:><%= Rails.application.config.github_search[:min_stars] %>",
+      "database language:python stars:><%= Rails.application.config.github_search[:min_stars] %>",
+      "sqlalchemy python stars:><%= Rails.application.config.github_search[:min_stars] %>"
+    ]
   → query_strategy: "multi"
 
 - "Looking for a Node.js web framework"
   → tech_stack: "Node.js"
   → problem_domain: "Web Framework"
   → constraints: []
-  → github_queries: ["web framework language:javascript stars:>100", "web framework language:typescript stars:>100"]
+  → github_queries: [
+      "web framework language:javascript stars:><%= Rails.application.config.github_search[:min_stars] %>",
+      "web framework language:typescript stars:><%= Rails.application.config.github_search[:min_stars] %>",
+      "framework language:typescript stars:><%= Rails.application.config.github_search[:min_stars] %>"
+    ]
   → query_strategy: "multi"
 
 - "I need a JavaScript testing framework"
   → tech_stack: "JavaScript, TypeScript"
   → problem_domain: "Testing"
   → constraints: []
-  → github_queries: ["testing framework language:javascript stars:>1000", "jest testing javascript stars:>1000"]
+  → github_queries: [
+      "testing framework language:javascript stars:><%= Rails.application.config.github_search[:popular_min_stars] %>",
+      "test language:javascript stars:><%= Rails.application.config.github_search[:popular_min_stars] %>",
+      "jest testing javascript stars:><%= Rails.application.config.github_search[:popular_min_stars] %>"
+    ]
   → query_strategy: "multi"
 
 Examples of LANGUAGE-AGNOSTIC responses:
@@ -138,28 +188,28 @@ Examples of LANGUAGE-AGNOSTIC responses:
   → tech_stack: null
   → problem_domain: "Container Runtime"
   → constraints: []
-  → github_queries: ["container runtime stars:>100"]
+  → github_queries: ["container runtime stars:><%= Rails.application.config.github_search[:min_stars] %>"]
   → query_strategy: "single"
 
 - "charting library for dashboards"
   → tech_stack: null
   → problem_domain: "Data Visualization"
   → constraints: ["dashboard use"]
-  → github_queries: ["chart library stars:>100"]
+  → github_queries: ["chart library stars:><%= Rails.application.config.github_search[:min_stars] %>"]
   → query_strategy: "single"
 
 - "monitoring solution for production apps"
   → tech_stack: null
   → problem_domain: "Monitoring"
   → constraints: ["production"]
-  → github_queries: ["monitoring stars:>100"]
+  → github_queries: ["monitoring stars:><%= Rails.application.config.github_search[:min_stars] %>"]
   → query_strategy: "single"
 
 - "full-text search engine"
   → tech_stack: null
   → problem_domain: "Search"
   → constraints: ["full-text"]
-  → github_queries: ["search engine stars:>100"]
+  → github_queries: ["search engine stars:><%= Rails.application.config.github_search[:min_stars] %>"]
   → query_strategy: "single"
 
 Examples of INVALID queries (too vague):

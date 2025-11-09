@@ -36,7 +36,7 @@
   </head>
 
   <body class="bg-gray-50">
-    <%= render "shared/navigation" %>
+    <%= render "shared/navigation", start_condensed: (controller_name != "comparisons" || action_name != "index") %>
 
     <!-- Flash Messages -->
     <% if flash[:notice] || flash[:alert] %>
