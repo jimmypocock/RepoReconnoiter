@@ -71,19 +71,19 @@ development:
 test:
   primary:
     <<: *default
-    database: repo_reconnoiter_test
+    url: <%= ENV.fetch("DATABASE_URL") { "postgres:///repo_reconnoiter_test" } %>
     migrations_paths: db/migrate
   cache:
     <<: *default
-    database: repo_reconnoiter_test
+    url: <%= ENV.fetch("DATABASE_URL") { "postgres:///repo_reconnoiter_test" } %>
     migrations_paths: db/cache_migrate
   queue:
     <<: *default
-    database: repo_reconnoiter_test
+    url: <%= ENV.fetch("DATABASE_URL") { "postgres:///repo_reconnoiter_test" } %>
     migrations_paths: db/queue_migrate
   cable:
     <<: *default
-    database: repo_reconnoiter_test
+    url: <%= ENV.fetch("DATABASE_URL") { "postgres:///repo_reconnoiter_test" } %>
     migrations_paths: db/cable_migrate
 
 # As with config/credentials.yml, you never want to store sensitive information,
