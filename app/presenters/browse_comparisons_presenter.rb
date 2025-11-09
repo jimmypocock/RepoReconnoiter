@@ -76,8 +76,7 @@ class BrowseComparisonsPresenter
   end
 
   def trending_comparisons
-    Comparison.where("created_at > ?", 7.days.ago)
-              .order(view_count: :desc)
+    Comparison.order(created_at: :desc)
               .limit(8)
   end
 end
