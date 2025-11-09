@@ -144,33 +144,55 @@ bundle install && bundle exec rails assets:precompile && bundle exec rails db:mi
 
 ---
 
-## Step 5: Whitelist Your GitHub User
+## Step 5: Admin Access Setup
 
-The app uses an invite-only whitelist system. To access the app:
+The app uses an invite-only whitelist system. To grant yourself admin access:
 
-1. Get your GitHub user ID:
-   - Visit: `https://api.github.com/users/YOUR_GITHUB_USERNAME`
-   - Copy the `id` field
+### 5A. Whitelist Your GitHub User
 
-2. Open Rails console in Render Shell:
+**Recommended Method** (uses rake task):
+
+1. Open Render Shell (Dashboard → Shell tab)
+
+2. Run the whitelist rake task:
 
    ```bash
-   bin/rails console
+   bin/rails whitelist:add[your_github_username]
    ```
 
-3. Create a whitelisted user:
+   The task automatically:
+   - Fetches your GitHub ID from GitHub API
+   - Fetches your email
+   - Creates the WhitelistedUser record
 
-   ```ruby
-   WhitelistedUser.create!(
-     github_id: YOUR_GITHUB_ID,
-     github_username: "your_username",
-     reason: "Admin user"
-   )
-   ```
+3. Note your GitHub ID from the output (you'll need it for the next step)
 
-4. Add your GitHub ID to `MISSION_CONTROL_ADMIN_IDS` environment variable (comma-separated if multiple admins)
+**Alternative Method** (manual):
 
-5. Exit console: `exit`
+```bash
+# Open Rails console
+bin/rails console
+
+# Create whitelisted user manually
+WhitelistedUser.create!(
+  github_id: YOUR_GITHUB_ID,
+  github_username: "your_username",
+  reason: "Admin user",
+  email: "your@email.com"
+)
+
+# Exit
+exit
+```
+
+### 5B. Grant Admin Dashboard Access
+
+1. In Render Dashboard → Environment Variables
+2. Find `MISSION_CONTROL_ADMIN_IDS`
+3. Set to your GitHub ID (from step 5A)
+   - Single admin: `12345678`
+   - Multiple admins: `12345678,87654321` (comma-separated)
+4. Save changes (this will restart your app)
 
 ---
 
@@ -240,6 +262,22 @@ For future code changes:
 - `COMPARISON_CACHE_DAYS` - Cache TTL in days (default: 7)
 - `RAILS_LOG_LEVEL` - Logging verbosity (default: info)
 - `WEB_CONCURRENCY` - Puma workers (Render auto-sets based on plan)
+
+---
+
+## Known Issues
+
+**Current Status**: ✅ No known issues!
+
+The production deployment is stable and all features are working as expected:
+- ✅ OAuth flow working
+- ✅ AI comparisons functioning
+- ✅ Background jobs processing
+- ✅ Cost tracking operational
+- ✅ Security headers configured (A+ rating)
+- ✅ Custom domain with SSL active
+
+If you encounter any issues, please check the Troubleshooting section below or report them via GitHub Issues.
 
 ---
 

@@ -2,6 +2,8 @@
 
 An Open Source Intelligence Dashboard that analyzes GitHub trending repositories using AI to provide developers with context-aware recommendations.
 
+**🚀 Live Demo**: [https://reporeconnoiter.com](https://reporeconnoiter.com)
+
 ## Features
 
 - 🔍 **Multi-Query Search**: Intelligent query parsing with 2-3 GitHub searches for comprehensive results
