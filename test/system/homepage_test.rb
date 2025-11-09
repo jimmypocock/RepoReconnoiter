@@ -43,16 +43,16 @@ class HomepageTest < ApplicationSystemTestCase
     assert_selector "select[name='sort']"
   end
 
-  test "trending section displays when comparisons exist" do
+  test "recent searches section displays when comparisons exist" do
     visit root_path
 
-    # Trending section header (includes emoji)
-    assert_text "Trending This Week"
+    # Recent searches section header
+    assert_text "Recent Searches"
 
-    # Should show trending cards if comparisons exist
+    # Should show recent search cards in grid layout if comparisons exist
     if Comparison.any?
-      # Check for comparison cards in trending row
-      assert_selector ".flex.gap-4.overflow-x-auto"
+      # Check for grid layout
+      assert_selector ".grid.grid-cols-1"
     end
   end
 
