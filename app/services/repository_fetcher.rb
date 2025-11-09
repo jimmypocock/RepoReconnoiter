@@ -83,6 +83,29 @@ class RepositoryFetcher
           )
         end
 
+        # Auto-assign technology category from GitHub language field
+        if repo.language.present?
+          language_slug = repo.language.parameterize
+
+          # Find or create the category
+          category = Category.find_or_create_by!(slug: language_slug, category_type: "technology") do |c|
+            c.name = repo.language
+            c.description = "#{repo.language} programming language and tools"
+          end
+
+          # TODO: Clean the category assignment up
+          # Only create association if it doesn't already exist
+          unless repo.repository_categories.exists?(category_id: category.id)
+            repo.repository_categories.create!(
+              category_id: category.id,
+              confidence_score: 1.0,
+              assigned_by: "github_language"
+            )
+
+            Rails.logger.info "  📌 Added technology category from GitHub language: #{repo.language}"
+          end
+        end
+
         # Update last_analyzed_at timestamp
         repo.update!(last_analyzed_at: Time.current)
 

@@ -23,7 +23,7 @@ Respond ONLY with valid JSON in this exact format:
     {
       "name": "Category Name",
       "slug": "category-slug",
-      "category_type": "problem_domain|architecture_pattern|maturity",
+      "category_type": "problem_domain|architecture_pattern|maturity|technology",
       "confidence": 0.95
     }
   ],
@@ -32,8 +32,10 @@ Respond ONLY with valid JSON in this exact format:
 }
 
 Guidelines:
-- Create 3-6 categories that best describe what this repository does
-- You MUST include AT LEAST ONE category from each type: problem_domain, architecture_pattern, maturity
+- Create 4-8 categories that best describe what this repository does
+- You MUST include AT LEAST ONE category from each type: problem_domain, architecture_pattern, maturity, technology
+- For technology categories: Extract from the repository's language field and topics (e.g., "Ruby", "Rails", "React", "TypeScript")
+- A repository can have MULTIPLE technology categories (e.g., a full-stack app might have "JavaScript", "TypeScript", "React", "Node.js")
 - Prefer using available categories listed below when they fit
 - Create NEW categories if the available ones don't accurately capture what this repo does
 - New category names should be clear, specific, and broadly applicable to other repos

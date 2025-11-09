@@ -167,9 +167,97 @@ maturity_levels.each do |attrs|
   puts "  ✓ #{category.name}"
 end
 
+# Technology Categories
+puts "\n💻 Creating Technology categories..."
+
+technologies = [
+  {
+    name: "Ruby",
+    description: "Ruby programming language and Ruby-based tools"
+  },
+  {
+    name: "Rails",
+    description: "Ruby on Rails web application framework"
+  },
+  {
+    name: "JavaScript",
+    description: "JavaScript programming language and JavaScript-based tools"
+  },
+  {
+    name: "TypeScript",
+    description: "TypeScript - typed superset of JavaScript"
+  },
+  {
+    name: "Node.js",
+    description: "Node.js JavaScript runtime environment"
+  },
+  {
+    name: "React",
+    description: "React JavaScript library for building user interfaces"
+  },
+  {
+    name: "Vue.js",
+    description: "Vue.js progressive JavaScript framework"
+  },
+  {
+    name: "Python",
+    description: "Python programming language and Python-based tools"
+  },
+  {
+    name: "Django",
+    description: "Django high-level Python web framework"
+  },
+  {
+    name: "Go",
+    description: "Go programming language (Golang)"
+  },
+  {
+    name: "Rust",
+    description: "Rust systems programming language"
+  },
+  {
+    name: "Java",
+    description: "Java programming language and Java-based tools"
+  },
+  {
+    name: "Spring",
+    description: "Spring Framework for Java applications"
+  },
+  {
+    name: "PHP",
+    description: "PHP programming language and PHP-based tools"
+  },
+  {
+    name: "Laravel",
+    description: "Laravel PHP web application framework"
+  },
+  {
+    name: "C#",
+    description: "C# programming language and .NET ecosystem"
+  },
+  {
+    name: "Swift",
+    description: "Swift programming language for iOS/macOS development"
+  },
+  {
+    name: "Kotlin",
+    description: "Kotlin programming language for JVM and Android"
+  }
+]
+
+technologies.each do |attrs|
+  category = Category.find_or_create_by!(
+    name: attrs[:name],
+    category_type: "technology"
+  )
+  category.update!(description: attrs[:description])
+  puts "  ✓ #{category.name}"
+end
+
 # Summary
 puts "\n✅ Seeding complete!"
-puts "   Problem Domains: #{Category.problem_domains.count}"
-puts "   Architecture Patterns: #{Category.architecture_patterns.count}"
-puts "   Maturity Levels: #{Category.maturity_levels.count}"
+puts "   Problem Domains: #{Category.problem_domain.count}"
+puts "   Architecture Patterns: #{Category.architecture_pattern.count}"
+puts "   Maturity Levels: #{Category.maturity.count}"
+puts "   Technologies: #{Category.technology.count}"
 puts "   Total Categories: #{Category.count}"

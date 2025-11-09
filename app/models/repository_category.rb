@@ -17,7 +17,7 @@ class RepositoryCategory < ApplicationRecord
     allow_nil: true
   }
   validates :assigned_by, inclusion: {
-    in: %w[ai manual github_topics],
+    in: %w[ai manual github_topics github_language],
     message: "%{value} is not a valid assignment method"
   }
 
@@ -27,7 +27,7 @@ class RepositoryCategory < ApplicationRecord
 
   scope :ai_assigned, -> { where(assigned_by: "ai") }
   scope :manually_assigned, -> { where(assigned_by: "manual") }
-  scope :from_github, -> { where(assigned_by: "github_topics") }
+  scope :from_github, -> { where(assigned_by: [ "github_topics", "github_language" ]) }
   scope :high_confidence, -> { where("confidence_score >= ?", 0.7) }
   scope :low_confidence, -> { where("confidence_score < ?", 0.5) }
 

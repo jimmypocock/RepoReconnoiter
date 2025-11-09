@@ -1,8 +1,14 @@
 class Category < ApplicationRecord
   #--------------------------------------
-  # CONSTANTS
+  # ENUMS
   #--------------------------------------
-  CATEGORY_TYPES = %w[problem_domain architecture_pattern maturity].freeze
+
+  enum :category_type, {
+    problem_domain: "problem_domain",
+    architecture_pattern: "architecture_pattern",
+    maturity: "maturity",
+    technology: "technology"
+  }
 
   #--------------------------------------
   # ASSOCIATIONS
@@ -19,10 +25,6 @@ class Category < ApplicationRecord
 
   validates :name, presence: true
   validates :slug, presence: true, uniqueness: { scope: :category_type }
-  validates :category_type, presence: true, inclusion: {
-    in: CATEGORY_TYPES,
-    message: "%{value} is not a valid category type"
-  }
 
   #--------------------------------------
   # CALLBACKS
@@ -34,9 +36,6 @@ class Category < ApplicationRecord
   # SCOPES
   #--------------------------------------
 
-  scope :problem_domains, -> { where(category_type: "problem_domain") }
-  scope :architecture_patterns, -> { where(category_type: "architecture_pattern") }
-  scope :maturity_levels, -> { where(category_type: "maturity") }
   scope :popular, -> { order(repositories_count: :desc) }
 
   #--------------------------------------
