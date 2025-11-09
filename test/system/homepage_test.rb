@@ -16,7 +16,7 @@ class HomepageTest < ApplicationSystemTestCase
     visit root_path
 
     # Header
-    assert_selector "h1", text: "RepoReconnoiter"
+    assert_selector "h1", text: "Repo Reconnoiter"
     assert_selector "p", text: "Find the perfect library for your project"
 
     # Auth section (not search section)
@@ -37,7 +37,7 @@ class HomepageTest < ApplicationSystemTestCase
     visit root_path
 
     # Header
-    assert_selector "h1", text: "RepoReconnoiter"
+    assert_selector "h1", text: "Repo Reconnoiter"
     assert_selector "p", text: "Find the perfect library for your project"
 
     # Search section (not auth section)

@@ -42,21 +42,21 @@ class HomePagePresenter
 
   # Top Categories
   def top_architecture_patterns
-    @top_architecture_patterns ||= Category.architecture_patterns
+    @top_architecture_patterns ||= Category.architecture_pattern
                                             .popular
                                             .limit(2)
                                             .includes(:repositories)
   end
 
   def top_maturity_levels
-    @top_maturity_levels ||= Category.maturity_levels
+    @top_maturity_levels ||= Category.maturity
                                       .popular
                                       .limit(2)
                                       .includes(:repositories)
   end
 
   def top_problem_domains
-    @top_problem_domains ||= Category.problem_domains
+    @top_problem_domains ||= Category.problem_domain
                                       .popular
                                       .limit(2)
                                       .includes(:repositories)
