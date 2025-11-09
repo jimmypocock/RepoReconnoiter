@@ -92,11 +92,77 @@ Track progress towards MVP release and UX enhancement.
 
 ---
 
+## 🎯 CURRENT PRIORITY: Phase 4.0 - Comparison Creation Progress UX (CRITICAL)
+
+**Status**: 🔴 NEXT - Better user feedback during comparison creation
+
+**Problem**: With 15 repos and 3-query strategy, comparison creation takes 10-30 seconds with minimal feedback. Users only see:
+- Top progress bar (not descriptive)
+- No indication of what's happening
+- No sense of progress through the pipeline
+- Can feel "hung" or broken
+
+**Goal**: Provide real-time progress updates at each step of the comparison pipeline.
+
+**Estimated Time**: 2-3 hours
+
+### Step-by-Step Progress Communication Strategy
+
+The comparison creation pipeline has these stages:
+1. **Parse query** (~1 sec)
+2. **Execute 3 GitHub searches** (~2-3 sec)
+3. **Merge and deduplicate results** (~1 sec)
+4. **Analyze repositories** (Tier 1 AI) (~5-10 sec for 15 repos)
+5. **Compare repositories** (Tier 3 AI) (~5-15 sec)
+6. **Save comparison** (~1 sec)
+
+### Task 1: Backend Progress Broadcasting (1 hour)
+
+- [ ] Add Turbo Stream support for progress updates
+- [ ] Create `ComparisonProgressBroadcaster` service to emit events
+- [ ] Update `ComparisonCreator` to broadcast progress at each step:
+  - "Parsing your query..."
+  - "Searching GitHub with 3 queries..."
+  - "Found X repositories across Y queries, merging results..."
+  - "Analyzing repository 1 of X: owner/repo-name..."
+  - "Analyzing repository 2 of X: owner/repo-name..."
+  - "Comparing all repositories with AI..."
+  - "Finalizing comparison..."
+- [ ] Use ActionCable or Turbo Streams (whichever fits better with current stack)
+
+### Task 2: Frontend Progress UI (45 mins)
+
+- [ ] Create progress modal/overlay component
+- [ ] Show step-by-step progress with:
+  - Current step description
+  - Progress bar (X of Y repos analyzed)
+  - List of completed steps (checkmarks)
+  - Current step (spinner/loading animation)
+  - Upcoming steps (grayed out)
+- [ ] Add estimated time remaining (optional)
+- [ ] Modern, non-intrusive design (centered modal with backdrop)
+
+### Task 3: Error Handling & Recovery (30 mins)
+
+- [ ] Show specific error messages if a step fails
+- [ ] Allow retry from failed step
+- [ ] Don't leave user hanging if something breaks
+- [ ] Clear error states with actionable messages
+
+### Success Criteria:
+- ✅ User sees each step of the process in real-time
+- ✅ User knows which repo is being analyzed (1 of 15, 2 of 15, etc.)
+- ✅ User can see progress bar advancing
+- ✅ No "is it hung?" confusion
+- ✅ If error occurs, user sees clear error message with retry option
+
+---
+
 ## 🚀 Phase 4 - UI & Navigation Polish (MVP Completion)
 
 **Goal**: Create a modern, browsable interface that showcases comparisons, categories, and trending repos.
 
-**Priority**: This is the path to a polished, user-friendly MVP! 🎨
+**Priority**: Polish the browsing experience after comparison creation UX is solid! 🎨
 
 **Vision**: "Airbnb for open source technology" - A visual, discovery-focused interface where users can:
 
