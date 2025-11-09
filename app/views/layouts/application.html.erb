@@ -57,5 +57,8 @@
     <main class="container mx-auto flex justify-center">
       <%= yield %>
     </main>
+
+    <%# Turbo Stream target for dynamically appended content (modals, notifications, etc.) %>
+    <div id="turbo-stream-target"></div>
   </body>
 </html>

@@ -3,10 +3,11 @@ class RepositoryFetcher
   DEFAULT_LIMIT = 10
   MAX_LIMIT = 15
 
-  attr_reader :github
+  attr_reader :github, :broadcaster
 
-  def initialize
+  def initialize(broadcaster: nil)
     @github = Github.new
+    @broadcaster = broadcaster
   end
 
   #--------------------------------------
@@ -18,6 +19,11 @@ class RepositoryFetcher
     limit = [ [ limit, MAX_LIMIT ].min, 1 ].max  # Clamp between 1 and MAX_LIMIT
     # Step 1: Execute multi-query GitHub search and merge results
     all_repos = execute_searches(github_queries, limit)
+
+    # Broadcast merge completion
+    broadcaster&.broadcast_step("merging_results",
+      message: "Found #{all_repos.size} #{all_repos.size == 1 ? 'repository' : 'repositories'}, merging results..."
+    )
 
     # Step 2: Sort by stars (quality signal for prioritization)
     sorted_repos = all_repos.sort_by { |r| -r.stargazers_count }
@@ -50,7 +56,14 @@ class RepositoryFetcher
   def analyze_repositories(repositories)
     analyzer = RepositoryAnalyzer.new
 
-    repositories.each do |repo|
+    repositories.each_with_index do |repo, index|
+      # Broadcast progress for this repository
+      broadcaster&.broadcast_step("analyzing_repositories",
+        current: index + 1,
+        total: repositories.size,
+        message: "Analyzing #{repo.full_name}..."
+      )
+
       next unless repo.needs_analysis?
 
       begin

@@ -106,48 +106,194 @@ Track progress towards MVP release and UX enhancement.
 
 **Estimated Time**: 2-3 hours
 
-### Step-by-Step Progress Communication Strategy
+### Architecture Overview
 
-The comparison creation pipeline has these stages:
-1. **Parse query** (~1 sec)
-2. **Execute 3 GitHub searches** (~2-3 sec)
-3. **Merge and deduplicate results** (~1 sec)
-4. **Analyze repositories** (Tier 1 AI) (~5-10 sec for 15 repos)
-5. **Compare repositories** (Tier 3 AI) (~5-15 sec)
-6. **Save comparison** (~1 sec)
+**Technology Stack:**
+- **WebSocket Layer**: Turbo Streams over ActionCable (Solid Cable - already configured in Rails 8)
+- **Broadcasting**: ActionCable channels for real-time updates
+- **Frontend**: Stimulus controller + Tailwind CSS modal
+- **Job Processing**: Background job broadcasts progress via channel
 
-### Task 1: Backend Progress Broadcasting (1 hour)
+**Pipeline Stages** (6 total):
+1. **Parse query** (~1 sec) - UserQueryParser extracts search parameters
+2. **Execute GitHub searches** (~2-3 sec) - RepositoryFetcher runs 3 queries
+3. **Merge and deduplicate** (~1 sec) - Combine results, remove duplicates
+4. **Analyze repositories** (~5-10 sec) - RepositoryAnalyzer categorizes 15 repos
+5. **Compare repositories** (~5-15 sec) - RepositoryComparer generates AI analysis
+6. **Save comparison** (~1 sec) - Persist to database
 
-- [ ] Add Turbo Stream support for progress updates
-- [ ] Create `ComparisonProgressBroadcaster` service to emit events
-- [ ] Update `ComparisonCreator` to broadcast progress at each step:
-  - "Parsing your query..."
-  - "Searching GitHub with 3 queries..."
-  - "Found X repositories across Y queries, merging results..."
-  - "Analyzing repository 1 of X: owner/repo-name..."
-  - "Analyzing repository 2 of X: owner/repo-name..."
-  - "Comparing all repositories with AI..."
-  - "Finalizing comparison..."
-- [ ] Use ActionCable or Turbo Streams (whichever fits better with current stack)
+---
 
-### Task 2: Frontend Progress UI (45 mins)
+### Phase 1: Backend Infrastructure (1.5 hours)
 
-- [ ] Create progress modal/overlay component
-- [ ] Show step-by-step progress with:
-  - Current step description
-  - Progress bar (X of Y repos analyzed)
-  - List of completed steps (checkmarks)
-  - Current step (spinner/loading animation)
-  - Upcoming steps (grayed out)
-- [ ] Add estimated time remaining (optional)
-- [ ] Modern, non-intrusive design (centered modal with backdrop)
+#### 1.1 ActionCable Channel Setup (20 mins)
 
-### Task 3: Error Handling & Recovery (30 mins)
+- [ ] Create `app/channels/comparison_progress_channel.rb`
+  - [ ] Subscribe method with session_id parameter
+  - [ ] Unsubscribe cleanup
+  - [ ] Stream from `comparison_progress_#{session_id}`
 
-- [ ] Show specific error messages if a step fails
-- [ ] Allow retry from failed step
-- [ ] Don't leave user hanging if something breaks
-- [ ] Clear error states with actionable messages
+- [ ] Update `app/javascript/controllers/index.js` to register Stimulus controllers
+
+- [ ] Test channel connection in browser console
+
+#### 1.2 Progress Broadcaster Service (30 mins)
+
+- [ ] Create `app/services/comparison_progress_broadcaster.rb`
+  - [ ] `initialize(session_id)` - Store session identifier
+  - [ ] `broadcast_step(step_name, data = {})` - Send Turbo Stream update
+  - [ ] `broadcast_error(message, retry_data = {})` - Send error state
+  - [ ] `broadcast_complete(comparison_id)` - Send success + redirect
+  - [ ] Private method `stream_name` - Returns channel identifier
+
+- [ ] Define step data structure:
+  ```ruby
+  {
+    step: "analyzing_repositories",
+    current: 3,
+    total: 15,
+    message: "Analyzing sidekiq/sidekiq...",
+    percentage: 20
+  }
+  ```
+
+#### 1.3 Update ComparisonCreator Service (40 mins)
+
+- [ ] Add `session_id` parameter to `initialize` method
+- [ ] Initialize `@broadcaster = ComparisonProgressBroadcaster.new(session_id)`
+- [ ] Broadcast at each pipeline stage:
+  - [ ] **Step 1**: After `UserQueryParser.new.parse(query)` completes
+    - Broadcast: "Parsing your query..." (step: parsing_query)
+  - [ ] **Step 2**: Before `RepositoryFetcher.new.fetch` starts
+    - Broadcast: "Searching GitHub with 3 queries..." (step: searching_github)
+  - [ ] **Step 3**: After fetch completes with repo count
+    - Broadcast: "Found X repositories, merging results..." (step: merging_results)
+  - [ ] **Step 4**: Inside repository analysis loop
+    - Broadcast: "Analyzing repository X of Y: owner/name..." (step: analyzing_repositories, current: X, total: Y)
+  - [ ] **Step 5**: Before comparison AI call
+    - Broadcast: "Comparing all repositories with AI..." (step: comparing_repositories)
+  - [ ] **Step 6**: After successful save
+    - Broadcast: "Comparison complete!" (step: complete, comparison_id: X)
+
+- [ ] Wrap broadcasts in rescue blocks (don't fail job if broadcast fails)
+- [ ] Add error broadcasting in existing rescue blocks
+
+---
+
+### Phase 2: Controller & Job Integration (30 mins)
+
+#### 2.1 Update ComparisonsController (15 mins)
+
+- [ ] Update `create` action to generate `session_id`
+  - Use `SecureRandom.uuid` or `session.id.to_s`
+- [ ] Pass `session_id` to background job
+- [ ] Store `session_id` in session for client-side access
+- [ ] Render turbo_stream response that shows progress modal
+
+#### 2.2 Update CreateComparisonJob (15 mins)
+
+- [ ] Add `session_id` parameter to `perform` method
+- [ ] Pass `session_id` to `ComparisonCreator.new(user, query, session_id)`
+- [ ] Ensure error handling broadcasts failure states
+
+---
+
+### Phase 3: Frontend Progress Modal (1 hour)
+
+#### 3.1 Stimulus Progress Controller (30 mins)
+
+- [ ] Create `app/javascript/controllers/comparison_progress_controller.js`
+  - [ ] `connect()` - Subscribe to ActionCable channel
+  - [ ] `disconnect()` - Unsubscribe from channel
+  - [ ] `updateProgress(data)` - Update UI with step data
+  - [ ] `showError(data)` - Display error state
+  - [ ] `complete(data)` - Redirect to comparison show page
+  - [ ] Private helper methods for updating progress bar, step list
+
+- [ ] Add data attributes for targets:
+  - `data-comparison-progress-target="modal"` - Modal container
+  - `data-comparison-progress-target="stepList"` - Step checklist
+  - `data-comparison-progress-target="currentMessage"` - Current step text
+  - `data-comparison-progress-target="progressBar"` - Progress bar fill
+  - `data-comparison-progress-target="errorContainer"` - Error message area
+
+#### 3.2 Progress Modal View Component (30 mins)
+
+- [ ] Create `app/views/comparisons/_progress_modal.html.erb`
+  - [ ] Modal backdrop (fixed, centered, semi-transparent black overlay)
+  - [ ] Modal card (white, rounded, shadow, max-width 600px)
+  - [ ] Header: "Creating Your Comparison"
+  - [ ] Step list container (6 steps with icons):
+    - ✓ Completed steps (green checkmark)
+    - ⏳ Current step (spinner animation)
+    - ○ Upcoming steps (gray circle)
+  - [ ] Current message text (large, bold)
+  - [ ] Progress bar (blue fill, animated transition)
+  - [ ] Percentage text (e.g., "60% complete")
+  - [ ] Error state container (hidden by default, red border/background)
+  - [ ] Retry button (hidden by default, shown on error)
+
+- [ ] Add Tailwind CSS classes for animations:
+  - Progress bar width transition
+  - Spinner rotation
+  - Step icon fade-in
+  - Modal slide-in animation
+
+- [ ] Add to `app/views/comparisons/create.turbo_stream.erb`:
+  - Render progress modal
+  - Include session_id in data attribute for Stimulus controller
+
+---
+
+### Phase 4: Error Handling & Recovery (30 mins)
+
+#### 4.1 Error State Broadcasting (15 mins)
+
+- [ ] Update `ComparisonProgressBroadcaster#broadcast_error` to include:
+  - Error message (user-friendly)
+  - Failed step name
+  - Retry payload (session_id, query, user_id)
+  - Timestamp
+
+- [ ] Update `CreateComparisonJob` error handling:
+  - Catch specific exceptions (RateLimitError, OpenAI::Error, GitHub::Error)
+  - Broadcast user-friendly error messages
+  - Preserve original error for logging
+
+#### 4.2 Retry Mechanism (15 mins)
+
+- [ ] Add retry button to progress modal
+  - [ ] Shows only on error state
+  - [ ] Triggers new job with same parameters
+  - [ ] Generates new session_id
+  - [ ] Resets modal to initial state
+
+- [ ] Add `retry` action to Stimulus controller
+  - [ ] Extract retry data from error broadcast
+  - [ ] Submit new form request
+  - [ ] Reset progress UI
+
+---
+
+### Phase 5: Testing & Polish (30 mins)
+
+#### 5.1 Manual Testing (20 mins)
+
+- [ ] Test full flow: submit query → see all 6 progress steps → redirect to result
+- [ ] Test error handling: force API error → see error message → retry successfully
+- [ ] Test concurrent comparisons: open two tabs, ensure isolated progress
+- [ ] Test network interruption: disconnect/reconnect during progress
+- [ ] Test on mobile: modal responsive, touch-friendly retry button
+- [ ] Verify no memory leaks: unsubscribe cleans up connections
+
+#### 5.2 Polish & Edge Cases (10 mins)
+
+- [ ] Add subtle fade-in animation for modal appearance
+- [ ] Add subtle pulse animation for current step
+- [ ] Ensure modal is keyboard-accessible (ESC to cancel - if appropriate)
+- [ ] Add loading spinner on retry button click
+- [ ] Verify progress percentages are accurate (based on step weights)
+- [ ] Add timeout handling (if job takes > 60 seconds, show warning)
 
 ### Success Criteria:
 - ✅ User sees each step of the process in real-time
