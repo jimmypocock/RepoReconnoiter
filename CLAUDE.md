@@ -27,7 +27,7 @@ RepoReconnoiter is an Open Source Intelligence Dashboard that analyzes GitHub tr
 - **Analytics**: Microsoft Clarity (CSP-friendly, free)
 - **Deployment**: Render.com (Starter plan - $14/month)
 - **Hosting**:
-  - Production URL: https://reporeconnoiter.onrender.com
+  - Production URL: https://reporeconnoiter.com (custom domain via Render)
   - PostgreSQL 17 database (1GB storage, 97 connections)
   - Web Service (512MB RAM, always-on, shell access)
 - **Styling**: Tailwind CSS
@@ -91,7 +91,7 @@ git push origin main      # Triggers automatic deployment
 
 # Monitoring
 # View logs: Render Dashboard → Logs tab
-# View jobs: https://reporeconnoiter.onrender.com/jobs (admin only)
+# View jobs: https://reporeconnoiter.com/jobs (admin only)
 ```
 
 ## Code Organization Standards
@@ -180,8 +180,9 @@ Services use action-oriented names WITHOUT "Service" suffix:
 1. **GitHub API Sync**: Solid Queue recurring job fetches trending repos from GitHub API
 2. **Tier 1 Processing (Cheap)**: gpt-4o-mini categorizes repos using metadata + description
 3. **Tier 2 Processing (Expensive)**: gpt-4o performs deep analysis on-demand (README + issues)
-4. **Tier 3 Processing (Comparison)**: Multi-query GitHub search, merge/dedupe, AI-powered comparison
-5. **Caching Strategy**: Aggressive caching to minimize AI API costs - repos only re-analyzed if README changes or significant activity detected
+4. **Tier 3 Processing (Comparison)**: Multi-query GitHub search, merge/dedupe, AI-powered comparison with real-time progress tracking
+5. **Real-Time Progress Updates**: ActionCable broadcasts comparison creation progress to browser via Solid Cable
+6. **Caching Strategy**: Aggressive caching to minimize AI API costs - repos only re-analyzed if README changes or significant activity detected
 
 ### Core Services
 
@@ -484,6 +485,9 @@ end
 - **Solid Queue**: Database-backed job processing (no Redis required). Job queues configured in `config/queue.yml`
 - **Solid Cache**: Database-backed caching configured in `config/cache.yml`
 - **Solid Cable**: Database-backed Action Cable for WebSocket connections
+  - **IMPORTANT**: Uses `solid_cable` adapter (not `async`) for cross-process broadcasting
+  - Allows background jobs to broadcast real-time updates to connected browsers
+  - Development and production both use `solid_cable` for consistency
 - **Multi-Database Setup**: Single PostgreSQL database with separate schema files for primary, cache, queue, and cable
   - `db/schema.rb` - Primary application data
   - `db/cache_schema.rb` - Solid Cache tables
@@ -496,6 +500,7 @@ end
 **Configuration:**
 - `config/recurring.yml`: Solid Queue recurring task definitions for scheduled jobs
 - `config/queue.yml`: Solid Queue configuration
+- `config/cable.yml`: Solid Cable configuration (uses `solid_cable` adapter for cross-process broadcasting)
 - `config/initializers/devise.rb`: Devise authentication configuration (GitHub OAuth)
 - `config/initializers/rack_attack.rb`: Rate limiting configuration
 - `config/initializers/content_security_policy.rb`: CSP configuration with Microsoft Clarity
@@ -513,6 +518,9 @@ end
   - `user_query_parser.rb`: Natural language query parser
   - `repository_analyzer.rb`: Repository AI analysis
   - `github.rb`: GitHub API wrapper
+  - `comparison_creator.rb`: Orchestrates comparison creation with progress broadcasting
+  - `comparison_progress_broadcaster.rb`: ActionCable broadcasting for real-time progress updates
+  - `repository_fetcher.rb`: Fetches and prepares repositories from GitHub
 
 **Testing/Analysis:**
 - `lib/tasks/analyze.rake`: Rake tasks for testing AI analysis pipeline
@@ -533,7 +541,7 @@ end
 
 ## Production Deployment
 
-**Status**: ✅ Live in production at https://reporeconnoiter.onrender.com
+**Status**: ✅ Live in production at https://reporeconnoiter.com
 
 **Deployment Process:**
 1. Push to `main` branch on GitHub
@@ -556,7 +564,7 @@ end
 
 **Monitoring:**
 - Logs: Render Dashboard → Logs tab
-- Jobs: https://reporeconnoiter.onrender.com/jobs (admin only)
+- Jobs: https://reporeconnoiter.com/jobs (admin only)
 - Analytics: Microsoft Clarity dashboard
 - Costs: Check `ai_costs` table via Rails console
 
