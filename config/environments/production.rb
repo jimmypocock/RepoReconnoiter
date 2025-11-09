@@ -64,6 +64,11 @@ Rails.application.configure do
   config.active_job.queue_adapter = :solid_queue
   config.solid_queue.connects_to = { database: { writing: :queue } }
 
+  # ActionCable configuration for production
+  # Enable WebSocket connections for real-time progress updates
+  config.action_cable.url = "wss://reporeconnoiter.com/cable"
+  config.action_cable.allowed_request_origins = [ "https://reporeconnoiter.com" ]
+
   # Ignore bad email addresses and do not raise email delivery errors.
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   # config.action_mailer.raise_delivery_errors = false

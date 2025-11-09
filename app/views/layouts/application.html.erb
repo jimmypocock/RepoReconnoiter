@@ -35,8 +35,8 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="bg-gray-50">
-    <%= render "shared/navigation", start_condensed: (controller_name != "comparisons" || action_name != "index") %>
+  <body class="bg-gray-50" data-controller="search-sync">
+    <%= render "shared/navigation", homepage: (controller_name == "comparisons" && action_name == "index") %>
 
     <!-- Flash Messages -->
     <% if flash[:notice] || flash[:alert] %>
@@ -54,8 +54,11 @@
       </div>
     <% end %>
 
-    <main class="container mx-auto flex justify-center">
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
       <%= yield %>
     </main>
+
+    <%# Turbo Stream target for dynamically appended content (modals, notifications, etc.) %>
+    <div id="turbo-stream-target"></div>
   </body>
 </html>

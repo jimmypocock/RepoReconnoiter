@@ -58,6 +58,11 @@ Rails.application.configure do
   # Use Solid Queue for background jobs (same as production)
   config.active_job.queue_adapter = :solid_queue
 
+  # Enable verbose logging for Solid Queue in development
+  config.log_level = :info
+  config.solid_queue.logger = ActiveSupport::Logger.new(STDOUT)
+  config.solid_queue.logger.level = Logger::INFO
+
   # Highlight code that triggered redirect in logs.
   config.action_dispatch.verbose_redirect_logs = true
 

@@ -1,0 +1,23 @@
+<%# Search Form Partial - Used in navigation for both mobile and desktop %>
+<%# Parameters:
+  - input_classes: CSS classes for the text input field
+  - container_classes: CSS classes for the form container (optional) %>
+  <%= form_with url: comparisons_path, method: :post, class: container_classes, data: { turbo_stream: true } do |f| %>
+    <div class="relative">
+      <%= f.text_field :query,
+          placeholder: "What library or tool are you looking for?",
+          class: input_classes,
+          maxlength: 500,
+          data: { search_sync_target: "input", action: "input->search-sync#sync" } %>
+      <button
+        type="submit"
+        class="
+          absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-blue-600 transition cursor-pointer
+        "
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+      </button>
+    </div>
+  <% end %>

@@ -1,0 +1,6 @@
+<%# Turbo Stream response for comparison creation %>
+<%# Renders the progress modal and initializes ActionCable subscription %>
+
+<%= turbo_stream.append "turbo-stream-target" do %>
+  <%= render "comparisons/progress_modal", session_id: @session_id %>
+<% end %>

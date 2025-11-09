@@ -51,10 +51,30 @@ Track progress towards MVP release and UX enhancement.
 - ✅ Phase 3.8: Testing & Code Quality
 - ✅ Phase 3.9: Production Stabilization & Bug Fixes
 - ✅ Phase 3.10: Search Quality & Relevance (CRITICAL - Nov 9, 2025)
+- ✅ Phase 4.0: Comparison Creation Progress UX (Nov 9, 2025)
 
 ---
 
-## 🎯 CURRENT PRIORITY: Phase 4 - UI & Navigation Polish (MVP Completion)
+## 🎯 CURRENT PRIORITY: Phase 4.1 - Category & Search Quality (CRITICAL)
+
+## ✅ COMPLETED: Phase 4.0 - Comparison Creation Progress UX
+
+**Status**: ✅ COMPLETE (Nov 9, 2025) - See `docs/TODO/PHASE_4.md` for details
+
+**What was built:**
+- Real-time progress updates via ActionCable + Turbo Streams
+- Progress modal with step-by-step feedback during comparison creation
+- Solid Cable configuration for cross-process broadcasting (worker → browser)
+- Search UX improvements (hero search on homepage, synced inputs, navbar scroll behavior)
+- Layout standardization (consistent max-w-6xl container across all pages)
+
+**Results:**
+- Users now see each pipeline stage in real-time (parsing → searching → comparing → complete)
+- No more "is it hung?" confusion during 10-30 second comparison creation
+- Search inputs sync between hero and navbar positions
+- Production ActionCable properly configured with wss:// and correct domain
+
+---
 
 ## ✅ COMPLETED: Phase 3.10 - Search Quality & Relevance (CRITICAL MVP CORE)
 
@@ -92,69 +112,238 @@ Track progress towards MVP release and UX enhancement.
 
 ---
 
-## 🎯 CURRENT PRIORITY: Phase 4.0 - Comparison Creation Progress UX (CRITICAL)
+## 🎯 CURRENT PRIORITY: Phase 4.1 - Category & Search Quality (CRITICAL)
 
-**Status**: 🔴 NEXT - Better user feedback during comparison creation
+**Status**: 🔴 IN PROGRESS - Fix comparison categorization and search discoverability
 
-**Problem**: With 15 repos and 3-query strategy, comparison creation takes 10-30 seconds with minimal feedback. Users only see:
-- Top progress bar (not descriptive)
-- No indication of what's happening
-- No sense of progress through the pipeline
-- Can feel "hung" or broken
+**Problem**: Poor category coverage and weak search functionality limiting comparison discoverability:
+- **Category Coverage**: Only 28.6% of comparisons have categories (10 of 35)
+- **Weak Categorization**: Only uses `problem_domain` → `problem_domain` categories (ignores tech_stack, repositories)
+- **Category Explosion**: Auto-creates new problem_domain categories without deduplication
+- **Search Fails**: Searching "ruby" doesn't find Rails comparisons because search only looks at `user_query` field
+- **Missing Taxonomy**: Comparisons don't inherit technology/maturity categories from their repositories
 
-**Goal**: Provide real-time progress updates at each step of the comparison pipeline.
+**Example**: Rails background job comparison should have:
+- `technology: Ruby`
+- `technology: Rails`
+- `technology: Sidekiq` (from repos)
+- `problem_domain: Background Job Processing`
 
-**Estimated Time**: 2-3 hours
+But currently only gets problem_domain category (if lucky).
 
-### Step-by-Step Progress Communication Strategy
+**Goal**: Comprehensive categorization and multi-field search for better discoverability.
 
-The comparison creation pipeline has these stages:
-1. **Parse query** (~1 sec)
-2. **Execute 3 GitHub searches** (~2-3 sec)
-3. **Merge and deduplicate results** (~1 sec)
-4. **Analyze repositories** (Tier 1 AI) (~5-10 sec for 15 repos)
-5. **Compare repositories** (Tier 3 AI) (~5-15 sec)
-6. **Save comparison** (~1 sec)
+**Estimated Time**: 3-4 hours
 
-### Task 1: Backend Progress Broadcasting (1 hour)
+---
 
-- [ ] Add Turbo Stream support for progress updates
-- [ ] Create `ComparisonProgressBroadcaster` service to emit events
-- [ ] Update `ComparisonCreator` to broadcast progress at each step:
-  - "Parsing your query..."
-  - "Searching GitHub with 3 queries..."
-  - "Found X repositories across Y queries, merging results..."
-  - "Analyzing repository 1 of X: owner/repo-name..."
-  - "Analyzing repository 2 of X: owner/repo-name..."
-  - "Comparing all repositories with AI..."
-  - "Finalizing comparison..."
-- [ ] Use ActionCable or Turbo Streams (whichever fits better with current stack)
+### Phase 1: Improve Categorization Logic (1.5 hours)
 
-### Task 2: Frontend Progress UI (45 mins)
+**Goal**: Assign multiple category types from multiple sources (not just problem_domain)
 
-- [ ] Create progress modal/overlay component
-- [ ] Show step-by-step progress with:
-  - Current step description
-  - Progress bar (X of Y repos analyzed)
-  - List of completed steps (checkmarks)
-  - Current step (spinner/loading animation)
-  - Upcoming steps (grayed out)
-- [ ] Add estimated time remaining (optional)
-- [ ] Modern, non-intrusive design (centered modal with backdrop)
+#### 1.1 Update RepositoryComparer Service (45 mins)
 
-### Task 3: Error Handling & Recovery (30 mins)
+**Current Issue** (`repository_comparer.rb:116-150`):
+- Only calls `link_comparison_categories(comparison, problem_domain)`
+- Only looks at `problem_domain` category type
+- Simple word matching (weak)
+- Auto-creates new categories without deduplication check
 
-- [ ] Show specific error messages if a step fails
-- [ ] Allow retry from failed step
-- [ ] Don't leave user hanging if something breaks
-- [ ] Clear error states with actionable messages
+**Solution**: Extract categories from multiple sources
 
-### Success Criteria:
-- ✅ User sees each step of the process in real-time
-- ✅ User knows which repo is being analyzed (1 of 15, 2 of 15, etc.)
-- ✅ User can see progress bar advancing
-- ✅ No "is it hung?" confusion
-- ✅ If error occurs, user sees clear error message with retry option
+- [ ] Refactor `link_comparison_categories` → three separate methods:
+  - [ ] `link_problem_domain_categories(comparison, problem_domain)`
+    - Fuzzy match against existing `category_type: "problem_domain"` categories
+    - Only create new category if no good match found (similarity < 0.7)
+    - Use `pg_trgm` SIMILARITY for matching
+
+  - [ ] `link_technology_categories(comparison, tech_stack)`
+    - Parse tech_stack string ("Rails, Ruby, Sidekiq")
+    - For each technology, find or create matching `category_type: "technology"` category
+    - Normalize names (e.g., "Ruby on Rails" → "Rails", "Node.js" → "Node.js")
+
+  - [ ] `link_repository_categories(comparison, repositories)`
+    - For each repository in comparison, get its categories
+    - Aggregate common categories (if 3+ repos have "Redis" technology, add it)
+    - Inherit maturity level if repos share same maturity
+    - Mark these as `assigned_by: "inherited"`
+
+- [ ] Update `create_comparison_record` to call all three methods:
+  ```ruby
+  link_problem_domain_categories(comparison, parsed_query[:problem_domain])
+  link_technology_categories(comparison, parsed_query[:tech_stack])
+  link_repository_categories(comparison, repositories)
+  ```
+
+- [ ] Add tests for category assignment logic
+
+#### 1.2 Category Deduplication Helper (30 mins)
+
+- [ ] Create `app/services/category_matcher.rb` service
+  - [ ] `find_or_create_category(name:, category_type:)` method
+    - Use `pg_trgm` to find similar categories (SIMILARITY > 0.7)
+    - Return existing if found, create new if not
+    - Normalize names before comparison
+
+  - [ ] `normalize_category_name(name, category_type)` method
+    - Technology: titleize ("ruby" → "Ruby", "react" → "React")
+    - Problem Domain: titleize ("background jobs" → "Background Jobs")
+    - Architecture Pattern: titleize
+    - Maturity: map to standard values ("prod ready" → "Production Ready")
+
+- [ ] Update all category creation to use this service
+- [ ] Add tests for fuzzy matching and normalization
+
+#### 1.3 Add Category Assignment Tests (15 mins)
+
+- [ ] Test Rails comparison gets "Ruby", "Rails", "Background Job Processing" categories
+- [ ] Test technology parsing handles commas, ampersands ("Ruby, Rails & Sidekiq")
+- [ ] Test repository category inheritance (3+ repos with same category → comparison gets it)
+- [ ] Test deduplication (don't create "Background Jobs" if "Background Job Processing" exists)
+
+---
+
+### Phase 2: Category Cleanup & Backfill (1 hour)
+
+**Goal**: Clean up existing category mess and backfill comparisons
+
+#### 2.1 Category Cleanup Rake Task (30 mins)
+
+- [ ] Create `lib/tasks/categories.rake`
+
+  - [ ] Task: `categories:find_duplicates`
+    - List all categories with similar names (SIMILARITY > 0.7)
+    - Show potential merges: "Background Jobs" → "Background Job Processing"
+    - Don't auto-merge (just report for manual review)
+
+  - [ ] Task: `categories:merge[from_id,to_id]`
+    - Merge category `from_id` into `to_id`
+    - Update all `repository_categories` and `comparison_categories`
+    - Delete old category
+    - Add safety checks (confirm category types match)
+
+  - [ ] Task: `categories:normalize_names`
+    - Normalize all category names using CategoryMatcher
+    - Update existing categories in place
+    - Report changes made
+
+- [ ] Run cleanup tasks manually to clean current database
+
+#### 2.2 Comparison Backfill Rake Task (30 mins)
+
+- [ ] Create task: `categories:backfill_comparisons`
+  - Loop through all comparisons
+  - For each comparison:
+    - Get `tech_stack`, `problem_domain`, and `repositories`
+    - Run categorization logic (same as new comparisons)
+    - Skip if comparison already has 3+ categories (don't re-categorize)
+    - Report progress: "Categorized comparison #123: added 5 categories"
+
+  - Add batch processing (100 at a time with progress bar)
+  - Add dry-run mode: `categories:backfill_comparisons[dry_run]`
+  - Log changes to file for review
+
+- [ ] Delete `lib/tasks/backfill_technology_categories.rake` (superseded by comprehensive categories.rake)
+
+- [ ] Run backfill task to categorize existing 25 comparisons
+
+---
+
+### Phase 3: Improve Search (45 mins)
+
+**Goal**: Search across all relevant fields, not just `user_query`
+
+#### 3.1 Update BrowseComparisonsPresenter (30 mins)
+
+**Current Issue** (`browse_comparisons_presenter.rb:72-76`):
+```ruby
+scope.where("user_query ILIKE ?", "%#{params[:search]}%")
+```
+Only searches `user_query` field!
+
+**Solution**: Multi-field search with category inclusion
+
+- [ ] Replace `filter_by_search` method with comprehensive search:
+  ```ruby
+  scope.where("
+    user_query ILIKE :q OR
+    tech_stack ILIKE :q OR
+    problem_domain ILIKE :q OR
+    github_search_query ILIKE :q OR
+    EXISTS (
+      SELECT 1 FROM comparison_categories cc
+      JOIN categories c ON c.id = cc.category_id
+      WHERE cc.comparison_id = comparisons.id
+      AND (c.name ILIKE :q OR c.slug ILIKE :q)
+    )
+  ", q: "%#{sanitized_search}%")
+  ```
+
+- [ ] Add SQL injection protection (use Arel or parameterized queries)
+- [ ] Add search highlighting (optional enhancement)
+
+#### 3.2 Add Search Tests (15 mins)
+
+- [ ] Test: searching "ruby" finds comparisons with:
+  - `user_query` containing "ruby"
+  - `tech_stack` containing "Ruby" or "Rails"
+  - Categories with "Ruby" in name
+
+- [ ] Test: searching "rails" finds:
+  - Rails comparisons
+  - Ruby on Rails technology tag
+  - Comparisons with Rails repos
+
+- [ ] Test: case-insensitive search works ("RUBY" = "ruby")
+
+---
+
+### Phase 4: Testing & Validation (30 mins)
+
+#### 4.1 Manual Testing (20 mins)
+
+- [ ] Create new comparison → verify gets 4-6 categories (not just 1)
+- [ ] Search "ruby" → verify finds Rails comparisons
+- [ ] Search "background" → verify finds job processing comparisons
+- [ ] Browse by category → verify all comparisons properly categorized
+- [ ] Check category count → verify no explosion of duplicates
+
+#### 4.2 Data Validation (10 mins)
+
+- [ ] Run: `bin/rails runner 'puts "Comparisons with categories: #{Comparison.joins(:categories).distinct.count}/#{Comparison.count}"'`
+  - Target: 95%+ coverage (33+/35)
+
+- [ ] Run: `bin/rails runner 'Category.group(:category_type).count.each { |type, count| puts "#{type}: #{count}" }'`
+  - Check for balanced distribution across types
+
+- [ ] Run duplicate check: `categories:find_duplicates`
+  - Should find minimal duplicates after cleanup
+
+---
+
+### Success Criteria
+
+- ✅ Comparison category coverage: 95%+ (was 28.6%)
+- ✅ Comparisons get 4-6 categories on average (technology + problem_domain + inherited)
+- ✅ Search "ruby" finds Rails comparisons
+- ✅ Search "background jobs" finds job processing comparisons
+- ✅ No category explosion (duplicates cleaned up and prevented)
+- ✅ Category assignment is automatic and comprehensive
+- ✅ Browsing by category works well for discovery
+
+---
+
+### Files to Create/Modify
+
+**New Files:**
+- `app/services/category_matcher.rb` - Fuzzy matching and normalization
+- `lib/tasks/categories.rake` - Cleanup and backfill tasks
+
+**Modified Files:**
+- `app/services/repository_comparer.rb` - Enhanced categorization logic
+- `app/presenters/browse_comparisons_presenter.rb` - Multi-field search
+- `test/services/repository_comparer_test.rb` - Category assignment tests
+- `test/presenters/browse_comparisons_presenter_test.rb` - Search tests
 
 ---
 

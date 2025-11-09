@@ -1,0 +1,176 @@
+<%# Progress Modal - Real-time comparison creation progress %>
+<div
+  id="comparison-progress-modal"
+  data-controller="comparison-progress"
+  data-comparison-progress-session-id-value="<%= session_id %>"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 animate-fade-in"
+>
+  <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slide-up">
+    <%# Header %>
+    <div class="px-8 pt-8 pb-6 border-b border-gray-200">
+      <h2 class="text-2xl font-bold text-gray-900">Creating Your Comparison</h2>
+      <p class="mt-2 text-sm text-gray-600">
+        Analyzing repositories and generating AI-powered insights...
+      </p>
+    </div>
+
+    <%# Progress Content %>
+    <div class="px-8 py-6">
+      <%# Current Step Message %>
+      <div class="mb-6">
+        <p
+          data-comparison-progress-target="currentMessage"
+          class="text-lg font-semibold text-gray-900 min-h-[1.75rem]"
+        >
+          Starting...
+        </p>
+      </div>
+
+      <%# Progress Bar %>
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium text-gray-700">Progress</span>
+          <span
+            data-comparison-progress-target="percentage"
+            class="text-sm font-medium text-blue-600"
+          >
+            0%
+          </span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+          <div
+            data-comparison-progress-target="progressBar"
+            class="h-full bg-blue-600 rounded-full transition-all duration-500 ease-out"
+            style="width: 0%"
+          ></div>
+        </div>
+      </div>
+
+      <%# Step List %>
+      <div data-comparison-progress-target="stepList" class="space-y-3">
+        <%# Step 1: Parsing Query %>
+        <div data-step="parsing_query" class="flex items-center gap-3 opacity-40">
+          <div class="flex-shrink-0 w-6 h-6">
+            <div class="step-icon-pending w-6 h-6 rounded-full border-2 border-gray-300"></div>
+          </div>
+          <span class="text-sm text-gray-700">Parse your query</span>
+        </div>
+
+        <%# Step 2: Searching GitHub %>
+        <div data-step="searching_github" class="flex items-center gap-3 opacity-40">
+          <div class="flex-shrink-0 w-6 h-6">
+            <div class="step-icon-pending w-6 h-6 rounded-full border-2 border-gray-300"></div>
+          </div>
+          <span class="text-sm text-gray-700">Search GitHub</span>
+        </div>
+
+        <%# Step 3: Merging Results %>
+        <div data-step="merging_results" class="flex items-center gap-3 opacity-40">
+          <div class="flex-shrink-0 w-6 h-6">
+            <div class="step-icon-pending w-6 h-6 rounded-full border-2 border-gray-300"></div>
+          </div>
+          <span class="text-sm text-gray-700">Merge and deduplicate results</span>
+        </div>
+
+        <%# Step 4: Analyzing Repositories %>
+        <div data-step="analyzing_repositories" class="flex items-center gap-3 opacity-40">
+          <div class="flex-shrink-0 w-6 h-6">
+            <div class="step-icon-pending w-6 h-6 rounded-full border-2 border-gray-300"></div>
+          </div>
+          <span class="text-sm text-gray-700">Analyze repositories with AI</span>
+          <span
+            data-comparison-progress-target="analyzeCount"
+            class="ml-auto text-xs text-gray-500"
+          ></span>
+        </div>
+
+        <%# Step 5: Comparing Repositories %>
+        <div data-step="comparing_repositories" class="flex items-center gap-3 opacity-40">
+          <div class="flex-shrink-0 w-6 h-6">
+            <div class="step-icon-pending w-6 h-6 rounded-full border-2 border-gray-300"></div>
+          </div>
+          <span class="text-sm text-gray-700">Compare repositories</span>
+        </div>
+
+        <%# Step 6: Saving Comparison %>
+        <div data-step="saving_comparison" class="flex items-center gap-3 opacity-40">
+          <div class="flex-shrink-0 w-6 h-6">
+            <div class="step-icon-pending w-6 h-6 rounded-full border-2 border-gray-300"></div>
+          </div>
+          <span class="text-sm text-gray-700">Finalize comparison</span>
+        </div>
+      </div>
+
+      <%# Error State Container (Hidden by default) %>
+      <div
+        data-comparison-progress-target="errorContainer"
+        class="hidden mt-6 p-4 bg-red-50 border border-red-200 rounded-lg"
+      >
+        <div class="flex items-start gap-3">
+          <svg class="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+          </svg>
+          <div class="flex-1">
+            <h3 class="text-sm font-semibold text-red-900">Error</h3>
+            <p
+              data-comparison-progress-target="errorMessage"
+              class="mt-1 text-sm text-red-700"
+            >
+              An error occurred during comparison creation.
+            </p>
+          </div>
+        </div>
+        <div class="mt-4 flex gap-3">
+          <button
+            data-comparison-progress-target="retryButton"
+            data-action="click->comparison-progress#retry"
+            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium text-sm rounded-lg transition-colors"
+          >
+            Retry
+          </button>
+          <a
+            href="<%= root_path %>"
+            class="px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 font-medium text-sm rounded-lg border border-gray-300 transition-colors"
+          >
+            Go Back
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.2s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+  }
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+</style>

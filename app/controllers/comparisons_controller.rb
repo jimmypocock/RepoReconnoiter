@@ -11,11 +11,18 @@ class ComparisonsController < ApplicationController
     return redirect_to root_path, alert: "Please enter a search query" if query.blank?
     return redirect_to root_path, alert: "Query too long (max 500 characters)" if query.length > 500
 
-    redirect_to comparison_path(comparison_created.record), notice: build_notice(comparison_created)
-  rescue ComparisonCreator::InvalidQueryError => e
-    redirect_to root_path, alert: "Invalid query: #{e.message}"
-  rescue ComparisonCreator::NoRepositoriesFoundError
-    redirect_to root_path, alert: "No repositories found for your query. Try different keywords."
+    # Generate unique session ID for progress tracking
+    @session_id = SecureRandom.uuid
+    session[:comparison_session_id] = @session_id
+
+    CreateComparisonJob.perform_later(current_user.id, query, @session_id)
+
+    # Respond with Turbo Stream to show
+    respond_to do |format|
+      format.turbo_stream
+      # TODO: Uncomment format.html before release
+      # format.html { redirect_to root_path, notice: "Creating your comparison..." }
+    end
   end
 
   def show
@@ -26,30 +33,10 @@ class ComparisonsController < ApplicationController
 
   private
 
-  def build_notice(result)
-    if result.newly_created
-      "Analysis complete!"
-    elsif result.similarity > 0.9
-      "Showing cached results from #{helpers.time_ago_in_words(result.record.created_at)} ago"
-    else
-      "Showing similar query results (#{(result.similarity * 100).round}% match) from #{helpers.time_ago_in_words(result.record.created_at)} ago"
-    end
-  end
-
   def check_rate_limit
     return if current_user.can_create_comparison?
 
     redirect_to root_path, alert: "You've reached your daily limit of #{current_user.daily_comparison_limit} comparisons. Try again tomorrow!"
-  end
-
-  def comparison_created
-    @comparison_created ||= ComparisonCreator.call(query: query, force_refresh: force_refresh, user: current_user).tap do |result|
-      session[:newly_created] = result.newly_created
-    end
-  end
-
-  def force_refresh
-    @force_refresh ||= params[:refresh] == "true"
   end
 
   def query

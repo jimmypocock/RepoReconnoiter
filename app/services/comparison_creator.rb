@@ -9,12 +9,14 @@
 #   result.newly_created  # Boolean - was this just created (vs retrieved from cache)?
 #   result.similarity     # Float - cache similarity score (1.0 if new)
 class ComparisonCreator
-  attr_reader :query, :force_refresh, :user, :record, :newly_created, :similarity
+  attr_reader :query, :force_refresh, :user, :session_id, :broadcaster, :record, :newly_created, :similarity
 
-  def initialize(query:, force_refresh: false, user: nil)
+  def initialize(query:, force_refresh: false, user: nil, session_id: nil)
     @query = query
     @force_refresh = force_refresh
     @user = user
+    @session_id = session_id
+    @broadcaster = session_id.present? ? ComparisonProgressBroadcaster.new(session_id) : nil
   end
 
   #--------------------------------------
@@ -22,6 +24,13 @@ class ComparisonCreator
   #--------------------------------------
 
   def call
+    # Give frontend time to connect to ActionCable before checking cache
+    # This prevents race condition where job finishes before WebSocket connects
+    if session_id.present?
+      broadcaster&.broadcast_step("parsing_query", message: "Checking for existing results...")
+      sleep(0.5) # Brief delay to ensure frontend WebSocket connection established
+    end
+
     result = find_cached_comparison || create_new_comparison
     @record = result[:record]
     @newly_created = result[:newly_created]
@@ -35,8 +44,8 @@ class ComparisonCreator
 
   class << self
     # Convenience method for one-liner usage
-    def call(query:, force_refresh: false, user: nil)
-      new(query: query, force_refresh: force_refresh, user: user).call
+    def call(query:, force_refresh: false, user: nil, session_id: nil)
+      new(query:, force_refresh:, user:, session_id:).call
     end
   end
 
@@ -58,13 +67,19 @@ class ComparisonCreator
 
   def create_new_comparison
     # Step 1: Parse query into structured data
+    broadcaster&.broadcast_step("parsing_query", message: "Parsing your query...")
     parsed = parse_query
 
     # Step 2: Fetch and prepare repositories
+    query_count = parsed[:github_queries]&.size || 1
+    broadcaster&.broadcast_step("searching_github", message: "Searching GitHub with #{query_count} #{query_count == 1 ? 'query' : 'queries'}...")
     repositories = fetch_repositories(parsed)
 
     # Step 3: Compare repositories and create comparison record
+    broadcaster&.broadcast_step("comparing_repositories", message: "Comparing #{repositories.size} repositories with AI...")
     comparison_record = compare_repositories(parsed, repositories)
+
+    broadcaster&.broadcast_step("saving_comparison", message: "Finalizing comparison...")
 
     {
       record: comparison_record,
@@ -74,7 +89,7 @@ class ComparisonCreator
   end
 
   def fetch_repositories(parsed)
-    fetcher = RepositoryFetcher.new
+    fetcher = RepositoryFetcher.new(broadcaster:)
     result = fetcher.fetch_and_prepare(
       github_queries: parsed[:github_queries],
       limit: 15
