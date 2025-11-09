@@ -49,10 +49,10 @@ class HomepageTest < ApplicationSystemTestCase
     # Recent searches section header
     assert_text "Recent Searches"
 
-    # Should show recent search cards in grid layout if comparisons exist
+    # Should show recent searches in compact list format if comparisons exist
     if Comparison.any?
-      # Check for grid layout
-      assert_selector ".grid.grid-cols-1"
+      # Check for list container with dividers
+      assert_selector ".divide-y"
     end
   end
 

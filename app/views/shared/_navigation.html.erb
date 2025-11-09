@@ -91,7 +91,7 @@
 
     <!-- Bottom Row: Search Bar (only when signed in, hidden on mobile, visible on desktop until scrolled) -->
     <% if user_signed_in? %>
-      <div class="pb-4 transition-all duration-300 hidden md:block" data-navbar-target="searchSection">
+      <div class="overflow-hidden transition-all duration-300 ease-in-out hidden md:block pb-4" data-navbar-target="searchSection" style="max-height: 200px;">
         <div class="max-w-2xl mx-auto">
           <p class="text-sm text-gray-600 mb-2 text-center transition-all duration-300" data-navbar-target="tagline">Use AI to search the best open source library for your project</p>
           <%= form_with url: comparisons_path, method: :post, class: "w-full" do |f| %>
