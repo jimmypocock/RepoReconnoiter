@@ -1,7 +1,4 @@
-<!-- Main Content -->
-<div class="container mx-auto px-4 py-8">
-  <main class="max-w-5xl mx-auto">
-    <!-- Query Info -->
+<!-- Query Info -->
     <div class="mb-6">
       <h2 class="text-2xl font-bold text-gray-900 mb-2"><%= @comparison.user_query %></h2>
       <div class="flex items-center gap-4 text-sm text-gray-600">
@@ -157,9 +154,7 @@
       <% end %>
     </div>
 
-    <!-- Footer Info -->
-    <div class="mt-8 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
-      <p>Analysis powered by AI • <%= @comparison.view_count %> views • Cost: $<%= @comparison.cost_usd.round(6) %></p>
-    </div>
-  </main>
+<!-- Footer Info -->
+<div class="mt-8 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
+  <p>Analysis powered by AI • <%= @comparison.view_count %> views • Cost: $<%= @comparison.cost_usd.round(6) %></p>
 </div>
