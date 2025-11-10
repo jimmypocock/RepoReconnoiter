@@ -10,7 +10,7 @@ Track progress towards MVP release and UX enhancement.
 
 ---
 
-## 🎯 CURRENT STATUS (Updated: Nov 8, 2025)
+## 🎯 CURRENT STATUS (Updated: Nov 10, 2025)
 
 ### ✅ PRODUCTION READY - Core Infrastructure Complete
 
@@ -28,6 +28,8 @@ Track progress towards MVP release and UX enhancement.
 - ✅ CI/CD (GitHub Actions + local ci:all task)
 - ✅ Custom domain with SSL
 - ✅ Mission Control Jobs dashboard (/jobs)
+- ✅ Category system with 129 canonical categories (tech, problem domains, architecture patterns)
+- ✅ Three-layer category matching (aliases, fuzzy matching, semantic embeddings)
 
 **GitHub API Compliance**: ✅ VERIFIED
 
@@ -38,7 +40,7 @@ Track progress towards MVP release and UX enhancement.
 - Aggressive caching (fuzzy matching prevents duplicate API calls)
 - Compliant with GitHub Terms of Service Section H
 
-**Test Coverage**: 49 tests, 110 assertions, 0 failures ✅
+**Test Coverage**: 73 tests, 184 assertions, 0 failures ✅
 
 **Completed Phases**:
 
@@ -52,10 +54,95 @@ Track progress towards MVP release and UX enhancement.
 - ✅ Phase 3.9: Production Stabilization & Bug Fixes
 - ✅ Phase 3.10: Search Quality & Relevance (CRITICAL - Nov 9, 2025)
 - ✅ Phase 4.0: Comparison Creation Progress UX (Nov 9, 2025)
+- ✅ Phase 4.1a: Category Infrastructure & Cleanup (Nov 10, 2025)
 
 ---
 
-## 🎯 CURRENT PRIORITY: Phase 4.1 - Category & Search Quality (CRITICAL)
+## 🎯 CURRENT PRIORITY: Phase 4.1b - Enhanced Categorization & Search (IN PROGRESS)
+
+**Status**: 🔴 READY FOR PRODUCTION DEPLOYMENT - Category infrastructure complete, needs deployment & remaining search work
+
+**What's Ready:**
+- 129 canonical categories with embeddings
+- Production migration tasks tested locally
+- All CI checks passing (73 tests, 184 assertions)
+
+**Next Steps:**
+1. Deploy to production (push code changes)
+2. Run migration tasks on production (4 commands - see below)
+3. Complete remaining search improvements (multi-field search, browse page enhancements)
+
+---
+
+## ✅ COMPLETED: Phase 4.1a - Category Infrastructure & Cleanup (Nov 10, 2025)
+
+**Status**: ✅ COMPLETE - Comprehensive category system built and tested locally
+
+**What Was Built:**
+
+### 1. Category System (129 Canonical Categories)
+- **Technology** (61): AI Assistants, Chatbot Framework, htmx, OpenShift, Redux, SVG, etc.
+- **Problem Domain** (49): Data Access, State Management, Web Framework, Icons, Session Management, etc.
+- **Architecture Pattern** (19): ORM Framework, Layered Architecture, Data Processing Framework, etc.
+
+### 2. CategoryMatcher Service (`app/services/category_matcher.rb`)
+- Three-layer matching system:
+  1. **Alias mapping**: "Ruby on Rails" → "Rails", "Node.js" variants, "k8s" → "Kubernetes"
+  2. **Fuzzy matching**: PostgreSQL trigram similarity (0.8 threshold)
+  3. **Semantic embeddings**: OpenAI embeddings for intelligent matching
+- Normalization for technology names (titlecase, common patterns)
+- Automatic deduplication prevents category explosion
+
+### 3. Production Migration Tasks
+- `categories:map_specific` - Maps 18 overly-specific categories to canonical (e.g., "Rails Wrapper" → "Rails")
+- `comparisons:backfill_categories` - Re-parses all comparison queries with clean categories
+- `categories:generate_embeddings` - Generates semantic embeddings for new categories
+- `categories:test_matrix` - 44-scenario test suite for matching validation
+
+### 4. Database Improvements
+- **Seeds file** (`db/seeds/categories.rb`): 129 canonical categories with proper deduplication
+- **Seeds runner** (`db/seeds.rb`): Fixed to preserve associations (no longer destroys all categories)
+- **Sync task** (`lib/tasks/db_sync.rake`): Auto-fixes environment metadata after production sync
+- **Test fixes** (`config/database.yml`): Test suite works with production data sync
+
+### 5. Testing & Quality
+- **Test Coverage**: 73 tests (was 49), 184 assertions (was 110), 0 failures
+- **CI Checks**: All passing (security, linter, tests)
+- **Category Matching**: 44/44 scenarios pass (100%)
+- **Comprehensive verification**: Category counts, associations, embeddings, duplicates all validated
+
+**Files Created:**
+- `app/services/category_matcher.rb` - Three-layer matching with normalization
+- `lib/tasks/map_specific_categories.rake` - Production migration for specific → canonical
+- `lib/tasks/backfill_comparison_categories.rake` - Comparison category backfill
+- `lib/tasks/generate_embeddings.rake` - OpenAI embedding generation
+- `lib/tasks/test_category_matrix.rake` - 44-scenario comprehensive test suite
+- `lib/tasks/category_seeds.rake` - Dump canonical categories from database
+- `lib/tasks/categories_sync.rake` - Lightweight category-only sync from production
+
+**Files Modified:**
+- `db/seeds/categories.rb` - 129 canonical categories (was messy duplicates)
+- `db/seeds.rb` - Removed `Category.destroy_all` (now preserves associations)
+- `lib/tasks/db_sync.rake` - Auto-fixes environment metadata for test suite
+- `test/services/category_matcher_test.rb` - Comprehensive matching tests
+
+**Results:**
+- Category count: 142 (production) → 129 (canonical)
+- Category quality: Eliminated duplicates, normalized names, proper types
+- Repository associations: 264 preserved through migration
+- Comparison associations: 13 → 17 (backfilled with correct categories)
+- Test coverage: +24 tests, +74 assertions
+
+**Production Deployment Commands:**
+```bash
+# After deploying code changes, run on production:
+bin/rails db:seed                                    # Add canonical categories
+bin/rails categories:map_specific                    # Map specific → canonical
+bin/rails comparisons:backfill_categories            # Fix comparison categories
+bin/rails categories:generate_embeddings             # Generate embeddings
+```
+
+---
 
 ## ✅ COMPLETED: Phase 4.0 - Comparison Creation Progress UX
 
@@ -112,34 +199,15 @@ Track progress towards MVP release and UX enhancement.
 
 ---
 
-## 🎯 CURRENT PRIORITY: Phase 4.1 - Category & Search Quality (CRITICAL)
+## 🚧 REMAINING: Phase 4.1b - Enhanced Categorization & Search
 
-**Status**: 🔴 IN PROGRESS - Fix comparison categorization and search discoverability
+**Status**: 🔴 NEXT UP - Complete search improvements and UI enhancements
 
-**Problem**: Poor category coverage and weak search functionality limiting comparison discoverability:
-- **Category Coverage**: Only 28.6% of comparisons have categories (10 of 35)
-- **Weak Categorization**: Only uses `problem_domain` → `problem_domain` categories (ignores tech_stack, repositories)
-- **Category Explosion**: Auto-creates new problem_domain categories without deduplication
-- **Search Fails**: Searching "ruby" doesn't find Rails comparisons because search only looks at `user_query` field
-- **Missing Taxonomy**: Comparisons don't inherit technology/maturity categories from their repositories
+**What's Left** (from original Phase 4.1 plan):
 
-**Example**: Rails background job comparison should have:
-- `technology: Ruby`
-- `technology: Rails`
-- `technology: Sidekiq` (from repos)
-- `problem_domain: Background Job Processing`
+### Remaining Work: Multi-Field Search & Browse UI (~2-3 hours)
 
-But currently only gets problem_domain category (if lucky).
-
-**Goal**: Comprehensive categorization and multi-field search for better discoverability.
-
-**Estimated Time**: 3-4 hours
-
----
-
-### Phase 1: Improve Categorization Logic (1.5 hours)
-
-**Goal**: Assign multiple category types from multiple sources (not just problem_domain)
+**Goal**: Search across all relevant fields and build browsing interface
 
 #### 1.1 Update RepositoryComparer Service (45 mins)
 
