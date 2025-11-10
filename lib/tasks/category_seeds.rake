@@ -34,8 +34,9 @@ namespace :categories do
         safe_name = cat.name.gsub("'", "\\\\'")
         safe_desc = cat.description.gsub("'", "\\\\'")
 
-        seeds_content << "category = Category.find_or_initialize_by(name: '#{safe_name}', category_type: '#{type}')\n"
-        seeds_content << "category.slug = '#{cat.slug}'\n"
+        # Find or initialize by slug AND type to avoid cross-type conflicts
+        seeds_content << "category = Category.find_or_initialize_by(slug: '#{cat.slug}', category_type: '#{type}')\n"
+        seeds_content << "category.name = '#{safe_name}'\n"
         seeds_content << "category.description = '#{safe_desc}'\n"
         seeds_content << "category.save!\n"
       end

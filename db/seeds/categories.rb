@@ -1,424 +1,420 @@
 # frozen_string_literal: true
 
 # Canonical category definitions
-# Generated: 2025-11-10 03:39:18
-# Total categories: 102
+# Generated: 2025-11-10 03:56:02
+# Total categories: 101
 # NOTE: Creates exact categories (no fuzzy matching) to avoid conflicts
 
 puts "Seeding categories..."
 
 
-# Technology (50 categories)
-category = Category.find_or_initialize_by(name: 'Async', category_type: 'technology')
-category.slug = 'async'
+# Technology (49 categories)
+category = Category.find_or_initialize_by(slug: 'async', category_type: 'technology')
+category.name = 'Async'
 category.description = 'Async programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Authentication', category_type: 'technology')
-category.slug = 'authentication'
-category.description = 'Authentication programming language and tools'
-category.save!
-category = Category.find_or_initialize_by(name: 'Aws', category_type: 'technology')
-category.slug = 'aws'
+category = Category.find_or_initialize_by(slug: 'aws', category_type: 'technology')
+category.name = 'Aws'
 category.description = 'Aws programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Aws Lambda', category_type: 'technology')
-category.slug = 'aws-lambda'
+category = Category.find_or_initialize_by(slug: 'aws-lambda', category_type: 'technology')
+category.name = 'Aws Lambda'
 category.description = 'Aws Lambda programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Blockchain Technology', category_type: 'technology')
-category.slug = 'blockchain-technology'
+category = Category.find_or_initialize_by(slug: 'blockchain-technology', category_type: 'technology')
+category.name = 'Blockchain Technology'
 category.description = 'Blockchain Technology programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Buckle Script', category_type: 'technology')
-category.slug = 'buckle-script'
+category = Category.find_or_initialize_by(slug: 'buckle-script', category_type: 'technology')
+category.name = 'Buckle Script'
 category.description = 'Buckle Script programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'C#', category_type: 'technology')
-category.slug = 'c'
+category = Category.find_or_initialize_by(slug: 'c', category_type: 'technology')
+category.name = 'C#'
 category.description = 'C# programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Cdk', category_type: 'technology')
-category.slug = 'cdk'
+category = Category.find_or_initialize_by(slug: 'cdk', category_type: 'technology')
+category.name = 'Cdk'
 category.description = 'Cdk programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Deep Learning', category_type: 'technology')
-category.slug = 'deep-learning'
+category = Category.find_or_initialize_by(slug: 'deep-learning', category_type: 'technology')
+category.name = 'Deep Learning'
 category.description = 'Deep Learning programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Django', category_type: 'technology')
-category.slug = 'django'
+category = Category.find_or_initialize_by(slug: 'django', category_type: 'technology')
+category.name = 'Django'
 category.description = 'Django programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Docker', category_type: 'technology')
-category.slug = 'docker'
+category = Category.find_or_initialize_by(slug: 'docker', category_type: 'technology')
+category.name = 'Docker'
 category.description = 'Docker programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Elixir', category_type: 'technology')
-category.slug = 'elixir'
+category = Category.find_or_initialize_by(slug: 'elixir', category_type: 'technology')
+category.name = 'Elixir'
 category.description = 'Elixir programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Etl', category_type: 'technology')
-category.slug = 'etl'
+category = Category.find_or_initialize_by(slug: 'etl', category_type: 'technology')
+category.name = 'Etl'
 category.description = 'Etl programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Go', category_type: 'technology')
-category.slug = 'go'
+category = Category.find_or_initialize_by(slug: 'go', category_type: 'technology')
+category.name = 'Go'
 category.description = 'Go programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Html', category_type: 'technology')
-category.slug = 'html'
+category = Category.find_or_initialize_by(slug: 'html', category_type: 'technology')
+category.name = 'Html'
 category.description = 'Html programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Http', category_type: 'technology')
-category.slug = 'http'
+category = Category.find_or_initialize_by(slug: 'http', category_type: 'technology')
+category.name = 'Http'
 category.description = 'Http programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Java', category_type: 'technology')
-category.slug = 'java'
+category = Category.find_or_initialize_by(slug: 'java', category_type: 'technology')
+category.name = 'Java'
 category.description = 'Java programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'JavaScript', category_type: 'technology')
-category.slug = 'javascript'
+category = Category.find_or_initialize_by(slug: 'javascript', category_type: 'technology')
+category.name = 'JavaScript'
 category.description = 'JavaScript programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Jupyter Notebook', category_type: 'technology')
-category.slug = 'jupyter-notebook'
+category = Category.find_or_initialize_by(slug: 'jupyter-notebook', category_type: 'technology')
+category.name = 'Jupyter Notebook'
 category.description = 'Jupyter Notebook programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Kotlin', category_type: 'technology')
-category.slug = 'kotlin'
+category = Category.find_or_initialize_by(slug: 'kotlin', category_type: 'technology')
+category.name = 'Kotlin'
 category.description = 'Kotlin programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Kubernetes', category_type: 'technology')
-category.slug = 'kubernetes'
+category = Category.find_or_initialize_by(slug: 'kubernetes', category_type: 'technology')
+category.name = 'Kubernetes'
 category.description = 'Kubernetes programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Laravel', category_type: 'technology')
-category.slug = 'laravel'
+category = Category.find_or_initialize_by(slug: 'laravel', category_type: 'technology')
+category.name = 'Laravel'
 category.description = 'Laravel programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Node.js', category_type: 'technology')
-category.slug = 'node-js'
+category = Category.find_or_initialize_by(slug: 'node-js', category_type: 'technology')
+category.name = 'Node.js'
 category.description = 'Node.js programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'O Caml', category_type: 'technology')
-category.slug = 'o-caml'
+category = Category.find_or_initialize_by(slug: 'o-caml', category_type: 'technology')
+category.name = 'O Caml'
 category.description = 'O Caml programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Open Policy Agent', category_type: 'technology')
-category.slug = 'open-policy-agent'
+category = Category.find_or_initialize_by(slug: 'open-policy-agent', category_type: 'technology')
+category.name = 'Open Policy Agent'
 category.description = 'Open Policy Agent programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Optimization', category_type: 'technology')
-category.slug = 'optimization'
+category = Category.find_or_initialize_by(slug: 'optimization', category_type: 'technology')
+category.name = 'Optimization'
 category.description = 'Optimization programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Pdf Generation', category_type: 'technology')
-category.slug = 'pdf-generation'
+category = Category.find_or_initialize_by(slug: 'pdf-generation', category_type: 'technology')
+category.name = 'Pdf Generation'
 category.description = 'Pdf Generation programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'PHP', category_type: 'technology')
-category.slug = 'php'
+category = Category.find_or_initialize_by(slug: 'php', category_type: 'technology')
+category.name = 'PHP'
 category.description = 'PHP programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'PostgreSQL', category_type: 'technology')
-category.slug = 'postgresql'
+category = Category.find_or_initialize_by(slug: 'postgresql', category_type: 'technology')
+category.name = 'PostgreSQL'
 category.description = 'PostgreSQL programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Prawn', category_type: 'technology')
-category.slug = 'prawn'
+category = Category.find_or_initialize_by(slug: 'prawn', category_type: 'technology')
+category.name = 'Prawn'
 category.description = 'Prawn programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Py Torch', category_type: 'technology')
-category.slug = 'py-torch'
+category = Category.find_or_initialize_by(slug: 'py-torch', category_type: 'technology')
+category.name = 'Py Torch'
 category.description = 'Py Torch programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Python', category_type: 'technology')
-category.slug = 'python'
+category = Category.find_or_initialize_by(slug: 'python', category_type: 'technology')
+category.name = 'Python'
 category.description = 'Python programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Rails', category_type: 'technology')
-category.slug = 'rails'
+category = Category.find_or_initialize_by(slug: 'rails', category_type: 'technology')
+category.name = 'Rails'
 category.description = 'Rails programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'React', category_type: 'technology')
-category.slug = 'react'
+category = Category.find_or_initialize_by(slug: 'react', category_type: 'technology')
+category.name = 'React'
 category.description = 'React programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Redis', category_type: 'technology')
-category.slug = 'redis'
+category = Category.find_or_initialize_by(slug: 'redis', category_type: 'technology')
+category.name = 'Redis'
 category.description = 'Redis programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Ruby', category_type: 'technology')
-category.slug = 'ruby'
+category = Category.find_or_initialize_by(slug: 'ruby', category_type: 'technology')
+category.name = 'Ruby'
 category.description = 'Ruby programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Rust', category_type: 'technology')
-category.slug = 'rust'
+category = Category.find_or_initialize_by(slug: 'rust', category_type: 'technology')
+category.name = 'Rust'
 category.description = 'Rust programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Scala', category_type: 'technology')
-category.slug = 'scala'
+category = Category.find_or_initialize_by(slug: 'scala', category_type: 'technology')
+category.name = 'Scala'
 category.description = 'Scala programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Scheduler', category_type: 'technology')
-category.slug = 'scheduler'
+category = Category.find_or_initialize_by(slug: 'scheduler', category_type: 'technology')
+category.name = 'Scheduler'
 category.description = 'Scheduler programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Shell', category_type: 'technology')
-category.slug = 'shell'
+category = Category.find_or_initialize_by(slug: 'shell', category_type: 'technology')
+category.name = 'Shell'
 category.description = 'Shell programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Sidekiq', category_type: 'technology')
-category.slug = 'sidekiq'
+category = Category.find_or_initialize_by(slug: 'sidekiq', category_type: 'technology')
+category.name = 'Sidekiq'
 category.description = 'Sidekiq programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Smarty', category_type: 'technology')
-category.slug = 'smarty'
+category = Category.find_or_initialize_by(slug: 'smarty', category_type: 'technology')
+category.name = 'Smarty'
 category.description = 'Smarty programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Spring', category_type: 'technology')
-category.slug = 'spring'
+category = Category.find_or_initialize_by(slug: 'spring', category_type: 'technology')
+category.name = 'Spring'
 category.description = 'Spring programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Swift', category_type: 'technology')
-category.slug = 'swift'
+category = Category.find_or_initialize_by(slug: 'swift', category_type: 'technology')
+category.name = 'Swift'
 category.description = 'Swift programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Testing', category_type: 'technology')
-category.slug = 'testing'
+category = Category.find_or_initialize_by(slug: 'testing', category_type: 'technology')
+category.name = 'Testing'
 category.description = 'Testing programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'TypeScript', category_type: 'technology')
-category.slug = 'typescript'
+category = Category.find_or_initialize_by(slug: 'typescript', category_type: 'technology')
+category.name = 'TypeScript'
 category.description = 'TypeScript programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Vue.js', category_type: 'technology')
-category.slug = 'vue-js'
+category = Category.find_or_initialize_by(slug: 'vue-js', category_type: 'technology')
+category.name = 'Vue.js'
 category.description = 'Vue.js programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Web Assembly', category_type: 'technology')
-category.slug = 'web-assembly'
+category = Category.find_or_initialize_by(slug: 'web-assembly', category_type: 'technology')
+category.name = 'Web Assembly'
 category.description = 'Web Assembly programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Web Sockets', category_type: 'technology')
-category.slug = 'web-sockets'
+category = Category.find_or_initialize_by(slug: 'web-sockets', category_type: 'technology')
+category.name = 'Web Sockets'
 category.description = 'Web Sockets programming language and tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Zig', category_type: 'technology')
-category.slug = 'zig'
+category = Category.find_or_initialize_by(slug: 'zig', category_type: 'technology')
+category.name = 'Zig'
 category.description = 'Zig programming language and tools'
 category.save!
 
 # Problem Domain (38 categories)
-category = Category.find_or_initialize_by(name: 'API Client Generation', category_type: 'problem_domain')
-category.slug = 'api-client-generation'
+category = Category.find_or_initialize_by(slug: 'api-client-generation', category_type: 'problem_domain')
+category.name = 'API Client Generation'
 category.description = 'Tools and libraries for api client generation'
 category.save!
-category = Category.find_or_initialize_by(name: 'API Integration', category_type: 'problem_domain')
-category.slug = 'api-integration'
+category = Category.find_or_initialize_by(slug: 'api-integration', category_type: 'problem_domain')
+category.name = 'API Integration'
 category.description = 'Tools and libraries for api integration'
 category.save!
-category = Category.find_or_initialize_by(name: 'Artificial Intelligence', category_type: 'problem_domain')
-category.slug = 'artificial-intelligence'
+category = Category.find_or_initialize_by(slug: 'artificial-intelligence', category_type: 'problem_domain')
+category.name = 'Artificial Intelligence'
 category.description = 'Tools and libraries for artificial intelligence'
 category.save!
-category = Category.find_or_initialize_by(name: 'Astronomy And Astrophysics', category_type: 'problem_domain')
-category.slug = 'astronomy-and-astrophysics'
+category = Category.find_or_initialize_by(slug: 'astronomy-and-astrophysics', category_type: 'problem_domain')
+category.name = 'Astronomy And Astrophysics'
 category.description = 'Tools and libraries for astronomy and astrophysics'
 category.save!
-category = Category.find_or_initialize_by(name: 'Authentication', category_type: 'problem_domain')
-category.slug = 'authentication'
+category = Category.find_or_initialize_by(slug: 'authentication', category_type: 'problem_domain')
+category.name = 'Authentication'
 category.description = 'Tools and libraries for authentication'
 category.save!
-category = Category.find_or_initialize_by(name: 'Automation Tools', category_type: 'problem_domain')
-category.slug = 'automation-tools'
+category = Category.find_or_initialize_by(slug: 'automation-tools', category_type: 'problem_domain')
+category.name = 'Automation Tools'
 category.description = 'Tools and libraries for automation tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Backend Applications', category_type: 'problem_domain')
-category.slug = 'backend-applications'
+category = Category.find_or_initialize_by(slug: 'backend-applications', category_type: 'problem_domain')
+category.name = 'Backend Applications'
 category.description = 'Tools and libraries for backend applications'
 category.save!
-category = Category.find_or_initialize_by(name: 'Background Job Processing', category_type: 'problem_domain')
-category.slug = 'background-job-processing'
+category = Category.find_or_initialize_by(slug: 'background-job-processing', category_type: 'problem_domain')
+category.name = 'Background Job Processing'
 category.description = 'Tools and libraries for background job processing'
 category.save!
-category = Category.find_or_initialize_by(name: 'Caching', category_type: 'problem_domain')
-category.slug = 'caching'
+category = Category.find_or_initialize_by(slug: 'caching', category_type: 'problem_domain')
+category.name = 'Caching'
 category.description = 'Tools and libraries for caching'
 category.save!
-category = Category.find_or_initialize_by(name: 'Chart Generation', category_type: 'problem_domain')
-category.slug = 'chart-generation'
+category = Category.find_or_initialize_by(slug: 'chart-generation', category_type: 'problem_domain')
+category.name = 'Chart Generation'
 category.description = 'Tools and libraries for chart generation'
 category.save!
-category = Category.find_or_initialize_by(name: 'Continuous Deployment', category_type: 'problem_domain')
-category.slug = 'continuous-deployment'
+category = Category.find_or_initialize_by(slug: 'continuous-deployment', category_type: 'problem_domain')
+category.name = 'Continuous Deployment'
 category.description = 'Tools and libraries for continuous deployment'
 category.save!
-category = Category.find_or_initialize_by(name: 'Cron Job Management', category_type: 'problem_domain')
-category.slug = 'cron-job-management'
+category = Category.find_or_initialize_by(slug: 'cron-job-management', category_type: 'problem_domain')
+category.name = 'Cron Job Management'
 category.description = 'Tools and libraries for cron job management'
 category.save!
-category = Category.find_or_initialize_by(name: 'Data Visualization', category_type: 'problem_domain')
-category.slug = 'data-visualization'
+category = Category.find_or_initialize_by(slug: 'data-visualization', category_type: 'problem_domain')
+category.name = 'Data Visualization'
 category.description = 'Tools and libraries for data visualization'
 category.save!
-category = Category.find_or_initialize_by(name: 'Database Tools', category_type: 'problem_domain')
-category.slug = 'database-tools'
+category = Category.find_or_initialize_by(slug: 'database-tools', category_type: 'problem_domain')
+category.name = 'Database Tools'
 category.description = 'Tools and libraries for database tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Dev Ops Tools', category_type: 'problem_domain')
-category.slug = 'dev-ops-tools'
+category = Category.find_or_initialize_by(slug: 'dev-ops-tools', category_type: 'problem_domain')
+category.name = 'Dev Ops Tools'
 category.description = 'Tools and libraries for dev ops tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Email', category_type: 'problem_domain')
-category.slug = 'email'
+category = Category.find_or_initialize_by(slug: 'email', category_type: 'problem_domain')
+category.name = 'Email'
 category.description = 'Tools and libraries for email'
 category.save!
-category = Category.find_or_initialize_by(name: 'File Processing', category_type: 'problem_domain')
-category.slug = 'file-processing'
+category = Category.find_or_initialize_by(slug: 'file-processing', category_type: 'problem_domain')
+category.name = 'File Processing'
 category.description = 'Tools and libraries for file processing'
 category.save!
-category = Category.find_or_initialize_by(name: 'HTML Manipulation', category_type: 'problem_domain')
-category.slug = 'html-manipulation'
+category = Category.find_or_initialize_by(slug: 'html-manipulation', category_type: 'problem_domain')
+category.name = 'HTML Manipulation'
 category.description = 'Tools and libraries for html manipulation'
 category.save!
-category = Category.find_or_initialize_by(name: 'HTTP Client', category_type: 'problem_domain')
-category.slug = 'http-client'
+category = Category.find_or_initialize_by(slug: 'http-client', category_type: 'problem_domain')
+category.name = 'HTTP Client'
 category.description = 'Tools and libraries for http client'
 category.save!
-category = Category.find_or_initialize_by(name: 'Identity Management', category_type: 'problem_domain')
-category.slug = 'identity-management'
+category = Category.find_or_initialize_by(slug: 'identity-management', category_type: 'problem_domain')
+category.name = 'Identity Management'
 category.description = 'Tools and libraries for identity management'
 category.save!
-category = Category.find_or_initialize_by(name: 'Inverse Problems', category_type: 'problem_domain')
-category.slug = 'inverse-problems'
+category = Category.find_or_initialize_by(slug: 'inverse-problems', category_type: 'problem_domain')
+category.name = 'Inverse Problems'
 category.description = 'Tools and libraries for inverse problems'
 category.save!
-category = Category.find_or_initialize_by(name: 'Invoice Processing', category_type: 'problem_domain')
-category.slug = 'invoice-processing'
+category = Category.find_or_initialize_by(slug: 'invoice-processing', category_type: 'problem_domain')
+category.name = 'Invoice Processing'
 category.description = 'Tools and libraries for invoice processing'
 category.save!
-category = Category.find_or_initialize_by(name: 'JSON Parsing', category_type: 'problem_domain')
-category.slug = 'json-parsing'
+category = Category.find_or_initialize_by(slug: 'json-parsing', category_type: 'problem_domain')
+category.name = 'JSON Parsing'
 category.description = 'Tools and libraries for json parsing'
 category.save!
-category = Category.find_or_initialize_by(name: 'Linear Operators', category_type: 'problem_domain')
-category.slug = 'linear-operators'
+category = Category.find_or_initialize_by(slug: 'linear-operators', category_type: 'problem_domain')
+category.name = 'Linear Operators'
 category.description = 'Tools and libraries for linear operators'
 category.save!
-category = Category.find_or_initialize_by(name: 'Machine Learning', category_type: 'problem_domain')
-category.slug = 'machine-learning'
+category = Category.find_or_initialize_by(slug: 'machine-learning', category_type: 'problem_domain')
+category.name = 'Machine Learning'
 category.description = 'Tools and libraries for machine learning'
 category.save!
-category = Category.find_or_initialize_by(name: 'Management Accounting', category_type: 'problem_domain')
-category.slug = 'management-accounting'
+category = Category.find_or_initialize_by(slug: 'management-accounting', category_type: 'problem_domain')
+category.name = 'Management Accounting'
 category.description = 'Tools and libraries for management accounting'
 category.save!
-category = Category.find_or_initialize_by(name: 'Mathematics', category_type: 'problem_domain')
-category.slug = 'mathematics'
+category = Category.find_or_initialize_by(slug: 'mathematics', category_type: 'problem_domain')
+category.name = 'Mathematics'
 category.description = 'Tools and libraries for mathematics'
 category.save!
-category = Category.find_or_initialize_by(name: 'Memory Allocation', category_type: 'problem_domain')
-category.slug = 'memory-allocation'
+category = Category.find_or_initialize_by(slug: 'memory-allocation', category_type: 'problem_domain')
+category.name = 'Memory Allocation'
 category.description = 'Tools and libraries for memory allocation'
 category.save!
-category = Category.find_or_initialize_by(name: 'Monitoring', category_type: 'problem_domain')
-category.slug = 'monitoring'
+category = Category.find_or_initialize_by(slug: 'monitoring', category_type: 'problem_domain')
+category.name = 'Monitoring'
 category.description = 'Tools and libraries for monitoring'
 category.save!
-category = Category.find_or_initialize_by(name: 'Multilinear Algebra', category_type: 'problem_domain')
-category.slug = 'multilinear-algebra'
+category = Category.find_or_initialize_by(slug: 'multilinear-algebra', category_type: 'problem_domain')
+category.name = 'Multilinear Algebra'
 category.description = 'Tools and libraries for multilinear algebra'
 category.save!
-category = Category.find_or_initialize_by(name: 'Payment Processing', category_type: 'problem_domain')
-category.slug = 'payment-processing'
+category = Category.find_or_initialize_by(slug: 'payment-processing', category_type: 'problem_domain')
+category.name = 'Payment Processing'
 category.description = 'Payment gateways, billing systems, subscription management'
 category.save!
-category = Category.find_or_initialize_by(name: 'Performance', category_type: 'problem_domain')
-category.slug = 'performance'
+category = Category.find_or_initialize_by(slug: 'performance', category_type: 'problem_domain')
+category.name = 'Performance'
 category.description = 'Tools and libraries for performance'
 category.save!
-category = Category.find_or_initialize_by(name: 'Profiler Tools', category_type: 'problem_domain')
-category.slug = 'profiler-tools'
+category = Category.find_or_initialize_by(slug: 'profiler-tools', category_type: 'problem_domain')
+category.name = 'Profiler Tools'
 category.description = 'Tools and libraries for profiler tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Real-Time Communication', category_type: 'problem_domain')
-category.slug = 'real-time-communication'
+category = Category.find_or_initialize_by(slug: 'real-time-communication', category_type: 'problem_domain')
+category.name = 'Real-Time Communication'
 category.description = 'Tools and libraries for real-time communication'
 category.save!
-category = Category.find_or_initialize_by(name: 'Search', category_type: 'problem_domain')
-category.slug = 'search'
+category = Category.find_or_initialize_by(slug: 'search', category_type: 'problem_domain')
+category.name = 'Search'
 category.description = 'Tools and libraries for search'
 category.save!
-category = Category.find_or_initialize_by(name: 'Security', category_type: 'problem_domain')
-category.slug = 'security'
+category = Category.find_or_initialize_by(slug: 'security', category_type: 'problem_domain')
+category.name = 'Security'
 category.description = 'Tools and libraries for security'
 category.save!
-category = Category.find_or_initialize_by(name: 'Serverless Applications', category_type: 'problem_domain')
-category.slug = 'serverless-applications'
+category = Category.find_or_initialize_by(slug: 'serverless-applications', category_type: 'problem_domain')
+category.name = 'Serverless Applications'
 category.description = 'Tools and libraries for serverless applications'
 category.save!
-category = Category.find_or_initialize_by(name: 'Slab Allocator', category_type: 'problem_domain')
-category.slug = 'slab-allocator'
+category = Category.find_or_initialize_by(slug: 'slab-allocator', category_type: 'problem_domain')
+category.name = 'Slab Allocator'
 category.description = 'Tools and libraries for slab allocator'
 category.save!
 
 # Architecture Pattern (14 categories)
-category = Category.find_or_initialize_by(name: 'API-First Design', category_type: 'architecture_pattern')
-category.slug = 'api-first-design'
+category = Category.find_or_initialize_by(slug: 'api-first-design', category_type: 'architecture_pattern')
+category.name = 'API-First Design'
 category.description = 'API-First Design architectural pattern and related tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'CLI Tools', category_type: 'architecture_pattern')
-category.slug = 'cli-tools'
+category = Category.find_or_initialize_by(slug: 'cli-tools', category_type: 'architecture_pattern')
+category.name = 'CLI Tools'
 category.description = 'CLI Tools architectural pattern and related tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Data Processing', category_type: 'architecture_pattern')
-category.slug = 'data-processing'
+category = Category.find_or_initialize_by(slug: 'data-processing', category_type: 'architecture_pattern')
+category.name = 'Data Processing'
 category.description = 'Data Processing architectural pattern and related tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Developer Tools', category_type: 'architecture_pattern')
-category.slug = 'developer-tools'
+category = Category.find_or_initialize_by(slug: 'developer-tools', category_type: 'architecture_pattern')
+category.name = 'Developer Tools'
 category.description = 'Developer Tools architectural pattern and related tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Event-Driven Architecture', category_type: 'architecture_pattern')
-category.slug = 'event-driven-architecture'
+category = Category.find_or_initialize_by(slug: 'event-driven-architecture', category_type: 'architecture_pattern')
+category.name = 'Event-Driven Architecture'
 category.description = 'Event-Driven Architecture architectural pattern and related tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'File Processing Framework', category_type: 'architecture_pattern')
-category.slug = 'file-processing-framework'
+category = Category.find_or_initialize_by(slug: 'file-processing-framework', category_type: 'architecture_pattern')
+category.name = 'File Processing Framework'
 category.description = 'File Processing Framework architectural pattern and related tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Frontend Frameworks', category_type: 'architecture_pattern')
-category.slug = 'frontend-frameworks'
+category = Category.find_or_initialize_by(slug: 'frontend-frameworks', category_type: 'architecture_pattern')
+category.name = 'Frontend Frameworks'
 category.description = 'Frontend Frameworks architectural pattern and related tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Microservices Architecture', category_type: 'architecture_pattern')
-category.slug = 'microservices-architecture'
+category = Category.find_or_initialize_by(slug: 'microservices-architecture', category_type: 'architecture_pattern')
+category.name = 'Microservices Architecture'
 category.description = 'Microservices Architecture architectural pattern and related tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Microservices Tooling', category_type: 'architecture_pattern')
-category.slug = 'microservices-tooling'
+category = Category.find_or_initialize_by(slug: 'microservices-tooling', category_type: 'architecture_pattern')
+category.name = 'Microservices Tooling'
 category.description = 'Microservices Tooling architectural pattern and related tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Monolith Utilities', category_type: 'architecture_pattern')
-category.slug = 'monolith-utilities'
+category = Category.find_or_initialize_by(slug: 'monolith-utilities', category_type: 'architecture_pattern')
+category.name = 'Monolith Utilities'
 category.description = 'Monolith Utilities architectural pattern and related tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Multithreaded Architecture', category_type: 'architecture_pattern')
-category.slug = 'multithreaded-architecture'
+category = Category.find_or_initialize_by(slug: 'multithreaded-architecture', category_type: 'architecture_pattern')
+category.name = 'Multithreaded Architecture'
 category.description = 'Multithreaded Architecture architectural pattern and related tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Scientific Computing', category_type: 'architecture_pattern')
-category.slug = 'scientific-computing'
+category = Category.find_or_initialize_by(slug: 'scientific-computing', category_type: 'architecture_pattern')
+category.name = 'Scientific Computing'
 category.description = 'Scientific Computing architectural pattern and related tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'Serverless Architecture', category_type: 'architecture_pattern')
-category.slug = 'serverless-architecture'
+category = Category.find_or_initialize_by(slug: 'serverless-architecture', category_type: 'architecture_pattern')
+category.name = 'Serverless Architecture'
 category.description = 'Serverless Architecture architectural pattern and related tools'
 category.save!
-category = Category.find_or_initialize_by(name: 'State Management', category_type: 'architecture_pattern')
-category.slug = 'state-management'
+category = Category.find_or_initialize_by(slug: 'state-management', category_type: 'architecture_pattern')
+category.name = 'State Management'
 category.description = 'State Management architectural pattern and related tools'
 category.save!
 
