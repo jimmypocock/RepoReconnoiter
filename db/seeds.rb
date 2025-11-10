@@ -4,13 +4,9 @@
 
 puts "🌱 Seeding database..."
 
-# Clear existing categories (only in development)
-if Rails.env.development?
-  puts "Clearing existing categories..."
-  Category.destroy_all
-end
-
 # Load canonical categories from seeds/categories.rb
+# NOTE: Uses find_or_initialize_by, so this is safe to run multiple times
+# and will NOT destroy existing categories or their associations
 load Rails.root.join("db", "seeds", "categories.rb")
 
 # Summary

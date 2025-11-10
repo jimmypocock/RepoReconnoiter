@@ -29,7 +29,7 @@ namespace :db do
     puts "\n📦 Backing up current local database..."
     puts "   → #{backup_file}"
 
-    system("pg_dump #{Rails.configuration.database_configuration[Rails.env]['database']} > #{backup_file}")
+    system("pg_dump #{Rails.configuration.database_configuration[Rails.env]['primary']['database']} > #{backup_file}")
 
     if $?.success?
       puts "   ✅ Local backup created"
@@ -62,7 +62,7 @@ namespace :db do
 
     # Drop and recreate local database
     puts "\n🔄 Resetting local database..."
-    local_db = Rails.configuration.database_configuration[Rails.env]["database"]
+    local_db = Rails.configuration.database_configuration[Rails.env]["primary"]["database"]
 
     system("dropdb #{local_db}")
     system("createdb #{local_db}")
@@ -95,11 +95,5 @@ namespace :db do
     puts "\n📂 Files created:"
     puts "  Local backup:     #{backup_file}"
     puts "  Production dump:  #{dump_file}"
-    puts "\n💡 Next steps:"
-    puts "  1. Run: bin/rails categories:cleanup"
-    puts "  2. Run: bin/rails db:seed"
-    puts "  3. Run: bin/rails categories:generate_embeddings"
-    puts "  4. Run: bin/rails categories:test_matrix"
-    puts "\n" + "=" * 100
   end
 end

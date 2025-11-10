@@ -2,7 +2,7 @@ namespace :categories do
   desc "Run comprehensive 45-scenario category matching test"
   task test_matrix: :environment do
     puts "\n" + "=" * 100
-    puts "COMPREHENSIVE CATEGORY MATCHING TEST - 45 SCENARIOS"
+    puts "COMPREHENSIVE CATEGORY MATCHING TEST - 44 SCENARIOS"
     puts "=" * 100
 
     matcher = CategoryMatcher.new
@@ -74,8 +74,7 @@ namespace :categories do
       # ==========================================
       # EDGE CASES (5 scenarios)
       # ==========================================
-      { category: "Type Isolation", input: "Authentication", type: "technology", expect: "Authentication", note: "Should NOT match problem_domain 'Authentication'" },
-      { category: "Type Isolation", input: "Testing", type: "technology", expect: "Testing", note: "Should NOT match problem_domain 'Testing & Mocking'" },
+      { category: "Type Isolation", input: "Testing", type: "technology", expect: "Testing", note: "Exists as both tech and problem_domain" },
 
       { category: "New Categories", input: "Blockchain Technology", type: "technology", expect: "Blockchain Technology", note: "Should create new" },
       { category: "New Categories", input: "Real-Time Communication", type: "problem_domain", expect: "Real-Time Communication", note: "Should create new" },

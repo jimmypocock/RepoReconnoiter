@@ -386,11 +386,5 @@ namespace :categories do
     else
       puts "\n✅ All cleanup operations completed successfully!"
     end
-
-    puts "\n💡 Next steps:"
-    puts "  1. Run: bin/rails categories:stats"
-    puts "  2. Run: bin/rails categories:test_matrix"
-    puts "  3. Run: bin/rails db:seed (to add missing canonical categories)"
-    puts "\n" + "=" * 100
   end
 end
