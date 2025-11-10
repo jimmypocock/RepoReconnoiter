@@ -34,10 +34,10 @@ namespace :categories do
         safe_name = cat.name.gsub("'", "\\\\'")
         safe_desc = cat.description.gsub("'", "\\\\'")
 
-        seeds_content << "Category.find_or_create_by!(name: '#{safe_name}', category_type: '#{type}') do |c|\n"
-        seeds_content << "  c.slug = '#{cat.slug}'\n"
-        seeds_content << "  c.description = '#{safe_desc}'\n"
-        seeds_content << "end\n"
+        seeds_content << "category = Category.find_or_initialize_by(name: '#{safe_name}', category_type: '#{type}')\n"
+        seeds_content << "category.slug = '#{cat.slug}'\n"
+        seeds_content << "category.description = '#{safe_desc}'\n"
+        seeds_content << "category.save!\n"
       end
     end
 
