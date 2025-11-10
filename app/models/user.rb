@@ -33,11 +33,11 @@ class User < ApplicationRecord
   #--------------------------------------
 
   def admin?
-    allowed_admin_github_ids = ENV.fetch("MISSION_CONTROL_ADMIN_IDS", "").split(",").map(&:strip).reject(&:empty?)
     allowed_admin_github_ids.include?(github_id.to_s)
   end
 
   def can_create_comparison?
+    return true if admin?
     comparisons.where("created_at > ?", 24.hours.ago).count < daily_comparison_limit
   end
 
@@ -73,5 +73,15 @@ class User < ApplicationRecord
       user.save!
       user
     end
+  end
+
+  private
+
+  #--------------------------------------
+  # PRIVATE METHODS
+  #--------------------------------------
+
+  def allowed_admin_github_ids
+    ENV.fetch("ALLOWED_ADMIN_GITHUB_IDS", "").split(",").map(&:strip).reject(&:empty?)
   end
 end

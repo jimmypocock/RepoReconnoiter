@@ -22,7 +22,6 @@ class HomepageTest < ApplicationSystemTestCase
 
     # Filter bar exists (visible to all users)
     assert_selector "input[name='search']"
-    assert_selector "select[name='category']"
     assert_selector "select[name='sort']"
   end
 
@@ -39,7 +38,6 @@ class HomepageTest < ApplicationSystemTestCase
 
     # Filter bar exists
     assert_selector "input[name='search']"
-    assert_selector "select[name='category']"
     assert_selector "select[name='sort']"
   end
 

@@ -9,3 +9,24 @@ two:
   slug: "database-orm"
   category_type: "problem_domain"
   description: "Object-relational mapping libraries"
+
+ruby:
+  name: "Ruby"
+  slug: "ruby"
+  category_type: "technology"
+  description: "Ruby programming language and tools"
+  repositories_count: 0
+
+go:
+  name: "Go"
+  slug: "go"
+  category_type: "technology"
+  description: "Go programming language and tools"
+  repositories_count: 0
+
+rust:
+  name: "Rust"
+  slug: "rust"
+  category_type: "technology"
+  description: "Rust programming language and tools"
+  repositories_count: 0

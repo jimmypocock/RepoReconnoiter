@@ -8,7 +8,7 @@ class MissionControlTest < ActionDispatch::IntegrationTest
   #--------------------------------------
 
   test "unauthenticated user cannot access jobs dashboard" do
-    get "/jobs"
+    get "/admin/jobs"
 
     # Should be redirected (not allowed to access)
     assert_response :redirect
@@ -20,13 +20,13 @@ class MissionControlTest < ActionDispatch::IntegrationTest
     user = users(:one)
 
     # Temporarily set admin IDs (not including this user)
-    with_env("MISSION_CONTROL_ADMIN_IDS" => "999999") do
+    with_env("ALLOWED_ADMIN_GITHUB_IDS" => "999999") do
       sign_in user
 
       # Reload initializer with new env variables
       reload_mission_control_config
 
-      get "/jobs"
+      get "/admin/jobs"
 
       # Should be redirected or forbidden (not allowed to access)
       assert_includes [ 302, 303, 403 ], response.status, "Non-admin should not access jobs dashboard"
@@ -38,13 +38,13 @@ class MissionControlTest < ActionDispatch::IntegrationTest
     user = users(:one) # GitHub ID: 12345
 
     # Add this user to admin list
-    with_env("MISSION_CONTROL_ADMIN_IDS" => "12345") do
+    with_env("ALLOWED_ADMIN_GITHUB_IDS" => "12345") do
       sign_in user
 
       # Reload initializer with new env variables
       reload_mission_control_config
 
-      get "/jobs"
+      get "/admin/jobs"
 
       # Should successfully load the jobs dashboard
       assert_response :success
@@ -55,30 +55,33 @@ class MissionControlTest < ActionDispatch::IntegrationTest
     user = users(:two) # GitHub ID: 67890
 
     # Multiple admins in comma-separated list
-    with_env("MISSION_CONTROL_ADMIN_IDS" => "12345,67890,111111") do
+    with_env("ALLOWED_ADMIN_GITHUB_IDS" => "12345,67890,111111") do
       sign_in user
 
       # Reload initializer with new env variables
       reload_mission_control_config
 
-      get "/jobs"
+      get "/admin/jobs"
 
       assert_response :success
     end
   end
 
-  test "raises error when MISSION_CONTROL_ADMIN_IDS is not set" do
+  test "raises error when ALLOWED_ADMIN_GITHUB_IDS is not set" do
     user = users(:one)
 
-    with_env("MISSION_CONTROL_ADMIN_IDS" => "") do
+    with_env("ALLOWED_ADMIN_GITHUB_IDS" => "") do
       sign_in user
 
       # Reload initializer with new env variables
       reload_mission_control_config
 
-      assert_raises(RuntimeError, "MISSION_CONTROL_ADMIN_IDS must be set") do
-        get "/jobs"
-      end
+      # User#admin? will return false when ALLOWED_ADMIN_GITHUB_IDS is empty
+      # This should redirect (not raise) now
+      get "/admin/jobs"
+
+      assert_response :redirect
+      assert_equal "You don't have permission to access this page.", flash[:alert]
     end
   end
 
@@ -101,22 +104,16 @@ class MissionControlTest < ActionDispatch::IntegrationTest
 
   # Reload Mission Control configuration with new environment variables
   def reload_mission_control_config
-    # Re-evaluate the check_admin_access! method with new ENV values
+    # Re-evaluate the require_admin! method with new ENV values
+    # This delegates to User#admin? which checks ALLOWED_ADMIN_GITHUB_IDS
     MissionControl::Jobs::ApplicationController.class_eval do
-      def check_admin_access!
+      def require_admin!
         unless current_user
           redirect_to main_app.root_path, alert: "You must be signed in to access this page."
           return
         end
 
-        allowed_admin_github_ids = ENV.fetch("MISSION_CONTROL_ADMIN_IDS", "").split(",").map(&:strip).reject(&:empty?)
-
-        # Require at least one admin ID to be configured
-        if allowed_admin_github_ids.empty?
-          raise "MISSION_CONTROL_ADMIN_IDS must be set in environment variables to access the jobs dashboard"
-        end
-
-        unless allowed_admin_github_ids.include?(current_user.github_id.to_s)
+        unless current_user.admin?
           redirect_to main_app.root_path, alert: "You don't have permission to access this page."
         end
       end

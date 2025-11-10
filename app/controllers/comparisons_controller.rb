@@ -20,15 +20,14 @@ class ComparisonsController < ApplicationController
     # Respond with Turbo Stream to show
     respond_to do |format|
       format.turbo_stream
-      # TODO: Uncomment format.html before release
-      # format.html { redirect_to root_path, notice: "Creating your comparison..." }
+      format.html { redirect_to root_path, notice: "Creating your comparison..." }
     end
   end
 
   def show
     comparison = Comparison.find(params[:id])
     comparison.increment_view_count!
-    @comparison = ComparisonPresenter.new(comparison, newly_created: session.delete(:newly_created))
+    @comparison = ComparisonPresenter.new(comparison, current_user, newly_created: session.delete(:newly_created))
   end
 
   private

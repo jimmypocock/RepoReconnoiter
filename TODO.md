@@ -27,7 +27,7 @@ Track progress towards MVP release and UX enhancement.
 - ✅ Cost tracking (automatic AI spend monitoring)
 - ✅ CI/CD (GitHub Actions + local ci:all task)
 - ✅ Custom domain with SSL
-- ✅ Mission Control Jobs dashboard (/jobs)
+- ✅ Mission Control Jobs dashboard (/admin/jobs)
 - ✅ Category system with 129 canonical categories (tech, problem domains, architecture patterns)
 - ✅ Three-layer category matching (aliases, fuzzy matching, semantic embeddings)
 
@@ -460,7 +460,7 @@ Only searches `user_query` field!
   - Browse menu (dropdown: Comparisons, Categories, Trending)
   - Sign In button (unauthenticated)
   - User avatar + dropdown (authenticated: Profile, Sign Out)
-  - Admin link to /jobs (admin users only)
+  - Admin link to /admin/jobs and /admin/stats (admin users only)
 - [ ] Add active state styling (current page highlighted)
 - [ ] Mobile hamburger menu (Tailwind + Stimulus)
 - [ ] Add to `application.html.erb` layout

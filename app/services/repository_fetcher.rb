@@ -55,6 +55,7 @@ class RepositoryFetcher
 
   def analyze_repositories(repositories)
     analyzer = RepositoryAnalyzer.new
+    category_matcher = CategoryMatcher.new
 
     repositories.each_with_index do |repo, index|
       # Broadcast progress for this repository
@@ -80,14 +81,13 @@ class RepositoryFetcher
           is_current: true
         )
 
-        # Create category associations
+        # Create category associations using CategoryMatcher
         result[:categories].each do |cat|
-          # Find or create category by slug
-          category = Category.find_or_create_by!(slug: cat["slug"]) do |c|
-            c.name = cat["name"]
-            c.category_type = cat["category_type"]
-            c.description = "AI-generated category"
-          end
+          # Find or create category with embedding and normalization
+          category = category_matcher.find_or_create(
+            name: cat["name"],
+            category_type: cat["category_type"]
+          )
 
           repo.repository_categories.create!(
             category_id: category.id,
@@ -98,15 +98,12 @@ class RepositoryFetcher
 
         # Auto-assign technology category from GitHub language field
         if repo.language.present?
-          language_slug = repo.language.parameterize
+          # Find or create the category using CategoryMatcher
+          category = category_matcher.find_or_create(
+            name: repo.language,
+            category_type: "technology"
+          )
 
-          # Find or create the category
-          category = Category.find_or_create_by!(slug: language_slug, category_type: "technology") do |c|
-            c.name = repo.language
-            c.description = "#{repo.language} programming language and tools"
-          end
-
-          # TODO: Clean the category assignment up
           # Only create association if it doesn't already exist
           unless repo.repository_categories.exists?(category_id: category.id)
             repo.repository_categories.create!(

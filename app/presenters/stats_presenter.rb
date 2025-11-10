@@ -23,11 +23,11 @@ class StatsPresenter
     @total_views ||= calculate_total_views
   end
 
-  private
-
   #--------------------------------------
   # PRIVATE METHODS
   #--------------------------------------
+
+  private
 
   def calculate_ai_spend_today
     AiCost.spend_today

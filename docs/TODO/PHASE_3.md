@@ -472,13 +472,13 @@
   - [x] Created `config/initializers/mission_control.rb`
   - [x] Skipped HTTP Basic Auth (uses Devise instead)
   - [x] Added custom authentication check via `check_admin_access!`
-  - [x] Only allows users with GitHub ID in `MISSION_CONTROL_ADMIN_IDS` env var
+  - [x] Only allows users with GitHub ID in `ALLOWED_ADMIN_GITHUB_IDS` env var
   - [x] Fail-closed security: Raises error if no admin IDs configured
   - [x] Redirects unauthenticated users to sign in
   - [x] Redirects non-admin users to root with alert
 - [x] Add helper method for admin checks
   - [x] Created `ApplicationHelper#current_user_admin?`
-  - [x] Checks GitHub ID against `MISSION_CONTROL_ADMIN_IDS` env var
+  - [x] Checks GitHub ID against `ALLOWED_ADMIN_GITHUB_IDS` env var
   - [x] Returns false if not signed in
   - [x] Used in views to conditionally show admin features
 - [x] Security testing
@@ -547,7 +547,7 @@
 ## Developer Experience Improvements ✅ COMPLETE
 
 - [x] Environment variable documentation
-  - [x] Updated `.env.example` with `MISSION_CONTROL_ADMIN_IDS`
+  - [x] Updated `.env.example` with `ALLOWED_ADMIN_GITHUB_IDS`
   - [x] Documented GitHub OAuth credentials section
   - [x] All existing env vars already documented (COMPARISON_SIMILARITY_THRESHOLD, etc.)
 - [x] Code organization standards enforced
@@ -720,7 +720,7 @@
 
 **Date Completed**: November 6-7, 2025
 **Time Invested**: ~3 hours (including troubleshooting and documentation)
-**Status**: App deployed and live at https://reporeconnoiter.onrender.com
+**Status**: App deployed and live at <https://reporeconnoiter.onrender.com>
 
 ### What Was Completed
 
@@ -760,12 +760,12 @@
 ### Task 5C: Custom Domain Setup - COMPLETE
 
 - ✅ Configured DNS in Route53 (A record for root, CNAME for www)
-- ✅ Added custom domains in Render (reporeconnoiter.com + www.reporeconnoiter.com)
+- ✅ Added custom domains in Render (reporeconnoiter.com + <www.reporeconnoiter.com>)
 - ✅ SSL certificate auto-provisioned via Let's Encrypt
 - ✅ Created production GitHub OAuth App with custom domain callback
 - ✅ Updated Render environment variables with production OAuth credentials
 - ✅ Added canonical domain redirect in ApplicationController
-  - Redirects www.reporeconnoiter.com → reporeconnoiter.com (301)
+  - Redirects <www.reporeconnoiter.com> → reporeconnoiter.com (301)
   - Redirects reporeconnoiter.onrender.com → reporeconnoiter.com (301)
   - Production-only, preserves full path, SEO-friendly
 
@@ -791,6 +791,7 @@
 ## 📚 Key Learnings from Phase 3.7
 
 ### Deployment Insights (Task 4 - Render)
+
 - Rails 8 multi-database setup requires all connections to use same DATABASE_URL on Render
 - Solid Cache/Queue/Cable use schema files (db/*_schema.rb) instead of migrations
 - Schema files need manual loading on first deploy via `db:schema:load:cache/queue/cable`
@@ -803,6 +804,7 @@
 - Re-enabling disabled frameworks better than complex workarounds (YAGNI principle)
 
 ### Custom Domain & SSL Insights (Task 5C)
+
 - Render auto-provisions SSL via Let's Encrypt (no AWS Certificate Manager needed)
 - SSL provisioning takes 5-10 minutes after DNS propagates
 - Route53 requires A record for root domain (can't CNAME apex)
@@ -812,6 +814,7 @@
 - Bot scanners (WordPress, phpMyAdmin) hit all public IPs constantly (normal noise)
 
 ### CI/Testing Insights (Task 5D)
+
 - GitHub Actions won't pass without stub OAuth env vars in test environment
 - Render waits for green CI before auto-deploying (good safety feature)
 - Rails 8 models with `ENV.fetch` need defaults in test_helper.rb (set before require environment)
@@ -827,7 +830,8 @@
 
 **All core security and deployment tasks completed!**
 
-App is live at https://reporeconnoiter.com with:
+App is live at <https://reporeconnoiter.com> with:
+
 - Full security hardening (CSP, prompt injection defense, security headers)
 - Custom domain with SSL
 - CI/CD pipeline with GitHub Actions

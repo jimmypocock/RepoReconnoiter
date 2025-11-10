@@ -12,10 +12,11 @@ class Rack::Attack
 
   # Throttle comparison creation by authenticated user
   # Limit: 25 requests per 24 hours (allows buffer over the 20/day business logic limit)
+  # Admins are exempt from throttling
   throttle("comparisons/user", limit: 25, period: 24.hours) do |req|
     if req.path == "/comparisons" && req.post?
-      # Extract user_id from Devise session
-      req.env["warden"]&.user&.id
+      user = req.env["warden"]&.user
+      user&.id unless user&.admin?
     end
   end
 

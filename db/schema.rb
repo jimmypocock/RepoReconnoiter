@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_10_003010) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_10_225107) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -75,6 +75,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_10_003010) do
     t.string "assigned_by", default: "inferred"
     t.bigint "category_id", null: false
     t.bigint "comparison_id", null: false
+    t.decimal "confidence_score", precision: 3, scale: 2
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["category_id"], name: "index_comparison_categories_on_category_id"
@@ -98,6 +99,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_10_003010) do
   end
 
   create_table "comparisons", force: :cascade do |t|
+    t.string "architecture_patterns"
     t.jsonb "constraints", default: []
     t.decimal "cost_usd", precision: 10, scale: 6
     t.datetime "created_at", null: false
@@ -106,19 +108,22 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_10_003010) do
     t.string "model_used"
     t.string "normalized_query"
     t.integer "output_tokens"
-    t.string "problem_domain"
+    t.string "problem_domains"
     t.jsonb "ranking_results"
     t.text "recommendation_reasoning"
     t.string "recommended_repo_full_name"
     t.integer "repos_compared_count"
-    t.string "tech_stack"
+    t.string "technologies"
     t.datetime "updated_at", null: false
     t.bigint "user_id"
     t.text "user_query", null: false
     t.integer "view_count", default: 0
+    t.index ["architecture_patterns"], name: "index_comparisons_on_architecture_patterns_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["created_at"], name: "index_comparisons_on_created_at"
     t.index ["normalized_query"], name: "index_comparisons_on_normalized_query_trgm", opclass: :gin_trgm_ops, using: :gin
-    t.index ["problem_domain"], name: "index_comparisons_on_problem_domain"
+    t.index ["problem_domains"], name: "index_comparisons_on_problem_domains"
+    t.index ["problem_domains"], name: "index_comparisons_on_problem_domains_trgm", opclass: :gin_trgm_ops, using: :gin
+    t.index ["technologies"], name: "index_comparisons_on_technologies_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["user_id"], name: "index_comparisons_on_user_id"
     t.index ["view_count"], name: "index_comparisons_on_view_count"
   end

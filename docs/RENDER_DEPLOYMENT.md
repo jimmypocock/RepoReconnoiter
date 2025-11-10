@@ -76,7 +76,7 @@ Click "Advanced" and add these environment variables:
 | `GITHUB_CLIENT_SECRET` | `[Your production OAuth App Secret]` | |
 | `OPENAI_ACCESS_TOKEN` | `[Your OpenAI API key]` | From platform.openai.com |
 | `CLARITY_PROJECT_ID` | `[Your Clarity project ID]` | Optional - Microsoft Clarity analytics |
-| `MISSION_CONTROL_ADMIN_IDS` | `[Comma-separated GitHub IDs]` | For /jobs dashboard access |
+| `ALLOWED_ADMIN_GITHUB_IDS` | `[Comma-separated GitHub IDs]` | For /jobs dashboard access |
 
 ### Instance Type
 
@@ -188,7 +188,7 @@ exit
 ### 5B. Grant Admin Dashboard Access
 
 1. In Render Dashboard → Environment Variables
-2. Find `MISSION_CONTROL_ADMIN_IDS`
+2. Find `ALLOWED_ADMIN_GITHUB_IDS`
 3. Set to your GitHub ID (from step 5A)
    - Single admin: `12345678`
    - Multiple admins: `12345678,87654321` (comma-separated)
@@ -253,7 +253,7 @@ For future code changes:
 - `GITHUB_CLIENT_ID` - GitHub OAuth App ID
 - `GITHUB_CLIENT_SECRET` - GitHub OAuth App Secret
 - `OPENAI_ACCESS_TOKEN` - OpenAI API key
-- `MISSION_CONTROL_ADMIN_IDS` - GitHub IDs for /jobs dashboard access
+- `ALLOWED_ADMIN_GITHUB_IDS` - GitHub IDs for /jobs dashboard access
 
 ### Optional
 
@@ -270,6 +270,7 @@ For future code changes:
 **Current Status**: ✅ No known issues!
 
 The production deployment is stable and all features are working as expected:
+
 - ✅ OAuth flow working
 - ✅ AI comparisons functioning
 - ✅ Background jobs processing
@@ -311,7 +312,7 @@ If you encounter any issues, please check the Troubleshooting section below or r
 
 ### Can't Access /jobs Dashboard
 
-- **Fix**: Add your GitHub user ID to `MISSION_CONTROL_ADMIN_IDS` environment variable
+- **Fix**: Add your GitHub user ID to `ALLOWED_ADMIN_GITHUB_IDS` environment variable
 - Format: `123456,789012` (comma-separated, no spaces)
 
 ### Database Connection Timeout

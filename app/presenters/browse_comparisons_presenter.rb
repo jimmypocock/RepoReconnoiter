@@ -14,7 +14,7 @@ class BrowseComparisonsPresenter
   end
 
   def has_filters?
-    params[:category].present? || params[:date].present? || params[:search].present?
+    params[:date].present? || params[:search].present?
   end
 
   def trending
@@ -28,13 +28,15 @@ class BrowseComparisonsPresenter
   #--------------------------------------
 
   def apply_filters(scope)
-    scope = filter_by_category(scope)
     scope = filter_by_date(scope)
     scope = filter_by_search(scope)
     apply_sort(scope)
   end
 
   def apply_sort(scope)
+    # If searching, use relevance scoring (don't override with manual sort)
+    return scope if params[:search].present?
+
     case params[:sort]
     when "popular"
       scope.order(view_count: :desc)
@@ -46,16 +48,7 @@ class BrowseComparisonsPresenter
   end
 
   def base_scope
-    Comparison.all
-  end
-
-  def filter_by_category(scope)
-    return scope unless params[:category].present?
-
-    category = Category.find_by(slug: params[:category])
-    return scope unless category
-
-    scope.joins(:categories).where(categories: { id: category.id })
+    Comparison.includes(:categories)
   end
 
   def filter_by_date(scope)
@@ -72,11 +65,12 @@ class BrowseComparisonsPresenter
   def filter_by_search(scope)
     return scope unless params[:search].present?
 
-    scope.where("user_query ILIKE ?", "%#{params[:search]}%")
+    scope.search(params[:search])
   end
 
   def trending_comparisons
-    Comparison.order(created_at: :desc)
+    Comparison.includes(:categories)
+              .order(created_at: :desc)
               .limit(8)
   end
 end
