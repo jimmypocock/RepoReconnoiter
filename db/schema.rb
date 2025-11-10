@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_06_033521) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_10_003010) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -61,6 +61,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_06_033521) do
     t.string "category_type", null: false
     t.datetime "created_at", null: false
     t.text "description"
+    t.jsonb "embedding"
     t.string "name", null: false
     t.integer "repositories_count", default: 0
     t.string "slug", null: false

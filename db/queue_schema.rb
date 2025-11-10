@@ -10,14 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_09_012502) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_10_003010) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
-
-  # Custom types defined in this database.
-  # Note that some types may not work with other database engines. Be careful if changing database.
-  create_enum "category_type_enum", ["problem_domain", "architecture_pattern", "maturity", "technology"]
 
   create_table "ai_costs", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -62,9 +58,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_09_012502) do
   end
 
   create_table "categories", force: :cascade do |t|
-    t.enum "category_type", null: false, enum_type: "category_type_enum"
+    t.string "category_type", null: false
     t.datetime "created_at", null: false
     t.text "description"
+    t.jsonb "embedding"
     t.string "name", null: false
     t.integer "repositories_count", default: 0
     t.string "slug", null: false
