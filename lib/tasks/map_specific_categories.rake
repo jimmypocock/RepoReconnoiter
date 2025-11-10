@@ -43,7 +43,7 @@ namespace :categories do
       "Shell History Management" => { to: "Developer Tools", type: "architecture_pattern" },
 
       # Map to Security
-      "Zero Trust Security" => { to: "Security", type: "problem_domain" },
+      "Zero Trust Security" => { to: "Security", type: "problem_domain" }
     }
 
     puts "\nMappings to apply:"

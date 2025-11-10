@@ -81,6 +81,11 @@ namespace :db do
     puts "\n🔧 Running migrations..."
     system("bin/rails db:migrate")
 
+    # Fix environment metadata (production → development)
+    puts "\n🔧 Fixing environment metadata..."
+    system("psql #{local_db} -c \"UPDATE ar_internal_metadata SET value = 'development' WHERE key = 'environment'\" > /dev/null 2>&1")
+    puts "   ✅ Environment set to development"
+
     # Show summary
     puts "\n" + "=" * 100
     puts "SUMMARY"
