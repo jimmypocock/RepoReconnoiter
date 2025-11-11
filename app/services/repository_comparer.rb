@@ -56,43 +56,82 @@ class RepositoryComparer
   # PRIVATE METHODS
   #--------------------------------------
 
-  def prepare_repository_data(repositories)
-    repositories.map do |item|
+  def add_common_categories(comparison, repositories, type:, threshold:)
+    category_counts = Hash.new(0)
+
+    repositories.each do |item|
       repo = item[:repository]
-      {
-        repository: repo,
-        quality_signals: item[:quality_signals],
-        analysis: repo.analysis_current # Get current Tier 1 analysis
-      }
+      repo.categories.where(category_type: type).each do |category|
+        category_counts[category] += 1
+      end
+    end
+
+    total_repos = repositories.size
+    min_count = (total_repos * threshold).ceil
+
+    category_counts.each do |category, count|
+      next unless count >= min_count
+
+      frequency_ratio = count.to_f / total_repos
+
+      comparison.comparison_categories.find_or_create_by!(category: category) do |cc|
+        cc.assigned_by = :inherited
+        cc.confidence_score = frequency_ratio.round(2)
+      end
+    end
+  end
+
+  def add_query_problem_domain(comparison, problem_domain)
+    return unless problem_domain.present?
+
+    category_matcher = CategoryMatcher.new
+    category = category_matcher.find_or_create(
+      name: problem_domain,
+      category_type: "problem_domain"
+    )
+
+    comparison.comparison_categories.find_or_create_by!(category: category) do |cc|
+      cc.assigned_by = :ai
+      cc.confidence_score = 1.0
+    end
+  end
+
+  def add_top_repo_categories(comparison, top_repos)
+    top_repos.each_with_index do |item, index|
+      repo = item[:repository]
+      confidence = case index
+      when 0 then 1.0
+      when 1 then 0.95
+      when 2 then 0.90
+      else 0.85
+      end
+
+      repo.categories.each do |category|
+        comparison.comparison_categories.find_or_create_by!(category: category) do |cc|
+          cc.assigned_by = :inherited
+          cc.confidence_score = confidence
+        end
+      end
     end
   end
 
   def create_comparison_record(user_query:, parsed_query:, comparison_data:, repositories:, input_tokens:, output_tokens:, user: nil)
-    # Calculate cost for gpt-4o
-    # Pricing: $2.50 per 1M input tokens, $10.00 per 1M output tokens
-    input_cost = (input_tokens / 1_000_000.0) * 2.50
-    output_cost = (output_tokens / 1_000_000.0) * 10.00
-    total_cost = input_cost + output_cost
-
-    # Create comparison record
     comparison = Comparison.create!(
       user: user,
       user_query: user_query,
-      tech_stack: parsed_query[:tech_stack],
-      problem_domain: parsed_query[:problem_domain],
+      technologies: parsed_query[:tech_stack],
+      problem_domains: parsed_query[:problem_domain],
       constraints: parsed_query[:constraints],
       github_search_query: parsed_query[:github_queries].join(" | "),
       recommended_repo_full_name: comparison_data["recommended_repo"],
       recommendation_reasoning: comparison_data["recommendation_reasoning"],
-      ranking_results: comparison_data, # Store full JSON response
+      ranking_results: comparison_data,
       repos_compared_count: comparison_data["ranking"].size,
       model_used: "gpt-4o",
       input_tokens: input_tokens,
-      output_tokens: output_tokens,
-      cost_usd: total_cost
+      output_tokens: output_tokens
     )
 
-    # Create comparison_repositories join records
     comparison_data["ranking"].each do |ranking_item|
       repo = repositories.find { |r| r[:repository].full_name == ranking_item["repo_full_name"] }
       next unless repo
@@ -107,45 +146,27 @@ class RepositoryComparer
       )
     end
 
-    # Infer and link categories from problem_domain
-    link_comparison_categories(comparison, parsed_query[:problem_domain])
+    link_comparison_categories(comparison, parsed_query, repositories)
 
     comparison
   end
 
-  def link_comparison_categories(comparison, problem_domain)
-    return unless problem_domain.present?
+  def link_comparison_categories(comparison, parsed_query, repositories)
+    add_query_problem_domain(comparison, parsed_query[:problem_domain])
+    add_top_repo_categories(comparison, repositories.first(3))
+    add_common_categories(comparison, repositories, type: :technology, threshold: 0.3)
+    add_common_categories(comparison, repositories, type: :problem_domain, threshold: 0.5)
+    add_common_categories(comparison, repositories, type: :architecture_pattern, threshold: 0.5)
+  end
 
-    # Try to find matching category by fuzzy matching on name/slug
-    # Simple approach: find categories that contain words from problem_domain
-    words = problem_domain.downcase.split(/\s+/)
-
-    matching_categories = Category.where(category_type: "problem_domain").select do |category|
-      category_words = category.name.downcase.split(/\s+/)
-      # Match if any word overlaps
-      (words & category_words).any?
-    end
-
-    # Link found categories
-    matching_categories.each do |category|
-      comparison.comparison_categories.find_or_create_by!(
-        category: category,
-        assigned_by: "inferred"
-      )
-    end
-
-    # If no match found, create a new category
-    if matching_categories.empty?
-      category = Category.find_or_create_by!(slug: problem_domain.parameterize) do |c|
-        c.name = problem_domain.titleize
-        c.category_type = "problem_domain"
-        c.description = "Auto-generated from comparison query"
-      end
-
-      comparison.comparison_categories.create!(
-        category: category,
-        assigned_by: "ai"
-      )
+  def prepare_repository_data(repositories)
+    repositories.map do |item|
+      repo = item[:repository]
+      {
+        repository: repo,
+        quality_signals: item[:quality_signals],
+        analysis: repo.analysis_current
+      }
     end
   end
 end

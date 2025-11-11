@@ -8,32 +8,51 @@
 class CreateComparisonJob < ApplicationJob
   queue_as :default
 
-  # Don't retry on validation errors - these are user-facing issues
-  # discard_on ComparisonCreator::InvalidQueryError
-  # discard_on ComparisonCreator::NoRepositoriesFoundError
+  retry_on StandardError, wait: :exponentially_longer, attempts: 2 do |job, error|
+    job.broadcast_retry_exhausted(error)
+  end
 
-  # Note: Could add retry_on for specific API errors in the future:
-  # retry_on Octokit::TooManyRequests, wait: 1.hour, attempts: 3
-  # retry_on Faraday::TimeoutError, wait: 30.seconds, attempts: 3
+  #--------------------------------------
+  # PUBLIC INSTANCE METHODS
+  #--------------------------------------
+
+  def broadcast_retry_exhausted(error)
+    session_id = arguments[2]
+    broadcaster = ComparisonProgressBroadcaster.new(session_id)
+    broadcaster.broadcast_error(error_message_for(error))
+  end
 
   def perform(user_id, query, session_id)
-    Rails.logger.info "🚀 CreateComparisonJob START - session: #{session_id}, query: #{query}"
-
     user = User.find(user_id)
+    broadcaster = ComparisonProgressBroadcaster.new(session_id)
 
-    # Create comparison with progress broadcasting (may return cached result)
     result = ComparisonCreator.new(
       query: query,
       user: user,
       session_id: session_id
     ).call
 
-    Rails.logger.info "✅ CreateComparisonJob DONE - comparison_id: #{result.record.id}, newly_created: #{result.newly_created}"
+    broadcaster.broadcast_complete(result.record.id)
+  rescue ComparisonCreator::InvalidQueryError => e
+    broadcaster.broadcast_error("Invalid query: #{e.message}")
+  rescue ComparisonCreator::NoRepositoriesFoundError
+    broadcaster.broadcast_error("No repositories found. Try a different query.")
+  end
 
-    # Always broadcast completion with redirect URL (whether new or cached)
-    # The broadcaster will handle the redirect to the comparison show page
-    ComparisonProgressBroadcaster.new(session_id).broadcast_complete(result.record.id)
+  private
 
-    Rails.logger.info "📡 Broadcast complete sent for session: #{session_id}"
+  #--------------------------------------
+  # PRIVATE METHODS
+  #--------------------------------------
+
+  def error_message_for(error)
+    case error
+    when Octokit::TooManyRequests
+      "GitHub rate limit reached. Please try again in a few minutes."
+    when Faraday::TimeoutError
+      "Request timed out. Please try again."
+    else
+      "Something went wrong. Please try again."
+    end
   end
 end

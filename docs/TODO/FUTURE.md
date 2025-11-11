@@ -143,6 +143,16 @@ These are features to consider after the MVP is complete and stable in productio
 - [ ] Weekly trend report generation
 - [ ] Visualization of technology adoption over time
 
+## UI/UX Polish
+
+### Skeleton Loaders for Infinite Scroll
+
+- [ ] Add skeleton loading states for pagination
+  - Show 2-3 pulsing gray card skeletons when loading next page
+  - Remove skeletons when real content arrives via Turbo Stream
+  - Provides visual feedback that content is loading (like Facebook/Twitter)
+  - Pure CSS + HTML (no React needed)
+
 ## Advanced Features
 
 - [ ] Alternative/cheaper AI providers (Gemini Flash, Claude)

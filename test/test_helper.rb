@@ -80,5 +80,25 @@ module ActiveSupport
         end
       end
     end
+
+    # Stub OpenAI embeddings API to prevent hitting real API in tests
+    def stub_openai_embeddings(embedding: [ 0.1, 0.2, 0.3 ])
+      # Stub the embeddings API using WebMock
+      stub_request(:post, "https://api.openai.com/v1/embeddings")
+        .to_return(
+          status: 200,
+          body: {
+            data: [
+              { embedding: embedding }
+            ]
+          }.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+    end
   end
+end
+
+# Add Devise test helpers for integration tests
+class ActionDispatch::IntegrationTest
+  include Devise::Test::IntegrationHelpers
 end

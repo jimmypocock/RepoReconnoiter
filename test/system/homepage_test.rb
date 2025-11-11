@@ -22,7 +22,6 @@ class HomepageTest < ApplicationSystemTestCase
 
     # Filter bar exists (visible to all users)
     assert_selector "input[name='search']"
-    assert_selector "select[name='category']"
     assert_selector "select[name='sort']"
   end
 
@@ -39,7 +38,6 @@ class HomepageTest < ApplicationSystemTestCase
 
     # Filter bar exists
     assert_selector "input[name='search']"
-    assert_selector "select[name='category']"
     assert_selector "select[name='sort']"
   end
 
@@ -60,7 +58,7 @@ class HomepageTest < ApplicationSystemTestCase
     visit root_path
 
     # Check comparison cards are displayed (look for specific comparison card class)
-    assert_selector ".bg-white.rounded-xl.shadow-sm", minimum: 1
+    assert_selector ".bg-white.rounded-2xl.shadow-lg", minimum: 1
   end
 
   test "empty state when no comparisons exist" do

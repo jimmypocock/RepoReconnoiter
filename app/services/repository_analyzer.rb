@@ -9,7 +9,7 @@ class RepositoryAnalyzer
   # PUBLIC INSTANCE METHODS
   #--------------------------------------
 
-  # Tier 1: Analyzes and categorizes a repository using gpt-4o-mini
+  # Analyzes and categorizes a repository using gpt-4o-mini
   # Returns: { categories: [...], summary: "...", use_cases: "...", input_tokens:, output_tokens: }
   def analyze(repository)
     available_categories = Category.all.group_by(&:category_type)
@@ -38,13 +38,6 @@ class RepositoryAnalyzer
       input_tokens: response.usage.prompt_tokens,
       output_tokens: response.usage.completion_tokens
     }
-  end
-
-  # Tier 2: Deep dive analysis (not yet implemented)
-  # Returns: Detailed analysis with README content and issue analysis
-  def deep_dive_analysis(repository)
-    # TODO: Implement with gpt-4o
-    raise NotImplementedError, "Tier 2 analysis not yet implemented"
   end
 
   class << self

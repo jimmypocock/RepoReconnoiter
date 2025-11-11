@@ -4,14 +4,15 @@
 # Uses SimpleDelegator to forward all Comparison methods automatically.
 #
 # Usage:
-#   @comparison = ComparisonPresenter.new(comparison, newly_created: true)
+#   @comparison = ComparisonPresenter.new(comparison, current_user, newly_created: true)
 #   @comparison.can_refresh?         # => false (brand new, don't show refresh)
 #   @comparison.user_query           # => delegates to Comparison model
 class ComparisonPresenter < SimpleDelegator
-  attr_reader :newly_created
+  attr_reader :current_user, :newly_created
 
-  def initialize(comparison, newly_created: nil)
+  def initialize(comparison, current_user = nil, newly_created: nil)
     super(comparison)
+    @current_user = current_user
     @newly_created = newly_created
   end
 
@@ -19,10 +20,7 @@ class ComparisonPresenter < SimpleDelegator
   # PUBLIC INSTANCE METHODS
   #--------------------------------------
 
-  # TODO: Move to ComparisonPolicy when Phase 3.7 (user auth) is implemented
-  # This is authorization logic, not business logic
-  def can_refresh?(user = nil)
-    Rails.env.development? && !newly_created
-    # Future: user&.admin?
+  def can_refresh?
+    current_user&.admin? && !newly_created
   end
 end

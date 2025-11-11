@@ -1,13 +1,13 @@
 one:
   repository: one
-  analysis_type: tier1_categorization
+  type: Analysis
   model_used: gpt-4o-mini
   summary: "A background job processor"
   is_current: true
 
 two:
   repository: two
-  analysis_type: tier1_categorization
+  type: Analysis
   model_used: gpt-4o-mini
   summary: "A Python ORM library"
   is_current: true

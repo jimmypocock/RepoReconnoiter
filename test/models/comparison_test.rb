@@ -76,6 +76,206 @@ class ComparisonTest < ActiveSupport::TestCase
     assert_equal "rails background jobs", normalized
   end
 
+  #--------------------------------------
+  # SEARCH: Comprehensive Multi-Field Search
+  #--------------------------------------
+
+  test "search finds by user_query" do
+    comparison = create_comparison("Rails background job library")
+
+    results = Comparison.search("background")
+
+    assert_includes results, comparison
+  end
+
+  test "search finds by technologies" do
+    comparison = create_comparison("job library")
+    comparison.update!(technologies: "Rails, Ruby")
+
+    results = Comparison.search("ruby")
+
+    assert_includes results, comparison
+  end
+
+  test "search finds by problem_domains" do
+    comparison = create_comparison("job library")
+    comparison.update!(problem_domains: "Background Job Processing")
+
+    results = Comparison.search("processing")
+
+    assert_includes results, comparison
+  end
+
+  test "search finds by associated category name" do
+    comparison = create_comparison("job library")
+    category = categories(:one) # "Background Jobs" category
+    comparison.comparison_categories.create!(category: category, assigned_by: "ai")
+
+    results = Comparison.search("background")
+
+    assert_includes results, comparison
+  end
+
+  test "search is case insensitive" do
+    comparison = create_comparison("Rails library")
+    comparison.update!(technologies: "Rails, Ruby")
+
+    [ "RAILS", "rails", "RaIlS" ].each do |search_term|
+      results = Comparison.search(search_term)
+      assert_includes results, comparison, "Should find comparison with search term: #{search_term}"
+    end
+  end
+
+  test "search handles partial matches" do
+    comparison = create_comparison("authentication library")
+    comparison.update!(problem_domains: "Authentication")
+
+    results = Comparison.search("auth")
+
+    assert_includes results, comparison
+  end
+
+  test "search returns empty for blank search term" do
+    create_comparison("Rails library")
+
+    results = Comparison.search("")
+
+    assert_equal Comparison.count, results.count
+  end
+
+  test "search returns empty for nil search term" do
+    create_comparison("Rails library")
+
+    results = Comparison.search(nil)
+
+    assert_equal Comparison.count, results.count
+  end
+
+  test "search finds across multiple fields" do
+    comparison = create_comparison("best job library")
+    comparison.update!(
+      technologies: "Rails, Ruby",
+      problem_domains: "Background Job Processing"
+    )
+
+    # Should find it via any of these fields
+    [ "job", "rails", "background", "processing" ].each do |search_term|
+      results = Comparison.search(search_term)
+      assert_includes results, comparison, "Should find via: #{search_term}"
+    end
+  end
+
+  test "search does not match unrelated comparisons" do
+    rails_comparison = create_comparison("Rails background job library")
+    rails_comparison.update!(technologies: "Rails, Ruby", problem_domains: "Background Jobs")
+
+    python_comparison = create_comparison("Python machine learning library")
+    python_comparison.update!(technologies: "Python", problem_domains: "Machine Learning")
+
+    results = Comparison.search("rails")
+
+    assert_includes results, rails_comparison
+    refute_includes results, python_comparison
+  end
+
+  #--------------------------------------
+  # SEARCH: Recent Enhancements (Nov 10, 2025)
+  #--------------------------------------
+
+  test "search finds by architecture_patterns" do
+    comparison = create_comparison("ORM library")
+    comparison.update!(architecture_patterns: "ORM Framework, Data Layer")
+
+    results = Comparison.search("orm")
+
+    assert_includes results, comparison
+  end
+
+  test "search uses synonym expansion" do
+    comparison = create_comparison("authentication library")
+    comparison.update!(problem_domains: "Authentication")
+
+    # "auth" should expand to ["auth", "authentication", "authorize", "authorization"]
+    results = Comparison.search("auth")
+
+    assert_includes results, comparison
+  end
+
+  test "search orders by relevance score DESC" do
+    # Create three comparisons with varying relevance
+    exact_match = create_comparison("Rails state management library")
+    exact_match.update!(technologies: "Rails, Ruby", problem_domains: "State Management")
+
+    partial_match = create_comparison("State management for TypeScript")
+    partial_match.update!(technologies: "TypeScript", problem_domains: "State Management")
+
+    weak_match = create_comparison("Python library for state machines")
+    weak_match.update!(technologies: "Python", problem_domains: "State Machines")
+
+    results = Comparison.search("rails state management")
+
+    # Exact match should be first (matches user_query + technologies + problem_domains)
+    assert_equal exact_match.id, results.first.id, "Best match should be first"
+  end
+
+  test "search relevance scoring weights user_query highest" do
+    # user_query match = 100 points
+    query_match = create_comparison("rails background jobs")
+
+    # technology match = 50 points
+    tech_match = create_comparison("job processing library")
+    tech_match.update!(technologies: "Rails")
+
+    results = Comparison.search("rails")
+
+    # Query match should rank higher than tech match
+    assert_equal query_match.id, results.first.id
+  end
+
+  test "search with fuzzy matching finds similar terms" do
+    comparison = create_comparison("authentication system")
+    comparison.update!(problem_domains: "Authentication")
+
+    # Fuzzy match with WORD_SIMILARITY should find "authentication" for "authentic"
+    results = Comparison.search("authentic")
+
+    assert_includes results, comparison
+  end
+
+  test "search handles multi-word queries" do
+    comparison = create_comparison("Ruby on Rails background job library")
+    comparison.update!(technologies: "Rails, Ruby", problem_domains: "Background Job Processing")
+
+    results = Comparison.search("rails background")
+
+    assert_includes results, comparison
+  end
+
+  test "search case insensitive across all fields" do
+    comparison = create_comparison("rails library")
+    comparison.update!(
+      technologies: "Rails, Ruby",
+      problem_domains: "Background Jobs",
+      architecture_patterns: "ORM Framework"
+    )
+
+    [ "RAILS", "rails", "RaIlS", "BACKGROUND", "orm" ].each do |term|
+      results = Comparison.search(term)
+      assert_includes results, comparison, "Should find with term: #{term}"
+    end
+  end
+
+  test "search returns relevance_score attribute" do
+    comparison = create_comparison("Rails library")
+    comparison.update!(technologies: "Rails, Ruby")
+
+    results = Comparison.search("rails")
+
+    first_result = results.first
+    assert_respond_to first_result, :relevance_score, "Should have relevance_score attribute"
+    assert_operator first_result.relevance_score, :>, 0, "Relevance score should be positive"
+  end
+
   private
 
   def create_comparison(query, created_at: Time.current)

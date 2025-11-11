@@ -59,7 +59,7 @@ Rails.application.configure do
   config.active_job.queue_adapter = :solid_queue
 
   # Enable verbose logging for Solid Queue in development
-  config.log_level = :info
+  config.log_level = :debug
   config.solid_queue.logger = ActiveSupport::Logger.new(STDOUT)
   config.solid_queue.logger.level = Logger::INFO
 

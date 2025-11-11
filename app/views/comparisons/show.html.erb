@@ -4,10 +4,10 @@
       <div class="flex items-center gap-4 text-sm text-gray-600">
         <span><%= @comparison.repos_compared_count %> repositories compared</span>
         <span>•</span>
-        <span><%= @comparison.tech_stack || "Language-agnostic" %></span>
-        <% if @comparison.problem_domain.present? %>
+        <span><%= @comparison.technologies || "Language-agnostic" %></span>
+        <% if @comparison.problem_domains.present? %>
           <span>•</span>
-          <span><%= @comparison.problem_domain %></span>
+          <span><%= @comparison.problem_domains %></span>
         <% end %>
       </div>
     </div>
@@ -31,7 +31,7 @@
       </div>
     </div>
 
-    <!-- Refresh Button (Development Only) -->
+    <!-- Refresh Button (Development & Admins) -->
     <% if @comparison.can_refresh? %>
       <div class="mb-6">
         <%= button_to comparisons_path(query: @comparison.user_query, refresh: true),

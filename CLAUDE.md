@@ -14,6 +14,22 @@ RepoReconnoiter is an Open Source Intelligence Dashboard that analyzes GitHub tr
 4. **Automatic Tracking**: The `OpenAi` service automatically tracks all API costs - never call OpenAI directly
 5. **Prompt as Code**: AI prompts are versioned ERB templates in `app/prompts/`, not hardcoded strings
 6. **Multi-Query Strategy**: Use 2-3 GitHub queries for comprehensive results when needed
+7. **Clean Production Logs**: Never add custom `Rails.logger` statements in code - rely on framework logging only
+
+## Logging Philosophy
+
+**Development Environment:**
+- Log level: `:debug` (verbose SQL queries, full stack traces, detailed debugging info)
+- Framework logging: Enabled (SQL, ActiveRecord, ActionCable, etc.)
+- Custom logger statements: Avoid (but acceptable for temporary debugging)
+
+**Production Environment:**
+- Log level: `:info` (request/response, errors, warnings only)
+- Framework logging: Minimal (no SQL queries, concise output)
+- Custom logger statements: Never use `Rails.logger` in code - keeps logs clean
+- Exception tracking: Errors automatically logged by Rails
+
+**Philosophy**: Write solid, testable code that doesn't need logging to understand. Framework-level logging (SQL, requests, errors) is sufficient for debugging production issues. Development should be verbose to aid debugging, but production should be clean and signal-focused.
 
 ## Tech Stack
 
@@ -27,7 +43,7 @@ RepoReconnoiter is an Open Source Intelligence Dashboard that analyzes GitHub tr
 - **Analytics**: Microsoft Clarity (CSP-friendly, free)
 - **Deployment**: Render.com (Starter plan - $14/month)
 - **Hosting**:
-  - Production URL: https://reporeconnoiter.com (custom domain via Render)
+  - Production URL: <https://reporeconnoiter.com> (custom domain via Render)
   - PostgreSQL 17 database (1GB storage, 97 connections)
   - Web Service (512MB RAM, always-on, shell access)
 - **Styling**: Tailwind CSS
@@ -36,12 +52,14 @@ RepoReconnoiter is an Open Source Intelligence Dashboard that analyzes GitHub tr
 ## Development Commands
 
 ### Setup
+
 ```bash
 bin/setup                 # Initial setup: install dependencies, setup database
 bin/dev                   # Start development server (runs Puma + Solid Queue + Tailwind watcher)
 ```
 
 ### Database
+
 ```bash
 bin/rails db:create       # Create database
 bin/rails db:migrate      # Run migrations
@@ -50,6 +68,7 @@ bin/rails db:reset        # Drop, create, migrate, and seed database
 ```
 
 ### Testing
+
 ```bash
 bin/rails test            # Run all tests
 bin/rails test:system     # Run system tests
@@ -59,9 +78,16 @@ bin/rails test test/models/repository_test.rb  # Run specific test file
 bin/rails analyze:compare["query"]         # Test full comparison pipeline (parse → search → merge)
 bin/rails analyze:validate_queries         # Run test suite with sample queries
 bin/rails analyze:repo[owner/name]         # Test Tier 1 analysis on single repo
+
+# Search Testing
+bin/rails search:validate                  # Run comprehensive search validation suite
+bin/rails search:test["query"]             # Test specific search query with detailed results
+bin/rails search:coverage                  # Analyze search field population coverage
+bin/rails search:benchmark                 # Benchmark search performance
 ```
 
 ### Linting & Security
+
 ```bash
 bin/rails ci:all          # Run all CI checks (security, lint, tests) - mirrors GitHub Actions
 bin/rails ci:security     # Run security scans only (Brakeman, Bundler Audit, Importmap)
@@ -75,12 +101,14 @@ bin/bundler-audit         # Check for vulnerable gem versions
 ```
 
 ### Background Jobs
+
 ```bash
 bin/rails solid_queue:start    # Start Solid Queue worker
 bin/rails solid_queue:stop     # Stop Solid Queue worker
 ```
 
 ### Production (Render.com)
+
 ```bash
 # Access via Render Dashboard → Shell tab
 bin/rails console         # Open Rails console on production
@@ -91,7 +119,7 @@ git push origin main      # Triggers automatic deployment
 
 # Monitoring
 # View logs: Render Dashboard → Logs tab
-# View jobs: https://reporeconnoiter.com/jobs (admin only)
+# View jobs: https://reporeconnoiter.com/admin/jobs (admin only)
 ```
 
 ## Code Organization Standards
@@ -191,6 +219,7 @@ Services use action-oriented names WITHOUT "Service" suffix:
 Transparent wrapper for OpenAI API that automatically tracks costs and enforces model whitelisting.
 
 **Key Features:**
+
 - **Model Whitelisting**: Only allows `gpt-4o-mini` and `gpt-4o` with explicit pricing
 - **Automatic Cost Tracking**: Every API call updates `ai_costs` table with daily rollup
 - **Transparent API**: Returns same response object as `OpenAI::Client`
@@ -215,6 +244,7 @@ tokens = response.usage.prompt_tokens
 ```
 
 **Pricing (as of 2025):**
+
 - `gpt-4o-mini`: $0.150/1M input, $0.600/1M output
 - `gpt-4o`: $2.50/1M input, $10.00/1M output
 
@@ -223,6 +253,7 @@ tokens = response.usage.prompt_tokens
 Renders AI prompt templates from `app/prompts/` directory using ERB.
 
 **Key Features:**
+
 - **Template Rendering**: Renders `.erb` files with variable interpolation
 - **Prompt Injection Prevention**: `sanitize_user_input()` method prevents attacks
 - **Convention**: System prompts end in `_system.erb`, user prompts in other names
@@ -242,6 +273,7 @@ safe_query = Prompter.sanitize_user_input(user_input)
 ```
 
 **Prompt Directory Structure:**
+
 ```
 app/prompts/
   ├── README.md                              # Documentation
@@ -251,6 +283,7 @@ app/prompts/
 ```
 
 **Creating New Prompts:**
+
 ```ruby
 # Generate a new system prompt
 Prompter.create("my_new_prompt", system: true)
@@ -266,6 +299,7 @@ Prompter.create("my_prompt")
 Parses natural language queries into structured GitHub search parameters.
 
 **Key Features:**
+
 - **Multi-Query Support**: Can return 2-3 GitHub queries for comprehensive coverage
 - **JSON Response**: Returns structured data with validation
 - **Query Strategy**: Indicates "single" or "multi" query approach
@@ -287,6 +321,7 @@ result[:valid]             # true
 Analyzes and categorizes repositories using AI (formerly `RepositoryCategorizationService`).
 
 **Methods:**
+
 - `analyze(repository)` - Tier 1 analysis using metadata + description
 - `deep_dive_analysis(repository)` - Tier 2 analysis using README + issues (not yet implemented)
 
@@ -321,6 +356,7 @@ authenticated = gh.authenticated?
 ### Database Schema
 
 **Core Tables:**
+
 - **repositories**: GitHub repo data, cached README content, metadata
 - **analyses**: Versioned AI-generated insights (Tier 1/Tier 2) with token/cost tracking
 - **categories**: Categorization taxonomy (Problem Domain, Architecture Pattern, Maturity Level)
@@ -329,42 +365,136 @@ authenticated = gh.authenticated?
 - **whitelisted_users**: Invite-only access control (github_id, reason, added_by)
 
 **Join Tables:**
+
 - **repository_categories**: Many-to-many with confidence scores, assignment method (ai/manual/github_topics)
 - **comparison_repositories**: Links comparisons to repos with rank and score
 - **comparison_categories**: Links comparisons to inferred categories
 
 **Processing:**
+
 - **queued_analyses**: Queue for batch Tier 1/Tier 2 analysis (priority, retry logic, scheduling)
 - **ai_costs**: Daily rollup of AI API spending by model and user (auto-updated by OpenAi service)
+
+### Comparison Search
+
+**Comprehensive Multi-Field Search with Fuzzy Matching:**
+
+The `Comparison.search(search_term, fuzzy: true)` scope provides intelligent search with synonym expansion and fuzzy matching:
+
+**Search Fields:**
+- **user_query**: Original search query entered by user
+- **tech_stack**: Parsed technologies (e.g., "Rails, Ruby", "Python")
+- **problem_domain**: Identified problem area (e.g., "Background Job Processing")
+- **categories**: Associated category names via join (e.g., "Ruby", "Authentication")
+
+**Key Features:**
+
+1. **Synonym Expansion** (`SearchSynonymExpander`):
+   - "auth" → ["auth", "authentication", "authorize", "authorization"]
+   - "job" → ["job", "jobs", "queue", "worker"]
+   - "node" → ["node", "nodejs", "javascript", "js"]
+   - 50+ synonym mappings for common tech terms
+
+2. **Fuzzy Matching** (PostgreSQL `pg_trgm` WORD_SIMILARITY):
+   - Handles plural/singular variations ("job" matches "jobs")
+   - Threshold 0.45 balances recall vs precision
+   - Catches partial matches ("scien" matches "Scientific Computing")
+   - Prevents false positives (floating point precision handling)
+
+3. **Search Modes:**
+   - `fuzzy: true` (default) - Uses WORD_SIMILARITY for intelligent matching
+   - `fuzzy: false` - Falls back to ILIKE for exact substring matching
+
+4. **Performance:**
+   - Efficient EXISTS subquery for category matching
+   - SQL injection protection via `sanitize_sql_like`
+   - Case-insensitive by default
+   - Returns all comparisons for blank/nil search terms
+
+**Usage Example:**
+
+```ruby
+# Fuzzy search (default) - handles synonyms and variations
+results = Comparison.search("jobs")
+# Matches:
+# - "Rails background job library" (fuzzy: job ≈ jobs)
+# - "Background worker processing" (synonym: worker → job)
+# - Comparisons with "Background Job Processing" category
+
+# Exact search - strict substring matching
+results = Comparison.search("exact term", fuzzy: false)
+
+# Via BrowseComparisonsPresenter (used in UI)
+presenter = BrowseComparisonsPresenter.new(params)
+comparisons = presenter.comparisons # Automatically applies fuzzy search
+```
+
+**Adding New Synonyms:**
+
+Edit `app/services/search_synonym_expander.rb`:
+
+```ruby
+SYNONYMS = {
+  "new_term" => [ "new_term", "synonym1", "synonym2" ],
+  # ...
+}
+```
+
+**Testing & Validation:**
+
+```bash
+bin/rails search:validate           # Test 21+ search scenarios (fuzzy + synonym)
+bin/rails search:test["ruby"]       # Test specific search with match details
+bin/rails search:coverage           # Verify field population (should be 100%)
+bin/rails search:benchmark          # Performance testing (100 iterations)
+```
+
+**Performance Optimization (Future):**
+
+When search becomes slow (10k+ comparisons), add GIN trigram indexes:
+
+```ruby
+add_index :comparisons, :tech_stack, using: :gin, opclass: :gin_trgm_ops
+add_index :comparisons, :problem_domain, using: :gin, opclass: :gin_trgm_ops
+```
+
+Currently not needed - WORD_SIMILARITY is fast enough for small datasets.
 
 ### Authentication & Authorization
 
 **Invite-Only Whitelist System:**
+
 - Users authenticate via GitHub OAuth (Devise + OmniAuth)
 - `WhitelistedUser` model controls who can access the app
 - `User.from_omniauth` checks whitelist before allowing sign in
 - Raises error if GitHub user not in whitelist (handled gracefully with redirect)
 
 **Access Control:**
+
 - Unauthenticated users: Can view homepage and existing comparisons (read-only)
 - Authenticated users: Can create comparisons (rate limited to 25/day)
 - Admin users: Unrestricted access + Mission Control dashboard access
 
 **Rate Limiting (Rack::Attack):**
+
 - 25 comparisons per day per authenticated user
-- 5 comparisons per day per IP address (anonymous users)
+- 5 POST requests per day per IP address (defense-in-depth security backstop)
 - 10 OAuth login attempts per 5 minutes per IP
+- Note: Only authenticated users can create comparisons (Devise blocks anonymous access)
 - Throttling prevents abuse and controls AI costs
 
 **Admin Access:**
-- Mission Control Jobs dashboard: `/jobs` (restricted to admins)
-- Admin status determined by `MISSION_CONTROL_ADMIN_IDS` env var (GitHub IDs)
-- Helper method: `current_user_admin?` for view-level checks
-- Fail-closed security: Empty admin IDs raises error (won't allow all users)
+
+- Mission Control Jobs dashboard: `/admin/jobs` (restricted to admins)
+- Admin stats dashboard: `/admin/stats` (restricted to admins)
+- Admin status determined by `ALLOWED_ADMIN_GITHUB_IDS` env var (GitHub IDs)
+- Helper method: `current_user.admin?` for view-level checks
+- Fail-closed security: Empty admin IDs means no admins (denies all access)
 
 ### Security Features
 
 **Prompt Injection Prevention (OWASP LLM01:2025):**
+
 - Multi-layered defense in `Prompter.sanitize_user_input`
 - Context-aware filters (15+ patterns for credential extraction, system info leaks)
 - System prompt security constraints in all AI prompts
@@ -372,6 +502,7 @@ authenticated = gh.authenticated?
 - Applied to all user inputs before AI processing
 
 **Content Security Policy (CSP):**
+
 - Strict CSP enforced via `config/initializers/content_security_policy.rb`
 - Nonce-based inline script/style protection (Turbo + Tailwind compatible)
 - Microsoft Clarity whitelisted (CSP-friendly analytics)
@@ -379,6 +510,7 @@ authenticated = gh.authenticated?
 - Enforcing mode enabled (not report-only)
 
 **HTTP Security Headers:**
+
 - X-Frame-Options: DENY (clickjacking prevention)
 - X-Content-Type-Options: nosniff (MIME sniffing prevention)
 - X-XSS-Protection: 1; mode=block (legacy XSS filter)
@@ -388,12 +520,14 @@ authenticated = gh.authenticated?
 - Force SSL enabled in production with secure cookies
 
 **Security Scanning:**
+
 - Brakeman: Static security analysis (0 warnings)
 - Bundler Audit: Vulnerable gem detection (clean)
 - All credentials encrypted in `config/credentials.yml.enc`
 - Secrets never committed to git (`.gitignore` enforced)
 
 **Input Validation:**
+
 - User queries: 500 character max, whitespace prevention
 - Model-level validations with custom validators
 - Controller-level guard clauses with early returns
@@ -475,6 +609,7 @@ end
 ```
 
 **Important Rules:**
+
 1. ALWAYS use `OpenAi` service, NEVER call `OpenAI::Client` directly
 2. Cost tracking is automatic - no need to manually calculate or save costs
 3. The `OpenAi#chat` method returns standard OpenAI response object
@@ -498,6 +633,7 @@ end
 ## Configuration Files & Directories
 
 **Configuration:**
+
 - `config/recurring.yml`: Solid Queue recurring task definitions for scheduled jobs
 - `config/queue.yml`: Solid Queue configuration
 - `config/cable.yml`: Solid Cable configuration (uses `solid_cable` adapter for cross-process broadcasting)
@@ -508,10 +644,12 @@ end
 - `.env.example`: Environment variable documentation (copy to `.env` for development)
 
 **AI Prompts:**
+
 - `app/prompts/`: ERB templates for AI prompts (rendered by Prompter service)
 - `app/prompts/README.md`: Documentation for prompt templates
 
 **Services:**
+
 - `app/services/`: All service classes following "Doer" naming pattern
   - `open_ai.rb`: OpenAI API wrapper with automatic cost tracking
   - `prompter.rb`: AI prompt template renderer
@@ -523,12 +661,14 @@ end
   - `repository_fetcher.rb`: Fetches and prepares repositories from GitHub
 
 **Testing/Analysis:**
+
 - `lib/tasks/analyze.rake`: Rake tasks for testing AI analysis pipeline
   - `analyze:compare[query]`: Test full comparison pipeline
   - `analyze:validate_queries`: Run test suite with sample queries
   - `analyze:repo[full_name]`: Test Tier 1 analysis on single repo
 
 **Documentation:**
+
 - `README.md`: Project overview and getting started guide (root level)
 - `TODO.md`: Current development status and next steps (root level)
 - `CLAUDE.md`: This file - coding standards and architecture guide (root level)
@@ -541,15 +681,17 @@ end
 
 ## Production Deployment
 
-**Status**: ✅ Live in production at https://reporeconnoiter.com
+**Status**: ✅ Live in production at <https://reporeconnoiter.com>
 
 **Deployment Process:**
+
 1. Push to `main` branch on GitHub
 2. Render auto-deploys (build command runs: `bundle install && rails assets:precompile && rails db:migrate`)
 3. Web service restarts with new code
 4. Monitor via Render Dashboard → Logs tab
 
 **Initial Setup (One-Time):**
+
 - See `docs/RENDER_DEPLOYMENT.md` for complete step-by-step guide
 - PostgreSQL database created and schemas loaded
 - Environment variables configured (DATABASE_URL, SECRET_KEY_BASE, RAILS_MASTER_KEY, GitHub OAuth, OpenAI)
@@ -557,25 +699,30 @@ end
 - Force SSL enabled with HSTS
 
 **Post-Deployment Tasks:**
+
 - Whitelist admin user via Rails console
 - Test OAuth flow and comparison creation
-- Verify security headers at https://securityheaders.com/
+- Verify security headers at <https://securityheaders.com/>
 - Check Mission Control Jobs dashboard
 
 **Monitoring:**
+
 - Logs: Render Dashboard → Logs tab
-- Jobs: https://reporeconnoiter.com/jobs (admin only)
+- Jobs: <https://reporeconnoiter.com/admin/jobs> (admin only)
+- Stats: <https://reporeconnoiter.com/admin/stats> (admin only)
 - Analytics: Microsoft Clarity dashboard
 - Costs: Check `ai_costs` table via Rails console
 
 ## Testing
 
 **Test Suite:**
+
 - 63 tests, 152 assertions (all passing)
 - 54 unit tests + 9 system tests
 - Run with: `bin/rails test && bin/rails test:system`
 
 **Test Coverage:**
+
 - Security tests (OAuth whitelist, rate limiting, Mission Control access)
 - Cost control tests (fuzzy cache matching with pg_trgm)
 - Data integrity tests (repository deduplication)
@@ -585,6 +732,7 @@ end
 - System tests (homepage UI for authenticated/unauthenticated users)
 
 **Test Philosophy:**
+
 - Test custom logic, not framework features
 - Focus on security, cost control, and data integrity
 - Fail-closed security (empty admin IDs should error, not allow all)
@@ -594,15 +742,17 @@ end
 ## Environment Variables
 
 **Required for Production:**
+
 - `DATABASE_URL` - PostgreSQL connection string from Render
 - `SECRET_KEY_BASE` - Rails encryption key (generate with `bin/rails secret`)
 - `RAILS_MASTER_KEY` - Master key to decrypt credentials (from `config/master.key`)
 - `GITHUB_CLIENT_ID` - GitHub OAuth App ID
 - `GITHUB_CLIENT_SECRET` - GitHub OAuth App Secret
 - `OPENAI_ACCESS_TOKEN` - OpenAI API key
-- `MISSION_CONTROL_ADMIN_IDS` - Comma-separated GitHub IDs for admin access
+- `ALLOWED_ADMIN_GITHUB_IDS` - Comma-separated GitHub IDs for admin access
 
 **Optional:**
+
 - `CLARITY_PROJECT_ID` - Microsoft Clarity analytics project ID
 - `COMPARISON_SIMILARITY_THRESHOLD` - Query fuzzy matching threshold (default: 0.8)
 - `COMPARISON_CACHE_DAYS` - Cache TTL in days (default: 7)

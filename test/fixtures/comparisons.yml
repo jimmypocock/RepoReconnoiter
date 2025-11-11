@@ -4,6 +4,11 @@ one:
   normalized_query: "rails background job library with retry logic"
   view_count: 10
   recommended_repo_full_name: "sidekiq/sidekiq"
+  repos_compared_count: 3
+  input_tokens: 1000
+  output_tokens: 500
+  model_used: "gpt-4o"
+  cost_usd: 0.015
 
 two:
   user: one
@@ -11,3 +16,8 @@ two:
   normalized_query: "python orm for postgresql"
   view_count: 5
   recommended_repo_full_name: "sqlalchemy/sqlalchemy"
+  repos_compared_count: 3
+  input_tokens: 800
+  output_tokens: 400
+  model_used: "gpt-4o"
+  cost_usd: 0.012
