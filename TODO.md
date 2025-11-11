@@ -40,7 +40,7 @@ Track progress towards MVP release and UX enhancement.
 - Aggressive caching (fuzzy matching prevents duplicate API calls)
 - Compliant with GitHub Terms of Service Section H
 
-**Test Coverage**: 73 tests, 184 assertions, 0 failures ✅
+**Test Coverage**: 95 tests, 261 assertions, 0 failures ✅ (See `TODO_TEST.md` for coverage gaps)
 
 **Completed Phases**:
 
@@ -55,22 +55,32 @@ Track progress towards MVP release and UX enhancement.
 - ✅ Phase 3.10: Search Quality & Relevance (CRITICAL - Nov 9, 2025)
 - ✅ Phase 4.0: Comparison Creation Progress UX (Nov 9, 2025)
 - ✅ Phase 4.1a: Category Infrastructure & Cleanup (Nov 10, 2025)
+- ✅ Phase 4.1b: Comprehensive Search & Admin Features (Nov 10, 2025)
 
 ---
 
-## 🎯 CURRENT PRIORITY: Phase 4.1b - Enhanced Categorization & Search (IN PROGRESS)
+## 🎯 CURRENT PRIORITY: Phase 4.2 - Test Coverage & Quality (IN PROGRESS)
 
-**Status**: 🔴 READY FOR PRODUCTION DEPLOYMENT - Category infrastructure complete, needs deployment & remaining search work
+**Status**: 🔴 CRITICAL - Significant test coverage gaps identified, implementing comprehensive test suite
+
+**See:** `TODO_TEST.md` for detailed test implementation plan
 
 **What's Ready:**
+- Comprehensive multi-field search with relevance scoring
+- GIN trigram indexes for performance
+- Admin refresh capability
 - 129 canonical categories with embeddings
-- Production migration tasks tested locally
-- All CI checks passing (73 tests, 184 assertions)
+- All CI checks passing (95 tests, 261 assertions)
 
 **Next Steps:**
-1. Deploy to production (push code changes)
-2. Run migration tasks on production (4 commands - see below)
-3. Complete remaining search improvements (multi-field search, browse page enhancements)
+1. **Immediate:** Implement critical test coverage (Phase 1: 43 tests, ~5-6 hours)
+   - User.admin? tests (5 tests)
+   - ComparisonPresenter tests (5 tests)
+   - Search enhancement tests (8 tests)
+   - BrowseComparisonsPresenter tests (10 tests)
+   - ComparisonsController tests (15 tests)
+2. **Then:** Deploy search improvements to production
+3. **Then:** Run migration for renamed fields (technologies, problem_domains, architecture_patterns)
 
 ---
 
@@ -141,6 +151,99 @@ bin/rails categories:map_specific                    # Map specific → canonica
 bin/rails comparisons:backfill_categories            # Fix comparison categories
 bin/rails categories:generate_embeddings             # Generate embeddings
 ```
+
+---
+
+## ✅ COMPLETED: Phase 4.1b - Comprehensive Search & Admin Features (Nov 10, 2025)
+
+**Status**: ✅ COMPLETE - Multi-field search with relevance scoring and admin refresh capability
+
+**What Was Built:**
+
+### 1. Comprehensive Multi-Field Search
+- **Multi-field fuzzy search**: Searches across `user_query`, `technologies`, `problem_domains`, `architecture_patterns`, and associated `categories`
+- **Synonym expansion**: 50+ mappings (e.g., "ruby" → ["rb", "ruby"], "auth" → ["auth", "authentication", "authorize", "authorization"])
+- **PostgreSQL WORD_SIMILARITY**: Fuzzy matching with 0.45 threshold for partial matches
+- **Weighted relevance scoring**:
+  - user_query: 100 points (highest - user's exact words)
+  - technologies: 50 points
+  - problem_domains: 30 points
+  - architecture_patterns: 20 points
+  - categories: 10 points
+- **GREATEST function**: Takes best score across synonym variations
+- **Results ordered by relevance**: Best matches appear first (DESC order)
+
+### 2. Database Schema Updates
+- **Renamed fields** for consistency:
+  - `tech_stack` → `technologies` (plural, stores multiple comma-separated values)
+  - `problem_domain` → `problem_domains` (plural, stores multiple comma-separated values)
+- **Added `architecture_patterns` column**: Now matches all three category types
+- **GIN trigram indexes**: Added `gin_trgm_ops` indexes on all three searchable fields for performance
+  - `index_comparisons_on_technologies_trgm`
+  - `index_comparisons_on_problem_domains_trgm`
+  - `index_comparisons_on_architecture_patterns_trgm`
+
+### 3. Search Service Layer
+- **SearchSynonymExpander** service (`app/services/search_synonym_expander.rb`):
+  - 50+ synonym mappings for common technology terms
+  - Handles abbreviations, variants, common misspellings
+  - Returns expanded term array for comprehensive matching
+  - Fully tested (14 tests, 61 assertions)
+
+### 4. UI Improvements
+- **Removed category dropdown**: Text search is now comprehensive enough
+- **Preserved relevance scoring**: BrowseComparisonsPresenter no longer overrides search order with manual sort
+- **Search-first UX**: When searching, relevance order takes precedence over "newest" or "popular" sorts
+
+### 5. Admin Features
+- **Admin refresh capability**: Admins can refresh comparisons in production
+- **ComparisonPresenter** updated to:
+  - Accept `current_user` parameter
+  - Check `user&.admin?` for refresh authorization
+  - Return `true` for admins or development mode, `false` otherwise
+  - Prevent refresh of newly created comparisons (already fresh)
+
+### 6. Testing & Validation
+- **All tests passing**: 95 tests, 261 assertions, 0 failures
+- **Comprehensive search validation**: 21/21 test queries return results
+- **Real-world verification**: "rails state management" query puts Rails result at #1 (was at bottom)
+- **System tests updated**: Removed category dropdown assertions
+
+**Files Created:**
+- `app/services/search_synonym_expander.rb` - Synonym expansion with 50+ mappings
+- `db/migrate/20251110220247_rename_comparison_tech_stack_to_technologies_and_add_gin_indexes.rb`
+- `test/services/search_synonym_expander_test.rb` - 14 comprehensive tests
+
+**Files Modified:**
+- `app/models/comparison.rb` - Added `search` scope with multi-field fuzzy search and relevance scoring
+- `app/presenters/browse_comparisons_presenter.rb` - Preserve relevance scoring, skip sort override when searching
+- `app/presenters/comparison_presenter.rb` - Admin refresh authorization with `current_user` parameter
+- `app/controllers/comparisons_controller.rb` - Pass `current_user` to ComparisonPresenter
+- `app/views/comparisons/index.html.erb` - Removed category dropdown
+- `app/views/comparisons/show.html.erb` - Updated comment "Development & Admins"
+- `lib/tasks/search.rake` - Updated field names, fixed `.count` → `.size` for custom SELECT queries
+- `test/models/comparison_test.rb` - Updated all field name references
+- `test/services/repository_comparer_test.rb` - Updated field name references
+- `test/system/homepage_test.rb` - Removed category dropdown assertions
+
+**Results:**
+- Search "ruby" now finds 5 Rails comparisons (was 0)
+- Search "rails state management" shows Rails result first (was last)
+- Synonym expansion: "auth" finds authentication comparisons
+- Fuzzy matching: "authentic" finds "authentication"
+- Multi-field coverage: Searches all relevant fields + categories
+- Performance: GIN indexes ensure fast fuzzy search on large datasets
+- Admin control: Refresh button only visible to admins (not regular users)
+
+**Success Criteria Met:**
+- ✅ Multi-field search across all relevant comparison data
+- ✅ Synonym expansion for common terms
+- ✅ Fuzzy matching with PostgreSQL trigram similarity
+- ✅ Relevance scoring puts best matches first
+- ✅ GIN indexes for performance
+- ✅ Simplified UI (no category dropdown needed)
+- ✅ Admin refresh capability
+- ✅ All tests passing
 
 ---
 

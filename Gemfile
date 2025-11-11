@@ -92,4 +92,7 @@ group :test do
 
   # Block all HTTP requests during tests to prevent accidental API calls
   gem "webmock"
+
+  # Stub environment variables in tests
+  gem "climate_control"
 end

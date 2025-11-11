@@ -100,11 +100,11 @@ class RepositoryComparer
     top_repos.each_with_index do |item, index|
       repo = item[:repository]
       confidence = case index
-                   when 0 then 1.0
-                   when 1 then 0.95
-                   when 2 then 0.90
-                   else 0.85
-                   end
+      when 0 then 1.0
+      when 1 then 0.95
+      when 2 then 0.90
+      else 0.85
+      end
 
       repo.categories.each do |category|
         comparison.comparison_categories.find_or_create_by!(category: category) do |cc|
@@ -116,10 +116,6 @@ class RepositoryComparer
   end
 
   def create_comparison_record(user_query:, parsed_query:, comparison_data:, repositories:, input_tokens:, output_tokens:, user: nil)
-    input_cost = (input_tokens / 1_000_000.0) * 2.50
-    output_cost = (output_tokens / 1_000_000.0) * 10.00
-    total_cost = input_cost + output_cost
-
     comparison = Comparison.create!(
       user: user,
       user_query: user_query,
@@ -133,8 +129,7 @@ class RepositoryComparer
       repos_compared_count: comparison_data["ranking"].size,
       model_used: "gpt-4o",
       input_tokens: input_tokens,
-      output_tokens: output_tokens,
-      cost_usd: total_cost
+      output_tokens: output_tokens
     )
 
     comparison_data["ranking"].each do |ranking_item|

@@ -107,7 +107,7 @@ namespace :test do
       }
     end
 
-    grouped.transform_values { |cats| cats.sort_by { |c| [-c[:confidence_score].to_f, c[:name]] } }
+    grouped.transform_values { |cats| cats.sort_by { |c| [ -c[:confidence_score].to_f, c[:name] ] } }
   end
 
   def run_checks(comparison, scenario)

@@ -95,6 +95,46 @@ class UserTest < ActiveSupport::TestCase
     assert_equal 20, user.daily_comparison_limit
   end
 
+  #--------------------------------------
+  # SECURITY: Admin Access Control
+  #--------------------------------------
+
+  test "admin? returns true when user GitHub ID in ALLOWED_ADMIN_GITHUB_IDS" do
+    # Stub env var with user's GitHub ID
+    ClimateControl.modify ALLOWED_ADMIN_GITHUB_IDS: "12345,67890" do
+      admin_user = users(:one) # has github_id: 12345
+      assert admin_user.admin?, "User with ID 12345 should be admin"
+    end
+  end
+
+  test "admin? returns false when user GitHub ID not in ALLOWED_ADMIN_GITHUB_IDS" do
+    ClimateControl.modify ALLOWED_ADMIN_GITHUB_IDS: "67890" do
+      regular_user = users(:one) # has github_id: 12345
+      refute regular_user.admin?, "User with ID 12345 should not be admin"
+    end
+  end
+
+  test "admin? returns false when ALLOWED_ADMIN_GITHUB_IDS is empty" do
+    ClimateControl.modify ALLOWED_ADMIN_GITHUB_IDS: "" do
+      user = users(:one)
+      refute user.admin?, "Empty admin IDs should deny all users (fail-closed)"
+    end
+  end
+
+  test "admin? returns false when ALLOWED_ADMIN_GITHUB_IDS is nil" do
+    ClimateControl.modify ALLOWED_ADMIN_GITHUB_IDS: nil do
+      user = users(:one)
+      refute user.admin?, "Nil admin IDs should deny all users (fail-closed)"
+    end
+  end
+
+  test "admin? handles whitespace in ALLOWED_ADMIN_GITHUB_IDS" do
+    ClimateControl.modify ALLOWED_ADMIN_GITHUB_IDS: " 12345 , 67890 " do
+      admin_user = users(:one) # has github_id: 12345
+      assert admin_user.admin?, "Should handle whitespace in env var"
+    end
+  end
+
   private
 
   # Helper to build GitHub OAuth response hash

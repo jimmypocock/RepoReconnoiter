@@ -28,6 +28,10 @@ Rails.application.configure do
   # Disable request forgery protection in test environment.
   config.action_controller.allow_forgery_protection = false
 
+  # Disable Rack::Attack middleware in test environment
+  # Middleware should be tested in isolation, not in controller/integration tests
+  config.middleware.delete Rack::Attack
+
   # Store uploaded files on the local file system in a temporary directory.
   # config.active_storage.service = :test  # ❌ Disabled - Active Storage not loaded
 

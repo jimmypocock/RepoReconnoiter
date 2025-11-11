@@ -97,3 +97,8 @@ module ActiveSupport
     end
   end
 end
+
+# Add Devise test helpers for integration tests
+class ActionDispatch::IntegrationTest
+  include Devise::Test::IntegrationHelpers
+end
