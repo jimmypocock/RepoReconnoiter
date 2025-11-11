@@ -23,8 +23,10 @@ class RepositorySyncer
   end
 
   # Syncs a collection of GitHub API repository items
-  # Returns: { synced:, created:, updated: }
+  # Returns: { synced:, created:, updated:, repositories: [] }
   def sync_repositories(items, created: 0, synced: 0, updated: 0)
+    repositories = []
+
     items.each do |item|
       repo = Repository.from_github_api(item.to_attrs)
 
@@ -37,11 +39,12 @@ class RepositorySyncer
       end
 
       synced += 1
+      repositories << repo
     rescue => e
       Rails.logger.error "❌ Error syncing repo #{item.full_name}: #{e.message}"
     end
 
-    { created:, synced:, updated: }
+    { created:, repositories:, synced:, updated: }
   end
 
   class << self

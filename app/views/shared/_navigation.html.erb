@@ -1,21 +1,21 @@
 <nav
-  class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50"
+  class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50 navbar-condensed"
   data-controller="navbar"
   data-navbar-target="nav"
   data-navbar-homepage-value="<%= local_assigns[:homepage] || false %>"
 >
-  <div class="container mx-auto px-4">
+  <div class="container mx-auto px-4 max-w-6xl">
     <!-- Top Row: Logo and User Controls -->
     <div class="flex items-center justify-between h-16" data-navbar-target="topRow">
-      <!-- Left: Logo & Brand (hidden on mobile when signed in) -->
-      <%= link_to root_path, class: "flex items-center gap-3 hover:opacity-80 transition flex-shrink-0 #{user_signed_in? ? 'hidden md:flex' : ''}" do %>
+      <!-- Left: Logo & Brand -->
+      <%= link_to root_path, class: "flex items-center gap-3 hover:opacity-80 transition flex-shrink-0" do %>
         <%= image_tag "/icon.png", alt: "Repo Reconnoiter", class: "w-8 h-8" %>
-        <span class="text-xl font-bold text-gray-900">Repo Reconnoiter</span>
+        <span class="text-xl font-bold text-gray-900" data-navbar-target="logoText">Repo Reconnoiter</span>
       <% end %>
       <!-- Center: Inline Search (shown on mobile always, shown on desktop when scrolled) or Waitlist Link -->
       <% if user_signed_in? %>
         <div
-          class="flex-1 flex justify-center px-2 md:px-8 md:hidden transition-all duration-300"
+          class="flex-1 flex justify-center px-2 md:px-8 hidden transition-all duration-300"
           data-navbar-target="searchInline"
         >
           <%= render "shared/search_form",

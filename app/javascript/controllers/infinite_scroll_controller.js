@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // Infinite scroll controller for pagination
 // Auto-loads next page when scrolled near bottom
 export default class extends Controller {
-  static targets = [ "load", "previous", "trigger" ]
+  static targets = ["load", "previous", "trigger"]
 
   connect() {
     // Hide pagination buttons when JS is enabled (progressive enhancement)

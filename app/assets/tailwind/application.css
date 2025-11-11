@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+/* Navbar logo text visibility */
+/* Default: Logo text visible on all screens */
+/* When condensed: Hide logo text on small screens only */
+@media (max-width: 768px) {
+  .navbar-condensed [data-navbar-target="logoText"] {
+    display: none;
+  }
+}

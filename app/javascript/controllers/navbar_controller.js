@@ -2,66 +2,56 @@ import { Controller } from "@hotwired/stimulus"
 
 // Shrinking navbar on scroll (like Airbnb)
 export default class extends Controller {
-  static targets = ["topRow", "searchSection", "tagline", "searchInline"]
+  static targets = ["logoText", "searchSection", "searchInline"]
   static values = {
     threshold: { type: Number, default: 100 }, // Scroll threshold in pixels
     homepage: { type: Boolean, default: false } // True only on homepage (enables scroll behavior)
   }
 
   connect() {
-    this.handleScroll = this.handleScroll.bind(this)
-    this.isCondensed = true // Default to condensed (navbar search inline)
+    this.boundOnScroll = this.onScroll.bind(this)
     this.ticking = false
     this.ignoreScrollUntil = 0 // Timestamp to ignore scroll events until (dead zone)
 
-    // On mobile, always condensed
-    if (this.isMobile()) {
-      this.shrinkInstant()
-      this.isCondensed = true
-    }
-    // On homepage desktop: Enable expand/shrink scroll behavior
-    else if (this.homepageValue) {
-      if (window.scrollY > this.thresholdValue) {
-        // If already scrolled down (refresh or anchor link), start condensed
+    // On homepage: Check if we should expand (default is condensed from server)
+    if (this.homepageValue) {
+      if (window.scrollY <= this.thresholdValue) {
+        // At top of page, expand immediately (removes navbar-condensed class)
+        this.expand()
+        this.isCondensed = false
+      } else {
+        // Already scrolled down, stay condensed (navbar-condensed class already set)
         this.shrinkInstant()
         this.isCondensed = true
-      } else {
-        // At top of page, start expanded
-        this.isCondensed = false
-        // Don't call expand() - already in correct state
       }
       // Add scroll listener for homepage only
-      window.addEventListener("scroll", this.onScroll.bind(this), { passive: true })
+      window.addEventListener("scroll", this.boundOnScroll, { passive: true })
     }
-    // On non-homepage desktop: Always condensed, no scroll behavior
+    // On non-homepage: Always condensed (navbar-condensed class already set server-side)
     else {
       this.shrinkInstant()
       this.isCondensed = true
     }
   }
 
-  onScroll() {
-    if (!this.ticking) {
-      this.ticking = true
-      requestAnimationFrame(() => {
-        this.handleScroll()
-        this.ticking = false
-      })
-    }
-  }
-
   disconnect() {
-    window.removeEventListener("scroll", this.onScroll)
+    window.removeEventListener("scroll", this.boundOnScroll)
   }
 
-  isMobile() {
-    return window.innerWidth < 768
+  expand() {
+    // Show page search section with smooth transition
+    if (this.hasSearchSectionTarget) {
+      this.searchSectionTarget.style.display = "block"
+    }
+    // Hide inline navbar search on all screen sizes
+    if (this.hasSearchInlineTarget) {
+      this.searchInlineTarget.classList.add("hidden")
+    }
+    // Remove condensed class (logo text shows via CSS on all screens)
+    this.element.classList.remove("navbar-condensed")
   }
 
   handleScroll() {
-    // On mobile, always condensed (no-op)
-    if (this.isMobile()) return
-
     // If we're in the dead zone (ignoring scroll events), skip
     if (Date.now() < this.ignoreScrollUntil) return
 
@@ -83,39 +73,39 @@ export default class extends Controller {
     }
   }
 
-  shrinkInstant() {
-    // Collapse bottom search section immediately (no transition)
-    if (this.hasSearchSectionTarget && !this.isMobile()) {
-      this.searchSectionTarget.style.maxHeight = "0px"
-      this.searchSectionTarget.style.paddingBottom = "0px"
-    }
-    // Show inline search
-    if (this.hasSearchInlineTarget && !this.isMobile()) {
-      this.searchInlineTarget.classList.remove("md:hidden")
-    }
-  }
-
-  expand() {
-    // Expand bottom search section with smooth transition
-    if (this.hasSearchSectionTarget && !this.isMobile()) {
-      this.searchSectionTarget.style.maxHeight = "200px"
-      this.searchSectionTarget.style.paddingBottom = "1rem" // pb-4
-    }
-    // Hide inline search
-    if (this.hasSearchInlineTarget && !this.isMobile()) {
-      this.searchInlineTarget.classList.add("md:hidden")
+  onScroll() {
+    if (!this.ticking) {
+      this.ticking = true
+      requestAnimationFrame(() => {
+        this.handleScroll()
+        this.ticking = false
+      })
     }
   }
 
   shrink() {
-    // Collapse bottom search section with smooth transition
-    if (this.hasSearchSectionTarget && !this.isMobile()) {
-      this.searchSectionTarget.style.maxHeight = "0px"
-      this.searchSectionTarget.style.paddingBottom = "0px"
+    // Hide page search section with smooth transition
+    if (this.hasSearchSectionTarget) {
+      this.searchSectionTarget.style.display = "none"
     }
-    // Show inline search
-    if (this.hasSearchInlineTarget && !this.isMobile()) {
-      this.searchInlineTarget.classList.remove("md:hidden")
+    // Show inline navbar search on all screen sizes
+    if (this.hasSearchInlineTarget) {
+      this.searchInlineTarget.classList.remove("hidden")
     }
+    // Add condensed class (CSS hides logo text on small screens)
+    this.element.classList.add("navbar-condensed")
+  }
+
+  shrinkInstant() {
+    // Hide page search section immediately (no transition)
+    if (this.hasSearchSectionTarget) {
+      this.searchSectionTarget.style.display = "none"
+    }
+    // Show inline navbar search
+    if (this.hasSearchInlineTarget) {
+      this.searchInlineTarget.classList.remove("hidden")
+    }
+    // Add condensed class (CSS hides logo text on small screens)
+    this.element.classList.add("navbar-condensed")
   }
 }

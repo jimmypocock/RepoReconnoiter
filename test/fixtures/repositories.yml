@@ -29,4 +29,6 @@ no_analyses:
   description: "Test repository with no analyses"
   language: "Ruby"
   stargazers_count: 100
+  forks_count: 10
+  open_issues_count: 5
   owner_login: "test"

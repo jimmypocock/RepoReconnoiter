@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // Dropdown controller for navigation menus
 // Handles click-to-toggle behavior with click-outside-to-close
 export default class extends Controller {
-  static targets = [ "menu" ]
+  static targets = ["menu"]
 
   connect() {
     this.boundClose = this.close.bind(this)

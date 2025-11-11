@@ -7,9 +7,9 @@ STARS: <%= @repository.stargazers_count %>
 FORKS: <%= @repository.forks_count %>
 OPEN ISSUES: <%= @repository.open_issues_count %>
 LICENSE: <%= @repository.license || "No license" %>
-CREATED: <%= @repository.github_created_at.strftime('%Y-%m-%d') %>
-LAST UPDATED: <%= @repository.github_updated_at.strftime('%Y-%m-%d') %>
-LAST PUSHED: <%= @repository.github_pushed_at.strftime('%Y-%m-%d') %>
+CREATED: <%= @repository.github_created_at&.strftime('%Y-%m-%d') || 'Unknown' %>
+LAST UPDATED: <%= @repository.github_updated_at&.strftime('%Y-%m-%d') || 'Unknown' %>
+LAST PUSHED: <%= @repository.github_pushed_at&.strftime('%Y-%m-%d') || 'Unknown' %>
 HOMEPAGE: <%= @repository.homepage_url.presence || "None" %>
 
 ---

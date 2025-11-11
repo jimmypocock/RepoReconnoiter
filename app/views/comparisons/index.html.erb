@@ -1,6 +1,6 @@
 <!-- Hero Search Section (Above the Fold) -->
     <% if user_signed_in? %>
-      <div class="mb-8 text-center">
+      <div class="mb-8 text-center transition-all duration-300" data-navbar-target="searchSection">
         <p class="text-sm text-gray-600 mb-4">Use AI to search the best open source library for your project</p>
         <div class="max-w-2xl mx-auto">
           <%= render "shared/search_form",
