@@ -48,57 +48,14 @@
 
       <%# Step List %>
       <div data-comparison-progress-target="stepList" class="space-y-3">
-        <%# Step 1: Parsing Query %>
-        <div data-step="parsing_query" class="flex items-center gap-3 opacity-40">
-          <div class="flex-shrink-0 w-6 h-6">
-            <div class="step-icon-pending w-6 h-6 rounded-full border-2 border-gray-300"></div>
-          </div>
-          <span class="text-sm text-gray-700">Parse your query</span>
-        </div>
-
-        <%# Step 2: Searching GitHub %>
-        <div data-step="searching_github" class="flex items-center gap-3 opacity-40">
-          <div class="flex-shrink-0 w-6 h-6">
-            <div class="step-icon-pending w-6 h-6 rounded-full border-2 border-gray-300"></div>
-          </div>
-          <span class="text-sm text-gray-700">Search GitHub</span>
-        </div>
-
-        <%# Step 3: Merging Results %>
-        <div data-step="merging_results" class="flex items-center gap-3 opacity-40">
-          <div class="flex-shrink-0 w-6 h-6">
-            <div class="step-icon-pending w-6 h-6 rounded-full border-2 border-gray-300"></div>
-          </div>
-          <span class="text-sm text-gray-700">Merge and deduplicate results</span>
-        </div>
-
-        <%# Step 4: Analyzing Repositories %>
-        <div data-step="analyzing_repositories" class="flex items-center gap-3 opacity-40">
-          <div class="flex-shrink-0 w-6 h-6">
-            <div class="step-icon-pending w-6 h-6 rounded-full border-2 border-gray-300"></div>
-          </div>
-          <span class="text-sm text-gray-700">Analyze repositories with AI</span>
-          <span
-            data-comparison-progress-target="analyzeCount"
-            class="ml-auto text-xs text-gray-500"
-          ></span>
-        </div>
-
-        <%# Step 5: Comparing Repositories %>
-        <div data-step="comparing_repositories" class="flex items-center gap-3 opacity-40">
-          <div class="flex-shrink-0 w-6 h-6">
-            <div class="step-icon-pending w-6 h-6 rounded-full border-2 border-gray-300"></div>
-          </div>
-          <span class="text-sm text-gray-700">Compare repositories</span>
-        </div>
-
-        <%# Step 6: Saving Comparison %>
-        <div data-step="saving_comparison" class="flex items-center gap-3 opacity-40">
-          <div class="flex-shrink-0 w-6 h-6">
-            <div class="step-icon-pending w-6 h-6 rounded-full border-2 border-gray-300"></div>
-          </div>
-          <span class="text-sm text-gray-700">Finalize comparison</span>
-        </div>
+        <%= render "comparisons/progress_step", step: "parsing_query", label: "Parse your query" %>
+        <%= render "comparisons/progress_step", step: "searching_github", label: "Search GitHub" %>
+        <%= render "comparisons/progress_step", step: "merging_results", label: "Merge and deduplicate results" %>
+        <%= render "comparisons/progress_step", step: "analyzing_repositories", label: "Analyze repositories with AI" do %>
+          <span data-comparison-progress-target="analyzeCount" class="ml-auto text-xs text-gray-500"></span>
+        <% end %>
+        <%= render "comparisons/progress_step", step: "comparing_repositories", label: "Compare repositories" %>
+        <%= render "comparisons/progress_step", step: "saving_comparison", label: "Finalize comparison" %>
       </div>
 
       <%# Error State Container (Hidden by default) %>
