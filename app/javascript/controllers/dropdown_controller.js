@@ -13,6 +13,27 @@ export default class extends Controller {
     document.removeEventListener("click", this.boundClose)
   }
 
+  //--------------------------------------
+  // PUBLIC INSTANCE METHODS
+  //--------------------------------------
+
+  close() {
+    this.menuTarget.classList.add("hidden")
+    document.removeEventListener("click", this.boundClose)
+  }
+
+  open() {
+    // Guard: prevent duplicate listener if already open
+    if (!this.menuTarget.classList.contains("hidden")) return
+
+    this.menuTarget.classList.remove("hidden")
+
+    // Delay listener attachment so the opening click doesn't immediately close the menu
+    setTimeout(() => {
+      document.addEventListener("click", this.boundClose)
+    }, 0)
+  }
+
   toggle(event) {
     event.stopPropagation()
 
@@ -21,18 +42,5 @@ export default class extends Controller {
     } else {
       this.close()
     }
-  }
-
-  open() {
-    this.menuTarget.classList.remove("hidden")
-    // Add click listener to close when clicking outside
-    setTimeout(() => {
-      document.addEventListener("click", this.boundClose)
-    }, 0)
-  }
-
-  close() {
-    this.menuTarget.classList.add("hidden")
-    document.removeEventListener("click", this.boundClose)
   }
 }

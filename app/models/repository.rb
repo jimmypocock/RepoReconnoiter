@@ -25,7 +25,7 @@ class Repository < ApplicationRecord
   #--------------------------------------
 
   def analysis_current
-    analyses.tier1.current.first
+    analyses.basic.current.first
   end
 
   def needs_analysis?

@@ -1,0 +1,38 @@
+Analyze this GitHub repository in depth:
+
+REPOSITORY: <%= @repository.full_name %>
+DESCRIPTION: <%= @repository.description || "No description provided" %>
+LANGUAGE: <%= @repository.language || "Not specified" %>
+STARS: <%= @repository.stargazers_count %>
+FORKS: <%= @repository.forks_count %>
+OPEN ISSUES: <%= @repository.open_issues_count %>
+LICENSE: <%= @repository.license || "No license" %>
+CREATED: <%= @repository.github_created_at.strftime('%Y-%m-%d') %>
+LAST UPDATED: <%= @repository.github_updated_at.strftime('%Y-%m-%d') %>
+LAST PUSHED: <%= @repository.github_pushed_at.strftime('%Y-%m-%d') %>
+HOMEPAGE: <%= @repository.homepage_url.presence || "None" %>
+
+---
+
+README CONTENT:
+<%= @readme_content %>
+
+---
+
+RECENT ISSUES (Last 30):
+<% if @issues_data.is_a?(String) %>
+<%= @issues_data %>
+<% else %>
+<% @issues_data.each_with_index do |issue, idx| %>
+<%= idx + 1 %>. [<%= issue[:state].upcase %>] <%= issue[:title] %>
+   Created: <%= issue[:created_at].strftime('%Y-%m-%d') %>
+   Comments: <%= issue[:comments] %>
+   Labels: <%= issue[:labels].any? ? issue[:labels].join(', ') : 'none' %>
+   <%= issue[:is_pull_request] ? '(Pull Request)' : '' %>
+
+<% end %>
+<% end %>
+
+---
+
+Based on the above information, provide your deep analysis covering all 5 required fields. Remember to be thorough, balanced, and actionable in your assessment.

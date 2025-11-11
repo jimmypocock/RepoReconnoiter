@@ -49,8 +49,6 @@ class Comparison < ApplicationRecord
 
   scope :cached, -> { where("created_at > ?", CACHE_TTL_DAYS.days.ago) }
   scope :popular, -> { order(view_count: :desc) }
-  scope :this_month, -> { where("created_at > ?", 30.days.ago) }
-  scope :this_week, -> { where("created_at > ?", 7.days.ago) }
 
   # Comprehensive search across all relevant comparison fields and associated categories
   # Searches: user_query, technologies, problem_domains, architecture_patterns, and category names
@@ -171,7 +169,7 @@ class Comparison < ApplicationRecord
   end
 
   def recommended_repository
-    comparison_repositories.order(:rank).first&.repository
+    comparison_repositories.min_by(&:rank)&.repository
   end
 
   #--------------------------------------

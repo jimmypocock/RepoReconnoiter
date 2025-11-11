@@ -18,7 +18,7 @@ class BrowseComparisonsPresenter
   end
 
   def recent_comparisons
-    @recent_comparisons ||= Comparison.includes(:categories).recent.limit(8)
+    @recent_comparisons ||= Comparison.includes(:categories, :repositories, comparison_repositories: :repository).recent.limit(8)
   end
 
   private
@@ -28,7 +28,7 @@ class BrowseComparisonsPresenter
   #--------------------------------------
 
   def build_comparisons_scope
-    scope = Comparison.includes(:categories)
+    scope = Comparison.includes(:categories, :repositories, comparison_repositories: :repository)
     scope = apply_date_filter(scope)
     scope = apply_search(scope)
     apply_sorting(scope)
@@ -36,8 +36,8 @@ class BrowseComparisonsPresenter
 
   def apply_date_filter(scope)
     case params[:date]
-    when "week" then scope.this_week
-    when "month" then scope.this_month
+    when "week" then scope.past_7_days
+    when "month" then scope.past_30_days
     else scope
     end
   end

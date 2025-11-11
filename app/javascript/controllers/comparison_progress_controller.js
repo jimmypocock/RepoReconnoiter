@@ -243,10 +243,6 @@ export default class extends Controller {
     })
   }
 
-  //--------------------------------------
-  // PRIVATE METHODS
-  //--------------------------------------
-
   validateStepOrder() {
     if (!this.hasStepListTarget) return
 

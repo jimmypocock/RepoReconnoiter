@@ -65,7 +65,10 @@ class CategoryTest < ActiveSupport::TestCase
     categories(:go).update!(repositories_count: 5)
     categories(:rust).update!(repositories_count: 15)
 
-    popular = Category.popular.limit(3)
+    # Query specific test categories to avoid interference from other parallel tests
+    test_category_ids = [ categories(:rust).id, categories(:ruby).id, categories(:go).id ]
+    popular = Category.where(id: test_category_ids).popular
+
     assert_equal categories(:rust), popular.first
     assert_equal categories(:ruby), popular.second
     assert_equal categories(:go), popular.third

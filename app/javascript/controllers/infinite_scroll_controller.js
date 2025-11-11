@@ -1,20 +1,30 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Connects to data-controller="infinite-scroll"
+// Infinite scroll controller for pagination
+// Auto-loads next page when scrolled near bottom
 export default class extends Controller {
-  static targets = ["link"]
+  static targets = [ "load", "previous", "trigger" ]
 
   connect() {
+    // Hide pagination buttons when JS is enabled (progressive enhancement)
+    if (this.hasPreviousTarget) {
+      this.previousTarget.style.display = "none"
+    }
+
+    if (this.hasLoadTarget) {
+      this.loadTarget.style.display = "none"
+    }
+
     this.observer = new IntersectionObserver(
-      entries => this.handleIntersection(entries),
+      (entries) => this.handleIntersection(entries),
       {
         threshold: 0.5,
         rootMargin: "100px"
       }
     )
 
-    if (this.hasLinkTarget) {
-      this.observer.observe(this.linkTarget)
+    if (this.hasTriggerTarget) {
+      this.observer.observe(this.triggerTarget)
     }
   }
 
@@ -25,13 +35,15 @@ export default class extends Controller {
   }
 
   handleIntersection(entries) {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        // Automatically click the "Load More" link when it becomes visible
-        this.linkTarget.click()
+    entries.forEach((entry) => {
+      if (entry.isIntersecting && this.hasLoadTarget) {
+        // Auto-click the load button when trigger becomes visible
+        this.loadTarget.click()
 
-        // Stop observing this link since we've triggered it
-        this.observer.unobserve(this.linkTarget)
+        // Stop observing
+        if (this.hasTriggerTarget) {
+          this.observer.unobserve(this.triggerTarget)
+        }
       }
     })
   }

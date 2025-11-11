@@ -21,7 +21,7 @@ class QueuedAnalysis < ApplicationRecord
   #--------------------------------------
 
   validates :analysis_type, presence: true, inclusion: {
-    in: %w[tier1_categorization tier2_deep_dive],
+    in: %w[Analysis AnalysisDeep],
     message: "%{value} is not a valid analysis type"
   }
   validates :priority, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
@@ -31,15 +31,15 @@ class QueuedAnalysis < ApplicationRecord
   # SCOPES
   #--------------------------------------
 
+  scope :basic, -> { where(analysis_type: "Analysis") }
+  scope :deep, -> { where(analysis_type: "AnalysisDeep") }
   scope :ready_to_process, -> {
     where(status: "pending")
       .where("scheduled_for IS NULL OR scheduled_for <= ?", Time.current)
       .order(priority: :desc, created_at: :asc)
   }
-  scope :tier1, -> { where(analysis_type: "tier1_categorization") }
-  scope :tier2, -> { where(analysis_type: "tier2_deep_dive") }
-  scope :stale, -> { where("created_at < ? AND status = ?", 7.days.ago, "pending") }
   scope :recent, -> { order(created_at: :desc) }
+  scope :stale, -> { where("created_at < ? AND status = ?", 7.days.ago, "pending") }
 
   #--------------------------------------
   # PUBLIC INSTANCE METHODS
@@ -86,16 +86,16 @@ class QueuedAnalysis < ApplicationRecord
     )
   end
 
+  def basic?
+    analysis_type == "Analysis"
+  end
+
+  def deep?
+    analysis_type == "AnalysisDeep"
+  end
+
   def scheduled?
     scheduled_for.present? && scheduled_for > Time.current
-  end
-
-  def tier1?
-    analysis_type == "tier1_categorization"
-  end
-
-  def tier2?
-    analysis_type == "tier2_deep_dive"
   end
 
   #--------------------------------------

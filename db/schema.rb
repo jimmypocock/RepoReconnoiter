@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_10_225107) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_11_030545) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -31,30 +31,35 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_10_225107) do
   end
 
   create_table "analyses", force: :cascade do |t|
-    t.string "analysis_type", null: false
+    t.text "adoption_analysis"
     t.string "content_hash"
     t.decimal "cost_usd", precision: 10, scale: 6
     t.datetime "created_at", null: false
     t.datetime "expires_at"
     t.integer "input_tokens"
     t.boolean "is_current", default: true
+    t.text "issues_analysis"
     t.text "key_insights"
     t.text "learning_value"
+    t.text "maintenance_analysis"
     t.string "maturity_assessment"
     t.string "model_used", null: false
     t.integer "output_tokens"
     t.jsonb "quality_signals"
+    t.text "readme_analysis"
     t.bigint "repository_id", null: false
+    t.text "security_analysis"
     t.text "summary"
+    t.string "type", null: false
     t.datetime "updated_at", null: false
     t.text "use_cases"
     t.text "why_care"
-    t.index ["analysis_type"], name: "index_analyses_on_analysis_type"
     t.index ["cost_usd"], name: "index_analyses_on_cost_usd"
     t.index ["created_at"], name: "index_analyses_on_created_at"
     t.index ["is_current"], name: "index_analyses_on_is_current"
-    t.index ["repository_id", "analysis_type", "is_current"], name: "index_analyses_current"
+    t.index ["repository_id", "type", "is_current"], name: "index_analyses_current"
     t.index ["repository_id"], name: "index_analyses_on_repository_id"
+    t.index ["type"], name: "index_analyses_on_type"
   end
 
   create_table "categories", force: :cascade do |t|

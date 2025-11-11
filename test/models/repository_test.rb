@@ -139,20 +139,20 @@ class RepositoryTest < ActiveSupport::TestCase
   # ANALYSIS: Current Analysis Retrieval
   #--------------------------------------
 
-  test "analysis_current returns current tier1 analysis" do
+  test "analysis_current returns current analysis" do
     repo = repositories(:no_analyses)
 
-    # Create a current tier1 analysis
+    # Create a current analysis
     current_analysis = repo.analyses.create!(
-      analysis_type: "tier1_categorization",
+      type: "Analysis",
       model_used: "gpt-4o-mini",
       summary: "Current analysis",
       is_current: true
     )
 
-    # Create old tier1 analysis
+    # Create old analysis
     repo.analyses.create!(
-      analysis_type: "tier1_categorization",
+      type: "Analysis",
       model_used: "gpt-4o-mini",
       summary: "Old analysis",
       is_current: false
@@ -162,12 +162,12 @@ class RepositoryTest < ActiveSupport::TestCase
     assert_equal "Current analysis", repo.analysis_current.summary
   end
 
-  test "analysis_current returns nil when no current tier1 analysis exists" do
+  test "analysis_current returns nil when no current analysis exists" do
     repo = repositories(:no_analyses)
 
     # Create only non-current analysis
     repo.analyses.create!(
-      analysis_type: "tier1_categorization",
+      type: "Analysis",
       model_used: "gpt-4o-mini",
       summary: "Old analysis",
       is_current: false
@@ -176,14 +176,14 @@ class RepositoryTest < ActiveSupport::TestCase
     assert_nil repo.analysis_current
   end
 
-  test "analysis_current ignores tier2 analyses" do
+  test "analysis_current ignores deep analyses" do
     repo = repositories(:no_analyses)
 
-    # Create current tier2 analysis (should be ignored)
+    # Create current deep analysis (should be ignored)
     repo.analyses.create!(
-      analysis_type: "tier2_deep_dive",
+      type: "AnalysisDeep",
       model_used: "gpt-4o",
-      summary: "Tier 2 analysis",
+      summary: "Deep analysis",
       is_current: true
     )
 

@@ -70,9 +70,8 @@ class RepositoryFetcher
       begin
         result = analyzer.analyze(repo)
 
-        # Create analysis record
+        # Create analysis record (defaults to Analysis base class)
         repo.analyses.create!(
-          analysis_type: "tier1_categorization",
           model_used: "gpt-4o-mini",
           summary: result[:summary],
           use_cases: result[:use_cases],
