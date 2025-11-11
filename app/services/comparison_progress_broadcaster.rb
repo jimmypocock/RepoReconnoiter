@@ -20,30 +20,6 @@ class ComparisonProgressBroadcaster
   # PUBLIC INSTANCE METHODS
   #--------------------------------------
 
-  # Broadcast a progress step update
-  #
-  # @param step [String] Step identifier (parsing_query, searching_github, etc.)
-  # @param data [Hash] Additional step data
-  #   @option data [String] :message User-facing message
-  #   @option data [Integer] :current Current item number (for loops)
-  #   @option data [Integer] :total Total items (for loops)
-  #   @option data [Integer] :percentage Progress percentage (0-100)
-  def broadcast_step(step, data = {})
-    return unless session_id.present?
-
-    payload = {
-      type: "progress",
-      step: step,
-      message: data[:message] || "Processing...",
-      current: data[:current],
-      total: data[:total],
-      percentage: data[:percentage] || calculate_percentage(step, data),
-      timestamp: Time.current.iso8601
-    }
-
-    broadcast(payload)
-  end
-
   # Broadcast completion with redirect URL
   #
   # @param comparison_id [Integer] ID of created comparison
@@ -78,6 +54,30 @@ class ComparisonProgressBroadcaster
     broadcast(payload)
   end
 
+  # Broadcast a progress step update
+  #
+  # @param step [String] Step identifier (parsing_query, searching_github, etc.)
+  # @param data [Hash] Additional step data
+  #   @option data [String] :message User-facing message
+  #   @option data [Integer] :current Current item number (for loops)
+  #   @option data [Integer] :total Total items (for loops)
+  #   @option data [Integer] :percentage Progress percentage (0-100)
+  def broadcast_step(step, data = {})
+    return unless session_id.present?
+
+    payload = {
+      type: "progress",
+      step: step,
+      message: data[:message] || "Processing...",
+      current: data[:current],
+      total: data[:total],
+      percentage: data[:percentage] || calculate_percentage(step, data),
+      timestamp: Time.current.iso8601
+    }
+
+    broadcast(payload)
+  end
+
   private
 
   #--------------------------------------
@@ -86,7 +86,6 @@ class ComparisonProgressBroadcaster
 
   def broadcast(payload)
     ActionCable.server.broadcast(stream_name, payload)
-    Rails.logger.debug "Broadcasted to #{stream_name}: #{payload[:type]} - #{payload[:message]}"
   end
 
   # Calculate percentage based on step and current/total

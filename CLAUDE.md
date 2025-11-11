@@ -75,17 +75,6 @@ bin/rails db:reset        # Drop, create, migrate, and seed database
 bin/rails test            # Run all tests
 bin/rails test:system     # Run system tests
 bin/rails test test/models/repository_test.rb  # Run specific test file
-
-# AI Analysis Testing
-bin/rails analyze:compare["query"]         # Test full comparison pipeline (parse → search → merge)
-bin/rails analyze:validate_queries         # Run test suite with sample queries
-bin/rails analyze:repo[owner/name]         # Test Tier 1 analysis on single repo
-
-# Search Testing
-bin/rails search:validate                  # Run comprehensive search validation suite
-bin/rails search:test["query"]             # Test specific search query with detailed results
-bin/rails search:coverage                  # Analyze search field population coverage
-bin/rails search:benchmark                 # Benchmark search performance
 ```
 
 ### Linting & Security
@@ -132,6 +121,22 @@ All services and models MUST follow this consistent structure:
 
 ```ruby
 class ExampleService
+  #--------------------------------------
+  # CUSTOM EXCEPTIONS
+  #--------------------------------------
+
+  class CustomError < StandardError; end
+  class AnotherError < StandardError; end
+
+  #--------------------------------------
+  # CONSTANTS
+  #--------------------------------------
+
+  DEFAULT_LIMIT = 10
+  MAX_RETRIES = 3
+
+  attr_reader :query, :options
+
   #--------------------------------------
   # PUBLIC INSTANCE METHODS
   #--------------------------------------
@@ -182,10 +187,21 @@ end
 
 ### Key Rules
 
-1. **Section Order**: Public instance methods → Class methods → Private methods
-2. **Class Methods**: ALWAYS use `class << self`, NEVER use `def self.method_name`
-3. **Alphabetization**: Methods MUST be alphabetized within each section (except `initialize` which comes first)
-4. **Headers**: Use `#--------------------------------------` separators with section names
+1. **Section Order**:
+   - Custom exceptions (if any)
+   - Constants (if any)
+   - attr_reader/accessor/writer
+   - Public instance methods
+   - Class methods
+   - Private methods
+2. **Section Headers**: Use `#--------------------------------------` separators with section names for:
+   - CUSTOM EXCEPTIONS (if defined)
+   - CONSTANTS (if defined)
+   - PUBLIC INSTANCE METHODS
+   - CLASS METHODS
+   - PRIVATE METHODS
+3. **Class Methods**: ALWAYS use `class << self`, NEVER use `def self.method_name`
+4. **Alphabetization**: Methods MUST be alphabetized within each section (except `initialize` which comes first)
 5. **Models**: Same rules apply - ASSOCIATIONS, VALIDATIONS, CALLBACKS, SCOPES, then methods
 6. **RuboCop Style**: Follow RuboCop conventions (run `bin/rails ci:lint` before committing)
    - Array brackets: `[ "item" ]` not `["item"]` (space inside brackets)
@@ -663,12 +679,34 @@ end
   - `comparison_progress_broadcaster.rb`: ActionCable broadcasting for real-time progress updates
   - `repository_fetcher.rb`: Fetches and prepares repositories from GitHub
 
-**Testing/Analysis:**
+**Rake Tasks:**
 
-- `lib/tasks/analyze.rake`: Rake tasks for testing AI analysis pipeline
-  - `analyze:compare[query]`: Test full comparison pipeline
-  - `analyze:validate_queries`: Run test suite with sample queries
-  - `analyze:repo[full_name]`: Test Tier 1 analysis on single repo
+- `lib/tasks/ci.rake`: CI/CD tasks that mirror GitHub Actions
+  - `ci:all`: Run all CI checks (security, lint, tests)
+  - `ci:security`: Run security scans (Brakeman, Bundler Audit, Importmap)
+  - `ci:lint`: Run RuboCop linter
+  - `ci:test`: Run all tests (unit + system)
+- `lib/tasks/analyze.rake`: Repository analysis tasks
+  - `analyze:basic` (REPO='owner/name'): Run basic analysis on a single repo (Tier 1, gpt-4o-mini)
+  - `analyze:deep` (REPO='owner/name'): Run deep analysis on a single repo (Tier 2, gpt-4o, expensive)
+- `lib/tasks/comparisons.rake`: Comparison management tasks
+  - `comparisons:create` (QUERY='...'): Create a new comparison (parse → fetch → analyze → compare)
+  - `comparisons:search["query"]`: Search for existing comparisons matching a query
+- `lib/tasks/query.rake`: Query parser testing
+  - `query:parse["query"]`: Test query parser with a natural language query
+- `lib/tasks/github.rake`: GitHub API exploration and manual sync
+  - `github:explore`: Explore GitHub API and display available data
+  - `github:trending[days,language,min_stars]`: Search trending repos with custom parameters
+  - `github:search[query]`: Search GitHub repositories with any query string
+  - `github:sync[days,min_stars,per_page]`: Sync trending repositories to database
+- `lib/tasks/whitelist.rake`: User whitelist management (invite-only system)
+  - `whitelist:add[github_id,github_username,email,notes]`: Add user to whitelist
+  - `whitelist:list`: List all whitelisted users
+  - `whitelist:remove[github_username]`: Remove user from whitelist
+- `lib/tasks/db.rake`: Database management
+  - `db:sync_from_production`: Pull production database and load it locally (dev only)
+- `lib/tasks/category_seeds.rake`: Category seed file management
+  - `categories:dump_seeds`: Dump current categories to seeds file
 
 **Documentation:**
 

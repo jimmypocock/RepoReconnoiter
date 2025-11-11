@@ -3,7 +3,11 @@
   <p class="text-gray-600">System-wide metrics and usage data</p>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Usage Stats -->
+<div class="mb-4">
+  <h2 class="text-2xl font-semibold text-gray-800 mb-3">Usage</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
   <%= render "stat_card",
     title: "Repositories Indexed",
     value: number_with_delimiter(@presenter.repositories_count),
@@ -21,16 +25,82 @@
     value: number_with_delimiter(@presenter.total_views),
     icon_color: "purple",
     icon: "eye" %>
+</div>
+
+<!-- AI Spending Stats -->
+<div class="mb-4">
+  <h2 class="text-2xl font-semibold text-gray-800 mb-3">AI Spending</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+  <%= render "stat_card",
+    title: "Today",
+    value: "$#{number_with_precision(@presenter.ai_spend_today, precision: 4)}",
+    icon_color: "blue",
+    icon: "chart" %>
 
   <%= render "stat_card",
-    title: "Total AI Spend",
-    value: "$#{number_with_precision(@presenter.ai_spend_total, precision: 2)}",
+    title: "This Week",
+    value: "$#{number_with_precision(@presenter.ai_spend_this_week, precision: 4)}",
+    icon_color: "purple",
+    icon: "chart" %>
+
+  <%= render "stat_card",
+    title: "This Month",
+    value: "$#{number_with_precision(@presenter.ai_spend_this_month, precision: 4)}",
     icon_color: "orange",
     icon: "dollar" %>
 
   <%= render "stat_card",
-    title: "AI Spend Today",
-    value: "$#{number_with_precision(@presenter.ai_spend_today, precision: 2)}",
+    title: "Projected Monthly",
+    value: "$#{number_with_precision(@presenter.ai_spend_projected, precision: 2)}",
     icon_color: "red",
     icon: "chart" %>
+
+  <%= render "stat_card",
+    title: "Total All Time",
+    value: "$#{number_with_precision(@presenter.ai_spend_total, precision: 2)}",
+    icon_color: "green",
+    icon: "dollar" %>
 </div>
+
+<!-- Budget Status -->
+<%
+  status_color = case @presenter.budget_status
+  when :healthy then "green"
+  when :warning then "yellow"
+  when :critical then "orange"
+  when :exceeded then "red"
+  end
+%>
+<div class="mb-4">
+  <h2 class="text-2xl font-semibold text-gray-800 mb-3">Budget Status</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <%= render "stat_card",
+    title: "Status",
+    value: @presenter.budget_status.to_s.upcase,
+    icon_color: status_color,
+    icon: "chart" %>
+
+  <%= render "stat_card",
+    title: "Budget Used",
+    value: "#{@presenter.budget_percentage_used}%",
+    icon_color: status_color,
+    icon: "chart" %>
+
+  <%= render "stat_card",
+    title: "Budget Remaining",
+    value: "$#{number_with_precision(@presenter.budget_remaining, precision: 2)}",
+    icon_color: "blue",
+    icon: "dollar" %>
+</div>
+
+<% if @presenter.budget_status == :exceeded %>
+  <div class="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+    <p class="text-red-800 font-semibold">⚠️ WARNING: Monthly budget exceeded!</p>
+  </div>
+<% elsif @presenter.budget_status == :critical %>
+  <div class="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+    <p class="text-orange-800 font-semibold">⚠️ WARNING: Approaching budget limit!</p>
+  </div>
+<% end %>

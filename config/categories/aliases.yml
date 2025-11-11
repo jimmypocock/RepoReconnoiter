@@ -1,0 +1,94 @@
+# Category name normalization mappings
+# Used by CategoryMatcher service to normalize user-provided category names
+# to canonical forms before fuzzy matching or creating new categories.
+#
+# Example: "js" → "JavaScript", "k8s" → "Kubernetes"
+
+categories:
+  # Technology name mappings (common aliases)
+  # Maps lowercase variations to canonical names
+  technology:
+    ruby on rails: Rails
+    ror: Rails
+    rails: Rails
+    ruby: Ruby
+    javascript: JavaScript
+    js: JavaScript
+    typescript: TypeScript
+    ts: TypeScript
+    node.js: Node.js
+    nodejs: Node.js
+    node: Node.js
+    python: Python
+    py: Python
+    golang: Go
+    go: Go
+    java: Java
+    rust: Rust
+    c++: C++
+    cpp: C++
+    c#: "C#"
+    csharp: "C#"
+    php: PHP
+    react: React
+    reactjs: React
+    vue: Vue.js
+    vuejs: Vue.js
+    vue.js: Vue.js
+    angular: Angular
+    angularjs: Angular
+    django: Django
+    flask: Flask
+    spring: Spring
+    laravel: Laravel
+    elixir: Elixir
+    kotlin: Kotlin
+    swift: Swift
+    postgresql: PostgreSQL
+    postgres: PostgreSQL
+    pg: PostgreSQL
+    mysql: MySQL
+    mongodb: MongoDB
+    mongo: MongoDB
+    redis: Redis
+    elasticsearch: Elasticsearch
+    docker: Docker
+    kubernetes: Kubernetes
+    k8s: Kubernetes
+
+  # Problem domain abbreviations
+  # Maps common abbreviations to full names
+  problem_domain:
+    auth: Authentication
+    ml: Machine Learning
+    ai: Artificial Intelligence
+    ci/cd: CI/CD
+    cicd: CI/CD
+    cache: Caching
+    payment process: Payment Processing
+    payment processing: Payment Processing
+
+  # Common acronyms that should stay uppercase
+  # Used by titleize_preserving_hyphens method
+  acronyms:
+    - API
+    - REST
+    - GraphQL
+    - SQL
+    - HTTP
+    - HTTPS
+    - URL
+    - URI
+    - JSON
+    - XML
+    - HTML
+    - CSS
+    - JS
+    - AI
+    - ML
+    - CI
+    - CD
+    - GPU
+    - CPU
+    - SaaS
+    - CLI

@@ -9,6 +9,13 @@
 #   result.newly_created  # Boolean - was this just created (vs retrieved from cache)?
 #   result.similarity     # Float - cache similarity score (1.0 if new)
 class ComparisonCreator
+  #--------------------------------------
+  # CUSTOM EXCEPTIONS
+  #--------------------------------------
+
+  class InvalidQueryError < StandardError; end
+  class NoRepositoriesFoundError < StandardError; end
+
   attr_reader :query, :force_refresh, :user, :session_id, :broadcaster, :record, :newly_created, :similarity
 
   def initialize(query:, force_refresh: false, user: nil, session_id: nil)
@@ -126,11 +133,4 @@ class ComparisonCreator
 
     parsed
   end
-
-  #--------------------------------------
-  # CUSTOM EXCEPTIONS
-  #--------------------------------------
-
-  class InvalidQueryError < StandardError; end
-  class NoRepositoriesFoundError < StandardError; end
 end

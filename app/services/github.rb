@@ -16,9 +16,8 @@ class Github
   # @param options [Hash] Any valid Octokit issues options (state, per_page, etc.)
   # @return [Array<Sawyer::Resource>] Array of issues
   def fetch_issues(full_name, **options)
-    client.issues(full_name, **options)
+    @client.issues(full_name, **options)
   rescue Octokit::NotFound, Octokit::Error => e
-    Rails.logger.error "Failed to fetch issues for #{full_name}: #{e.message}"
     []
   end
 
@@ -26,7 +25,7 @@ class Github
   # @param full_name [String] Repository full name (e.g., "rails/rails")
   # @return [String, nil] README content or nil if not found
   def fetch_readme(full_name)
-    readme = client.readme(full_name, accept: "application/vnd.github.raw")
+    readme = @client.readme(full_name, accept: "application/vnd.github.raw")
     readme
   rescue Octokit::NotFound
     nil
@@ -37,7 +36,7 @@ class Github
   # @param options [Hash] Any valid Octokit search options (per_page, sort, order, etc.)
   # @return [Sawyer::Resource] Search results with 'items' array
   def search(query, **options)
-    client.search_repositories(query, **options)
+    @client.search_repositories(query, **options)
   end
 
   # Search for trending repositories (recently created, sorted by stars)
@@ -73,6 +72,4 @@ class Github
   #--------------------------------------
   # PRIVATE METHODS
   #--------------------------------------
-
-  attr_reader :client
 end

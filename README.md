@@ -54,12 +54,14 @@ npm install
 ### 3. Configure API Keys
 
 You'll need API keys for:
+
 - **OpenAI**: For AI-powered repository analysis
 - **GitHub**: For searching and fetching repository data
 
 #### Get Your API Keys
 
 **OpenAI API Key:**
+
 1. Go to [platform.openai.com](https://platform.openai.com)
 2. Sign up or log in
 3. Navigate to API Keys section
@@ -67,6 +69,7 @@ You'll need API keys for:
 5. Copy the key (you won't be able to see it again)
 
 **GitHub Personal Access Token:**
+
 1. Go to [github.com/settings/tokens](https://github.com/settings/tokens)
 2. Click "Generate new token (classic)"
 3. Give it a descriptive name (e.g., "RepoReconnoiter Development")
@@ -102,6 +105,7 @@ secret_key_base: <%= SecureRandom.hex(64) %>
 **Save and close the editor** - Rails will automatically encrypt the file.
 
 **Important Files:**
+
 - `config/credentials.yml.enc` - Encrypted credentials (safe to commit)
 - `config/master.key` - Decryption key (DO NOT COMMIT - add to .gitignore)
 
@@ -153,7 +157,8 @@ bin/dev
 ```
 
 This starts:
-- **Web server**: http://localhost:3000
+
+- **Web server**: <http://localhost:3000>
 - **Background jobs**: Solid Queue worker
 - **Tailwind CSS**: File watcher for CSS changes
 
@@ -189,7 +194,7 @@ QUERY="what's good for state management in React?" bin/rails analyze:compare
 bin/rails analyze:validate_queries
 
 # Test Tier 1 analysis on a single repo
-REPO="mperham/sidekiq" bin/rails analyze:repo
+REPO="mperham/sidekiq" bin/rails analyze:basic
 ```
 
 ## Running Tests

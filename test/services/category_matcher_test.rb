@@ -62,56 +62,6 @@ class CategoryMatcherTest < ActiveSupport::TestCase
   end
 
   #--------------------------------------
-  # TECHNOLOGY NAME NORMALIZATION TESTS
-  #--------------------------------------
-
-  test "normalizes Ruby on Rails to Rails" do
-    name = @matcher.normalize_name("Ruby on Rails", "technology")
-    assert_equal "Rails", name
-  end
-
-  test "normalizes Node.js variants" do
-    assert_equal "Node.js", @matcher.normalize_name("nodejs", "technology")
-    assert_equal "Node.js", @matcher.normalize_name("node", "technology")
-    assert_equal "Node.js", @matcher.normalize_name("Node.js", "technology")
-  end
-
-  test "normalizes JavaScript variants" do
-    assert_equal "JavaScript", @matcher.normalize_name("js", "technology")
-    assert_equal "JavaScript", @matcher.normalize_name("javascript", "technology")
-  end
-
-  test "normalizes database names" do
-    assert_equal "PostgreSQL", @matcher.normalize_name("postgres", "technology")
-    assert_equal "PostgreSQL", @matcher.normalize_name("postgresql", "technology")
-    assert_equal "MongoDB", @matcher.normalize_name("mongo", "technology")
-  end
-
-  test "normalizes Kubernetes variants" do
-    assert_equal "Kubernetes", @matcher.normalize_name("k8s", "technology")
-    assert_equal "Kubernetes", @matcher.normalize_name("kubernetes", "technology")
-  end
-
-  test "titleizes unknown technology names" do
-    name = @matcher.normalize_name("some new framework", "technology")
-    assert_equal "Some New Framework", name
-  end
-
-  #--------------------------------------
-  # PROBLEM DOMAIN / ARCHITECTURE NORMALIZATION TESTS
-  #--------------------------------------
-
-  test "titleizes problem domain names" do
-    name = @matcher.normalize_name("background jobs", "problem_domain")
-    assert_equal "Background Jobs", name
-  end
-
-  test "titleizes architecture pattern names" do
-    name = @matcher.normalize_name("event-driven architecture", "architecture_pattern")
-    assert_equal "Event-Driven Architecture", name
-  end
-
-  #--------------------------------------
   # INTEGRATION TESTS
   #--------------------------------------
 

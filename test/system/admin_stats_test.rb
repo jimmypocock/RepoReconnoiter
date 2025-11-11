@@ -39,11 +39,26 @@ class AdminStatsTest < ApplicationSystemTestCase
     assert_current_path admin_stats_path
     assert_selector "h1", text: "Admin Statistics"
     assert_text "System-wide metrics and usage data"
+
+    # Usage section
+    assert_selector "h2", text: "Usage"
     assert_text "Repositories Indexed"
     assert_text "Comparisons Created"
     assert_text "Total Views"
-    assert_text "Total AI Spend"
-    assert_text "AI Spend Today"
+
+    # AI Spending section
+    assert_selector "h2", text: "AI Spending"
+    assert_text "Today"
+    assert_text "This Week"
+    assert_text "This Month"
+    assert_text "Projected Monthly"
+    assert_text "Total All Time"
+
+    # Budget Status section
+    assert_selector "h2", text: "Budget Status"
+    assert_text "Status"
+    assert_text "Budget Used"
+    assert_text "Budget Remaining"
   end
 
   test "stats display correct data" do
@@ -51,11 +66,13 @@ class AdminStatsTest < ApplicationSystemTestCase
 
     visit admin_stats_path
 
+    # We now have 11 stat cards (3 usage + 5 spending + 3 budget)
     stat_cards = all(".text-3xl.font-bold")
-    assert_equal 5, stat_cards.count
+    assert_equal 11, stat_cards.count
 
+    # Verify each card shows data (numbers or dollar amounts or status text)
     stat_cards.each do |card|
-      assert_match(/\d+|\$\d+\.\d{2}/, card.text)
+      assert_match(/\d+|\$\d+\.\d{2,4}|HEALTHY|WARNING|CRITICAL|EXCEEDED/i, card.text)
     end
   end
 end
