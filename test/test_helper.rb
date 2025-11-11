@@ -105,4 +105,5 @@ end
 # Add Devise test helpers for integration tests
 class ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
+  include Pagy::Method
 end

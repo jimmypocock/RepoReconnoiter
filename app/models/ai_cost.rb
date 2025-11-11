@@ -51,6 +51,42 @@ class AiCost < ApplicationRecord
   # CLASS METHODS
   #--------------------------------------
   class << self
+    # Get spending breakdown by model for a given scope
+    # Returns: [{ model: "gpt-5-mini", cost: 1.23, requests: 100, percentage: 25.5 }, ...]
+    def by_model_breakdown(scope = all)
+      total = scope.sum(:total_cost_usd)
+      return [] if total.zero?
+
+      scope.group(:model_used).sum(:total_cost_usd).map do |model, cost|
+        {
+          model:,
+          cost:,
+          requests: scope.where(model_used: model).sum(:total_requests),
+          percentage: (cost / total * 100).round(1)
+        }
+      end.sort_by { |item| -item[:cost] }
+    end
+
+    # Get spending breakdown by user for a given scope
+    # Returns: [{ user: User, cost: 1.23, requests: 100 }, ...]
+    def by_user_breakdown(scope = all, limit: 10)
+      # Get analyses grouped by user
+      user_costs = Analysis.where(
+        created_at: scope.pluck(:date).min..scope.pluck(:date).max
+      ).group(:user_id).sum(:cost_usd)
+
+      user_costs.map do |user_id, cost|
+        user = User.find_by(id: user_id)
+        next if user.nil?
+
+        {
+          user:,
+          cost:,
+          requests: Analysis.where(user_id:).count
+        }
+      end.compact.sort_by { |item| -item[:cost] }.first(limit)
+    end
+
     def spend_today
       today.sum(:total_cost_usd)
     end

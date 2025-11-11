@@ -48,22 +48,32 @@
     <%= heroicon "check", variant: :outline, options: { class: "w-6 h-6 text-blue-600 flex-shrink-0 mt-1" } %>
     <div class="flex-1">
       <h3 class="text-lg font-semibold text-gray-900 mb-1">Recommended</h3>
+      <% recommended_repo_record = Repository.find_by(full_name: @comparison.recommended_repo_full_name) %>
+      <% recommended_repo = recommended_repo_record ? RepositoryDecorator.new(recommended_repo_record) : nil %>
+
       <div class="flex items-center justify-between gap-4 mb-2">
-        <% recommended_repo = Repository.find_by(full_name: @comparison.recommended_repo_full_name) %>
         <% if recommended_repo %>
           <%= link_to repository_path(recommended_repo),
             class: "text-2xl font-bold text-blue-600 hover:text-blue-700 hover:underline" do %>
             <%= @comparison.recommended_repo_full_name %>
           <% end %>
-          <% if safe_github_url(recommended_repo.html_url) %>
-            <%= link_to safe_github_url(recommended_repo.html_url),
-              target: "_blank",
-              rel: "noopener noreferrer",
-              class: "inline-flex items-center gap-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors" do %>
-              <%= heroicon "arrow-top-right-on-square", variant: :outline, options: { class: "w-4 h-4" } %>
-              GitHub
+          <div class="flex items-center gap-2">
+            <% if recommended_repo.safe_github_url %>
+              <%= link_to recommended_repo.safe_github_url,
+                target: "_blank",
+                rel: "noopener noreferrer",
+                class: "inline-flex items-center gap-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors" do %>
+                <%= heroicon "arrow-top-right-on-square", variant: :outline, options: { class: "w-4 h-4" } %>
+                GitHub
+              <% end %>
             <% end %>
-          <% end %>
+            <%= link_to repository_path(recommended_repo),
+              class: "inline-flex items-center gap-1 px-3 py-1 text-sm bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg transition-colors font-medium" do %>
+              <%= heroicon "document-text", variant: :outline, options: { class: "w-4 h-4" } %>
+              Analyze
+              <%= heroicon "arrow-right", variant: :outline, options: { class: "w-3 h-3" } %>
+            <% end %>
+          </div>
         <% else %>
           <%= link_to "https://github.com/#{@comparison.recommended_repo_full_name}",
             target: "_blank",
@@ -83,6 +93,7 @@
   <h3 class="text-xl font-bold text-gray-900 mb-4">All Options Ranked</h3>
 
   <% @comparison.comparison_repositories.order(:rank).each do |cr| %>
+    <% repo = RepositoryDecorator.new(cr.repository) %>
     <div class="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
       <!-- Rank and Name -->
       <div class="flex items-start gap-4 mb-4">
@@ -93,33 +104,41 @@
         <div class="flex-1">
           <div class="flex items-center justify-between gap-3 mb-2">
             <div class="flex items-baseline gap-3">
-              <%= link_to repository_path(cr.repository),
+              <%= link_to repository_path(repo),
                 class: "text-xl font-bold text-gray-900 hover:text-blue-600 hover:underline" do %>
-                <%= cr.repository.full_name %>
+                <%= repo.full_name %>
               <% end %>
               <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-semibold rounded-full">
                 <%= cr.score %>/100
               </span>
             </div>
-            <% if safe_github_url(cr.repository.html_url) %>
-              <%= link_to safe_github_url(cr.repository.html_url),
-                target: "_blank",
-                rel: "noopener noreferrer",
-                class: "inline-flex items-center gap-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors flex-shrink-0" do %>
-                <%= heroicon "arrow-top-right-on-square", variant: :outline, options: { class: "w-4 h-4" } %>
-                GitHub
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <% if repo.safe_github_url %>
+                <%= link_to repo.safe_github_url,
+                  target: "_blank",
+                  rel: "noopener noreferrer",
+                  class: "inline-flex items-center gap-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors" do %>
+                  <%= heroicon "arrow-top-right-on-square", variant: :outline, options: { class: "w-4 h-4" } %>
+                  GitHub
+                <% end %>
               <% end %>
-            <% end %>
+              <%= link_to repository_path(repo),
+                class: "inline-flex items-center gap-1 px-3 py-1 text-sm bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg transition-colors font-medium" do %>
+                <%= heroicon "document-text", variant: :outline, options: { class: "w-4 h-4" } %>
+                Analyze This Repo
+                <%= heroicon "arrow-right", variant: :outline, options: { class: "w-3 h-3" } %>
+              <% end %>
+            </div>
           </div>
 
-          <p class="text-gray-600 text-sm mb-3"><%= cr.repository.description %></p>
+          <p class="text-gray-600 text-sm mb-3"><%= repo.description %></p>
 
           <!-- GitHub Stats -->
           <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
-            <span>⭐ <%= number_with_delimiter(cr.repository.stargazers_count) %></span>
-            <span>🍴 <%= number_with_delimiter(cr.repository.forks_count) %></span>
-            <% if cr.repository.language.present? %>
-              <span>💻 <%= cr.repository.language %></span>
+            <span>⭐ <%= number_with_delimiter(repo.stargazers_count) %></span>
+            <span>🍴 <%= number_with_delimiter(repo.forks_count) %></span>
+            <% if repo.language.present? %>
+              <span>💻 <%= repo.language %></span>
             <% end %>
           </div>
 

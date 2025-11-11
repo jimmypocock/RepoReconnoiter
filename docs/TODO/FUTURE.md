@@ -6,18 +6,11 @@ These are features to consider after the MVP is complete and stable in productio
 
 ## Enhanced Admin Features
 
-### Cost Tracking Dashboard
+### Enhanced Cost Tracking (Optional Future Enhancements)
 
-**Status**: Basic admin stats exist (total AI spend visible on homepage). This section describes an enhanced, detailed dashboard.
+**Note**: Basic enhanced cost dashboard has been moved to `TODO.md` Phase 5. Items below are optional extras.
 
-- [ ] Admin cost dashboard page (`/admin/costs`)
-  - Total spend today, this week, this month
-  - Spend by user (top 10 users leaderboard)
-  - Spend by model (gpt-5 vs gpt-5-mini breakdown)
-  - Daily spend chart (last 30 days visualization)
-  - Budget status: "$X.XX / $10.00 monthly budget" with progress bar
-  - Alert banner if approaching limit (>$8.00/month)
-- [ ] Implement spending cap enforcement
+- [ ] Implement hard spending cap enforcement
   - Check total monthly spend before allowing new comparisons
   - If over budget, show message to users
   - Admins can override budget limit
@@ -26,14 +19,10 @@ These are features to consider after the MVP is complete and stable in productio
   - Email admin when spend reaches 50%, 75%, 90% of monthly budget
   - Slack/Discord webhook integration for real-time alerts
 
-### Enhanced Whitelist Management
+### Waitlist/Access Request System (Future Enhancement)
 
-- [ ] Admin interface for whitelist management (`/admin/users`)
-  - List all users with whitelist status
-  - Filter: whitelisted, pending, all
-  - Bulk actions: "Whitelist selected users"
-  - Individual actions: Whitelist, Remove access, Make admin
-  - Show user's GitHub profile, comparisons count, cost spent
+**Note**: Basic whitelist management has been moved to `TODO.md` Phase 5. Items below are optional enhancements.
+
 - [ ] Waitlist/access request system
   - Shown to non-whitelisted authenticated users
   - "Request Access" button (records interest)
@@ -42,7 +31,9 @@ These are features to consider after the MVP is complete and stable in productio
   - Notify user when whitelisted (via Action Mailer)
   - Welcome email with getting started guide
 
-### Audit Logging
+### Audit Logging (Optional Enhancement)
+
+**Note**: Consider if needed after observing production usage patterns.
 
 - [ ] Create audit_logs table for structured logging
   - Track user actions (sign in, comparison created, whitelist changes)
@@ -54,79 +45,11 @@ These are features to consider after the MVP is complete and stable in productio
 
 ---
 
-## Tier 2 Deep Analysis (AI-Powered README & Issues Analysis)
-
-**Status**: Deferred post-MVP. Tier 1 (categorization) and Tier 3 (comparison) are working well. Tier 2 adds expensive deep-dive analysis.
-
-**Cost**: ~$0.05-0.10 per repository (10-20x more expensive than Tier 1)
-
-### Database Schema
-
-- [ ] **OPTIONAL**: Create `github_issues` table
-  - **Note**: May not be needed - can link directly to GitHub issues instead
-  - Alternative: Fetch issues on-demand via API (no storage)
-  - Decision: TBD during implementation based on value vs maintenance cost
-
-### Deep Analysis Features
-
-- [ ] Create `DeepAnalyzeRepositoryJob` (uses gpt-5)
-- [ ] Fetch README content from GitHub
-- [ ] Fetch recent issues (last 30 days) - either store or analyze on-the-fly
-- [ ] Implement comprehensive analysis prompt
-  - What problem does it solve?
-  - Who is it for?
-  - Quality signals from issues
-  - Learning opportunities
-  - Production readiness assessment
-- [ ] Store rich analysis data in `analyses` table (tier2 type)
-- [ ] Add expiration logic (cache for 30 days)
-
-### On-Demand Analysis UI
-
-- [ ] Add "Deep Analyze" button to repository cards
-- [ ] Queue analysis job when button clicked
-- [ ] Show loading state with Turbo Streams
-- [ ] Display deep analysis results in modal or expanded view
-- [ ] Rate limit: 3 deep dives per day for free tier
-- [ ] Add visual diff between Tier 1 and Tier 2 insights
-
-### Budget Controls for Tier 2
-
-- [ ] Implement daily spending cap for Tier 2 ($0.50/day max)
-- [ ] Pause analysis jobs if budget exceeded
-- [ ] Send alerts when approaching limits
-- [ ] Admin emergency "pause all Tier 2 AI" switch
-
----
-
 ## User Profile & Dashboard
 
-**Status**: Basic user authentication exists via Devise + GitHub OAuth. This section describes a full user dashboard experience.
+**Note**: Basic user profile page has been moved to `TODO.md` Phase 5. Items below are advanced personalization features.
 
-### User Profile Page
-
-- [ ] Create `users#show` route and action (current user only)
-- [ ] My Comparisons section
-  - List of user's comparisons with quick filters
-  - Edit/delete options
-  - Re-run with fresh data button
-  - Export to CSV/JSON
-- [ ] Usage Stats section
-  - Comparisons this month (chart/graph)
-  - AI cost spent (if admin)
-  - Rate limit status (X/25 comparisons today with visual indicator)
-  - Historical usage trends
-- [ ] Account Settings section
-  - GitHub profile info (read-only display)
-  - Email notification preferences
-  - Delete account option with confirmation
-- [ ] Admin section (admin users only)
-  - Quick link to Mission Control Jobs dashboard
-  - Quick link to enhanced cost tracking dashboard
-  - Quick link to whitelist management
-  - System health indicators
-
-### User Personalization
+### User Personalization (Future Enhancement)
 
 - [ ] Create user preferences (tech stack, interests)
 - [ ] Personalized recommendations based on user stack
@@ -170,6 +93,7 @@ These are features to consider after the MVP is complete and stable in productio
   - Helps users understand the comparison landscape at a glance
 
 **Benefits**:
+
 - Richer comparison context without extra AI cost
 - Better user understanding of how tools relate
 - Foundation for recommendation engine
@@ -177,46 +101,7 @@ These are features to consider after the MVP is complete and stable in productio
 
 ## UI/UX Polish
 
-### Skeleton Loaders for Infinite Scroll
-
-- [ ] Add skeleton loading states for pagination
-  - Show 2-3 pulsing gray card skeletons when loading next page
-  - Remove skeletons when real content arrives via Turbo Stream
-  - Provides visual feedback that content is loading (like Facebook/Twitter)
-  - Pure CSS + HTML (no React needed)
-  - **Note**: Basic skeleton loaders are in `TODO_UI.md` Phase 2 for tab content loading
-
-### Global Search (Cross-Tab Search)
-
-**Status**: V3 feature, deferred from V1 tab-based UI restructure
-
-- [ ] Unified search bar that searches both Comparisons AND Analyses
-- [ ] Results grouped by type with clear visual separation
-- [ ] Tab context preserved (e.g., search from Comparisons shows Comparison results first)
-- [ ] Advanced filters: "Search in: All | Comparisons | Analyses"
-- [ ] Performance optimization: Index both tables for fast cross-table search
-
-**Why Deferred**:
-- V1 focuses on tab-specific search (simpler, easier to understand)
-- Global search requires more complex UI (grouped results, context switching)
-- Need to validate that users want this feature before building
-- Can add in V3 after observing user behavior in V1/V2
-
-### Save/Star Functionality
-
-**Status**: V2 feature, deferred from V1 tab-based UI restructure
-
-- [ ] Star/bookmark comparisons and analyses
-- [ ] "My Starred" filter on each tab
-- [ ] Personal collections: group related items together
-- [ ] Export starred items as CSV/JSON
-- [ ] Email digest: weekly summary of starred items with updates
-
-**Why Deferred**:
-- V1 focuses on core discovery and comparison features
-- Starring requires additional UI elements (star icons, filters, collections page)
-- Can add in V2 once users have built up comparison/analysis history
-- Low friction to add later (non-breaking change)
+**Note**: Most UI/UX polish items have been moved to `TODO_UI.md` for V1 implementation. Items below are post-V1 enhancements.
 
 ## Advanced Features
 

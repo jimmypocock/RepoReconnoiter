@@ -5,6 +5,11 @@ class ComparisonsController < ApplicationController
   def index
     @presenter = SearchComparisonsPresenter.new(params)
     @pagy, @comparisons = pagy(@presenter.comparisons, items: 20)
+    @comparisons_count = @presenter.comparisons.count
+
+    # Fetch repositories for analyses tab
+    @repositories = Repository.order(updated_at: :desc).limit(50)
+    @repositories_count = Repository.count
   end
 
   def create
