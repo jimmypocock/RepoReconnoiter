@@ -269,7 +269,7 @@ GEM
     omniauth-rails_csrf_protection (1.0.2)
       actionpack (>= 4.2)
       omniauth (~> 2.0)
-    openai (0.34.1)
+    openai (0.35.1)
       connection_pool
     openssl (3.3.2)
     orm_adapter (0.5.0)
@@ -516,7 +516,7 @@ DEPENDENCIES
   octokit
   omniauth-github
   omniauth-rails_csrf_protection
-  openai (~> 0.34.1)
+  openai (~> 0.35.1)
   openssl (>= 3.3.1)
   pagy
   pg (~> 1.1)
