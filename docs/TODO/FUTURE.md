@@ -184,6 +184,39 @@ These are features to consider after the MVP is complete and stable in productio
   - Remove skeletons when real content arrives via Turbo Stream
   - Provides visual feedback that content is loading (like Facebook/Twitter)
   - Pure CSS + HTML (no React needed)
+  - **Note**: Basic skeleton loaders are in `TODO_UI.md` Phase 2 for tab content loading
+
+### Global Search (Cross-Tab Search)
+
+**Status**: V3 feature, deferred from V1 tab-based UI restructure
+
+- [ ] Unified search bar that searches both Comparisons AND Analyses
+- [ ] Results grouped by type with clear visual separation
+- [ ] Tab context preserved (e.g., search from Comparisons shows Comparison results first)
+- [ ] Advanced filters: "Search in: All | Comparisons | Analyses"
+- [ ] Performance optimization: Index both tables for fast cross-table search
+
+**Why Deferred**:
+- V1 focuses on tab-specific search (simpler, easier to understand)
+- Global search requires more complex UI (grouped results, context switching)
+- Need to validate that users want this feature before building
+- Can add in V3 after observing user behavior in V1/V2
+
+### Save/Star Functionality
+
+**Status**: V2 feature, deferred from V1 tab-based UI restructure
+
+- [ ] Star/bookmark comparisons and analyses
+- [ ] "My Starred" filter on each tab
+- [ ] Personal collections: group related items together
+- [ ] Export starred items as CSV/JSON
+- [ ] Email digest: weekly summary of starred items with updates
+
+**Why Deferred**:
+- V1 focuses on core discovery and comparison features
+- Starring requires additional UI elements (star icons, filters, collections page)
+- Can add in V2 once users have built up comparison/analysis history
+- Low friction to add later (non-breaking change)
 
 ## Advanced Features
 

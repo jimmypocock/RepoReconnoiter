@@ -17,7 +17,22 @@ class Github
   # @return [Array<Sawyer::Resource>] Array of issues
   def fetch_issues(full_name, **options)
     @client.issues(full_name, **options)
-  rescue Octokit::NotFound, Octokit::Error => e
+  rescue Octokit::NotFound
+    []
+  rescue Octokit::TooManyRequests => e
+    Sentry.capture_exception(e, extra: {
+      endpoint: "issues",
+      full_name:,
+      rate_limit_remaining: e.response_headers["X-RateLimit-Remaining"],
+      rate_limit_reset: e.response_headers["X-RateLimit-Reset"]
+    })
+    []
+  rescue Octokit::Error => e
+    Sentry.capture_exception(e, extra: {
+      endpoint: "issues",
+      full_name:,
+      error_type: e.class.name
+    })
     []
   end
 
@@ -29,6 +44,21 @@ class Github
     readme
   rescue Octokit::NotFound
     nil
+  rescue Octokit::TooManyRequests => e
+    Sentry.capture_exception(e, extra: {
+      endpoint: "readme",
+      full_name:,
+      rate_limit_remaining: e.response_headers["X-RateLimit-Remaining"],
+      rate_limit_reset: e.response_headers["X-RateLimit-Reset"]
+    })
+    nil
+  rescue Octokit::Error => e
+    Sentry.capture_exception(e, extra: {
+      endpoint: "readme",
+      full_name:,
+      error_type: e.class.name
+    })
+    nil
   end
 
   # Generic search for repositories using any query string
@@ -37,6 +67,27 @@ class Github
   # @return [Sawyer::Resource] Search results with 'items' array
   def search(query, **options)
     @client.search_repositories(query, **options)
+  rescue Octokit::TooManyRequests => e
+    Sentry.capture_exception(e, extra: {
+      endpoint: "search_repositories",
+      query:,
+      rate_limit_remaining: e.response_headers["X-RateLimit-Remaining"],
+      rate_limit_reset: e.response_headers["X-RateLimit-Reset"]
+    })
+    raise
+  rescue Faraday::TimeoutError, Faraday::ConnectionFailed => e
+    Sentry.capture_exception(e, extra: {
+      endpoint: "search_repositories",
+      query:
+    })
+    raise
+  rescue Octokit::Error => e
+    Sentry.capture_exception(e, extra: {
+      endpoint: "search_repositories",
+      query:,
+      error_type: e.class.name
+    })
+    raise
   end
 
   # Search for trending repositories (recently created, sorted by stars)

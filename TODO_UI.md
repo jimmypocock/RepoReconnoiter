@@ -1,8 +1,8 @@
 # UI Restructure: Tab-Based Interface
 
-**Status**: Planning
+**Status**: Ready for Implementation
 **Priority**: High
-**Estimated Effort**: 2-3 days
+**Estimated Effort**: 4-5 days (11 implementation phases)
 
 ---
 
@@ -101,10 +101,12 @@ This restructure improves discoverability, reduces cognitive load, and creates a
 - Count badges showing total items in each tab
 - Active state: Underline + bold text + blue color
 - Preserves scroll position when switching tabs
+- **Last Active Tab Memory**: Store user's last active tab in localStorage, restore on return visit
 
 **Implementation Notes**:
 - Use Stimulus controller for tab switching (`tabs_controller.js`)
 - Store active tab in URL params (bookmarkable, shareable)
+- Store last active tab in localStorage for returning users (fallback to comparisons)
 - Turbo Frame lazy loading for inactive tabs (performance)
 
 ---
@@ -116,7 +118,13 @@ This restructure improves discoverability, reduces cognitive load, and creates a
 **Layout**:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  [Search...]  [Date ▾]  [Sort ▾]  [Apply Filters]  [Clear]     │
+│  [Search comparisons...]  🔍                                    │
+│  ┌─────────────────────────────────────────────────────────────┐
+│  │ 💡 Try: "auth", "background jobs", "python web frameworks" │
+│  │ Recent: "rails orm", "nodejs testing"                      │  ← localStorage
+│  └─────────────────────────────────────────────────────────────┘
+│                                                                 │
+│  [Date ▾]  [Sort ▾]  [Apply Filters]  [Clear]                 │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌───────────────────────────────────────────────────────────┐ │
@@ -140,10 +148,16 @@ This restructure improves discoverability, reduces cognitive load, and creates a
 ```
 
 **Components**:
-- **Filter Bar**: Search, date range, sort order (existing functionality)
+- **Search Bar with Suggestions**: Tab-specific search with example queries and recent searches
+  - Suggestions dropdown on focus (show example searches)
+  - Recent searches stored in localStorage (last 5 searches)
+  - Clear search history option
+- **Filter Bar**: Date range, sort order (existing functionality)
+  - **Filter Persistence**: Store filters in URL params for bookmarkability
+  - Example: `/?tab=comparisons&search=rails&date=7d&sort=stars`
 - **Comparison Cards**: Existing design with NEW cross-link buttons
 - **Infinite Scroll**: Keep existing implementation
-- **Empty State**: Show when no comparisons match filters
+- **Empty State**: Show when no comparisons exist or match filters (see Empty States section)
 
 **New Feature - Cross-linking**:
 - Each repository in comparison results gets "Analyze This Repo →" button
@@ -280,6 +294,218 @@ This restructure improves discoverability, reduces cognitive load, and creates a
 
 ---
 
+### 7. Empty States
+
+**Purpose**: Guide users when no content exists, reduce friction for new users
+
+**Comparisons Tab - No Results (Filter Applied)**:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  🔍 No comparisons found                                        │
+│                                                                 │
+│  No comparisons match "python testing" with current filters.   │
+│                                                                 │
+│  Try:                                                           │
+│  • Adjusting your search terms                                 │
+│  • Clearing filters                                            │
+│  • Creating a new comparison                                   │
+│                                                                 │
+│  [Clear Filters]  [New Comparison]                             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Comparisons Tab - No Comparisons Exist**:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  📊 No comparisons yet!                                         │
+│                                                                 │
+│  Create your first comparison to see AI-powered insights       │
+│  on the best open source tools for your needs.                 │
+│                                                                 │
+│  💡 Try searching for:                                         │
+│  • "Rails authentication library"                              │
+│  • "Python web framework for APIs"                             │
+│  • "Node.js testing framework"                                 │
+│                                                                 │
+│  [Create Comparison]                                           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Analyses Tab - No Results (Filter Applied)**:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  🔍 No analyses found                                           │
+│                                                                 │
+│  No repositories match your current filters.                   │
+│                                                                 │
+│  [Clear Filters]  [Analyze a Repository]                       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Analyses Tab - No Analyses Exist**:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  🔍 No analyses yet!                                            │
+│                                                                 │
+│  Analyze your first repository to see AI-powered insights      │
+│  like code quality, maintenance status, and use cases.         │
+│                                                                 │
+│  💡 Popular repositories to analyze:                           │
+│  [rails/rails]  [sidekiq/sidekiq]  [nodejs/node]              │
+│                                                                 │
+│  Or paste any GitHub URL:                                      │
+│  [https://github.com/owner/repo]  [Analyze]                   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Key Features**:
+- Contextual: Different empty state for "no results" vs "no data exists"
+- Actionable: Clear CTAs to resolve the empty state
+- Helpful: Example repos as clickable buttons to reduce friction
+- Friendly: Encouraging tone, not punitive
+
+---
+
+### 8. Loading & Progress States
+
+**Purpose**: Provide feedback during async operations, showcase real-time AI processing
+
+**Skeleton Loader for Tab Content** (while Turbo Frame loads):
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢           │
+│  ▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢  ▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢              │
+│                                                                 │
+│  ▢▢▢▢▢▢  ▢▢▢▢▢▢  ▢▢▢▢▢▢  ▢▢▢▢▢▢                              │
+│  ▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢           │
+│                                                                 │
+│  ▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢           │
+│  ▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢  ▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢▢              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Real-Time Progress Modal** (Comparison Creation via ActionCable):
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  🤖 Creating comparison...                           [Cancel]   │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  75%       │
+│                                                                 │
+│  ✓ Parsed your query (Rails background job library)           │
+│  ✓ Found 12 matching repositories                             │
+│  ⏳ Analyzing repositories with AI...                          │
+│  ⏳ Generating comparison insights...                          │
+│                                                                 │
+│  Estimated time: 15-20 seconds                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Real-Time Progress Modal** (Repository Analysis):
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  🔍 Analyzing sidekiq/sidekiq...                     [Cancel]   │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  60%       │
+│                                                                 │
+│  ✓ Fetched repository metadata                                │
+│  ✓ Downloaded README content                                  │
+│  ⏳ Running AI analysis...                                     │
+│                                                                 │
+│  Estimated time: 10-15 seconds                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Inline Loading State** (Analyze This Repo button):
+```
+[⏳ Analyzing...]  ← Button disabled, spinner icon
+```
+
+**Implementation Notes**:
+- **Skeleton Screens**: Pure CSS + HTML, animated shimmer effect
+- **Progress Modals**: ActionCable (Solid Cable) broadcasts from background jobs
+- **Cancel Functionality**: Interrupt background job if user cancels
+- **Optimistic Updates**: Show comparison/analysis immediately, update with final data when ready
+
+---
+
+### 9. Error & Rate Limit States
+
+**Purpose**: Handle failures gracefully, inform users about limits
+
+**Rate Limit Reached (25/day)**:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ⚠️ Daily limit reached (25/25 comparisons)                    │
+│                                                                 │
+│  You've used all your comparisons for today. Your limit        │
+│  resets in 8 hours (12:00 AM UTC).                            │
+│                                                                 │
+│  💡 While you wait:                                            │
+│  • Browse existing comparisons                                 │
+│  • Analyze repositories (unlimited)                            │
+│  • Explore trending repos                                      │
+│                                                                 │
+│  [Browse Comparisons →]  [Analyze Repos →]                     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Rate Limit Counter (Persistent UI Element)** ✅ CONFIRMED FOR V1:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Comparisons today: 23/25 remaining                            │  ← Top bar or footer
+└─────────────────────────────────────────────────────────────────┘
+```
+**Decision**: Always visible to help users understand limits and usage
+
+**Analysis Failed (GitHub API Error)**:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ❌ Analysis failed                                             │
+│                                                                 │
+│  Could not fetch repository data from GitHub.                  │
+│                                                                 │
+│  Possible reasons:                                              │
+│  • Repository is private or doesn't exist                      │
+│  • GitHub API rate limit reached (try again in 1 hour)        │
+│  • Network connection issue                                    │
+│                                                                 │
+│  [Try Again]  [Report Issue]                                   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Comparison Failed (AI Error)**:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ❌ Comparison failed                                           │
+│                                                                 │
+│  An error occurred while processing your request.              │
+│                                                                 │
+│  This might be a temporary issue. Please try again.            │
+│  If the problem persists, contact support.                     │
+│                                                                 │
+│  [Try Again]  [Go Back]                                        │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Key Features**:
+- **Actionable**: Clear next steps (wait, browse, try again)
+- **Informative**: Explain why and when limit resets
+- **Helpful**: Suggest alternative actions
+- **Non-punitive**: Friendly tone, not blaming the user
+
+---
+
+### 10. ~~Onboarding Tour~~ ✨ DEFERRED TO V2
+
+**Decision**: Hero section + empty states with examples are sufficient for V1 onboarding.
+
+**Future V2 Implementation** (when we add it):
+- 3-step guided tour: Comparisons Tab → Analyses Tab → Cross-Linking
+- Triggered on first authenticated session
+- Dismissible at any step
+- Stored in localStorage: `onboarding_completed: true`
+- Re-triggerable from help menu
+
+---
+
 ## User Flows
 
 ### Flow 1: New User Discovers Compare Feature
@@ -335,7 +561,7 @@ This restructure improves discoverability, reduces cognitive load, and creates a
   - [ ] `_comparison_tab_content.html.erb`
   - [ ] `_analyses_tab_content.html.erb`
 
-### Phase 2: Hero Section (Day 1)
+### Phase 2: Hero Section & Loading States (Day 1)
 
 - [ ] Build hero section component
 - [ ] Add localStorage persistence for dismissal
@@ -343,14 +569,21 @@ This restructure improves discoverability, reduces cognitive load, and creates a
 - [ ] Add dual CTA cards with icons
 - [ ] Add responsive design (mobile: stacked cards)
 - [ ] Wire up CTA click handlers (focus search, switch tabs)
+- [ ] Create skeleton loader component (`_skeleton_card.html.erb`)
+- [ ] Add CSS shimmer animation for loading states
+- [ ] ~~Create onboarding tour component~~ ✨ DEFERRED TO V2
 
-### Phase 3: Tabbed Interface (Day 2)
+### Phase 3: Tabbed Interface & Search (Day 2)
 
 - [ ] Refactor homepage controller to support tabs
 - [ ] Create Turbo Frames for tab content
 - [ ] Add tab switching logic (URL param sync)
+- [ ] Add last active tab persistence (localStorage)
 - [ ] Add count badges (comparisons count, repositories count)
 - [ ] Style active/inactive tab states
+- [ ] Add search suggestions dropdown for comparisons tab
+- [ ] Add recent searches tracking (localStorage, last 5)
+- [ ] Add filter persistence in URL params (search, date, sort)
 - [ ] Test tab switching performance
 
 ### Phase 4: Cross-Linking (Day 2)
@@ -361,12 +594,16 @@ This restructure improves discoverability, reduces cognitive load, and creates a
 - [ ] Add "Related Comparisons" section to repository show page
 - [ ] Wire up cross-link click handlers
 
-### Phase 5: Quick Actions Bar (Day 2)
+### Phase 5: Quick Actions Bar & Progress Modals (Day 2-3)
 
 - [ ] Build sticky action bar component
 - [ ] Add modal/slide-over for forms
 - [ ] Add FAB variant for mobile
 - [ ] Add menu slide-up animation (mobile)
+- [ ] Create progress modal component with ActionCable integration
+- [ ] Add real-time progress updates for comparison creation
+- [ ] Add real-time progress updates for repository analysis
+- [ ] Add cancel functionality for in-progress operations
 - [ ] Test on various screen sizes
 
 ### Phase 6: Analyses Tab Enhancements (Day 3)
@@ -377,23 +614,71 @@ This restructure improves discoverability, reduces cognitive load, and creates a
 - [ ] Add "Re-analyze" button logic (7+ days check)
 - [ ] Add analysis status indicators (queued/processing/complete)
 
-### Phase 7: Polish & Testing (Day 3)
+### Phase 7: Empty States & Error Handling (Day 3)
 
-- [ ] Add empty states for both tabs
-- [ ] Add loading states (skeleton screens)
-- [ ] Add error states (failed analysis, rate limited)
-- [ ] Test all user flows (see above)
-- [ ] Test on mobile devices
-- [ ] Accessibility audit (keyboard nav, ARIA labels)
-- [ ] Performance testing (tab switching, infinite scroll)
+- [ ] Add empty states for comparisons tab (no data, no results)
+- [ ] Add empty states for analyses tab (no data, no results)
+- [ ] Add clickable example repos to empty states
+- [ ] Add rate limit error state (25/day reached)
+- [ ] Add **persistent rate limit counter UI** (X/25 remaining) - always visible in header/footer
+- [ ] Add analysis failure error state
+- [ ] Add comparison failure error state
+- [ ] Test error recovery flows
 
-### Phase 8: Cleanup
+### Phase 8: Keyboard Shortcuts & Analytics (Day 3-4)
+
+- [ ] Create keyboard shortcuts controller
+- [ ] Add Cmd/Ctrl + K for quick search
+- [ ] Add Cmd/Ctrl + 1/2 for tab switching
+- [ ] Add / for focus search
+- [ ] Add Esc for dismiss modals
+- [ ] Add ? for keyboard shortcuts help modal
+- [ ] Add analytics event tracking (Microsoft Clarity)
+  - [ ] Track hero_cta_clicked event
+  - [ ] Track hero_dismissed event
+  - [ ] Track tab_switched event
+  - [ ] Track cross_link_clicked event
+  - [ ] Track comparison_created event
+  - [ ] Track analysis_created event
+  - [ ] Track rate_limit_hit event
+
+### Phase 9: Accessibility & Performance (Day 4)
+
+- [ ] Focus visible on all interactive elements
+- [ ] Focus trap in modals (Tab doesn't escape)
+- [ ] Announce tab content changes to screen readers
+- [ ] Color contrast ≥ 4.5:1 for all text
+- [ ] Reduced motion: disable animations if prefers-reduced-motion
+- [ ] Touch targets ≥ 44x44px on mobile
+- [ ] Form labels properly associated
+- [ ] Error messages announced to screen readers
+- [ ] Performance budget checks:
+  - [ ] Total page weight < 500KB (excluding images)
+  - [ ] First Contentful Paint < 1.5s
+  - [ ] Time to Interactive < 3s
+  - [ ] Lighthouse Performance score > 90
+  - [ ] Tab switching < 100ms perceived latency
+
+### Phase 10: Testing & QA (Day 4)
+
+- [ ] Test all user flows (see User Flows section)
+- [ ] Test on mobile devices (iOS, Android)
+- [ ] Test on different browsers (Chrome, Firefox, Safari)
+- [ ] Test keyboard navigation
+- [ ] Test screen reader compatibility
+- [ ] Test with slow network (throttling)
+- [ ] Test error scenarios (API failures, timeouts)
+
+### Phase 11: Cleanup & Deployment (Day 4-5)
 
 - [ ] Remove old `/repositories` index page (redirect to `/?tab=analyses`)
 - [ ] Update navigation links
 - [ ] Update documentation (README, OVERVIEW)
+- [ ] Final code review and cleanup
 - [ ] Deploy to production
 - [ ] Monitor analytics (tab usage, cross-link clicks)
+- [ ] Monitor performance metrics (Lighthouse)
+- [ ] Monitor error rates (Sentry/logs)
 
 ---
 
@@ -410,6 +695,26 @@ This restructure improves discoverability, reduces cognitive load, and creates a
 - **Comparisons**: Blue theme (`bg-blue-50`, `text-blue-600`, `border-blue-200`)
 - **Analyses**: Purple theme (`bg-purple-50`, `text-purple-600`, `border-purple-200`)
 - Consistent use throughout tabs, cards, buttons
+
+### Mobile Navigation Pattern
+
+**V1 Approach: FAB with Menu**
+- Single floating action button (bottom-right)
+- Opens menu with "New Comparison" | "Analyze Repo" options
+- Pros: Doesn't take up permanent screen space
+- Cons: Less discoverable for new users
+
+**V2 Consideration: Bottom Tab Bar** (optional future enhancement)
+```
+┌──────────────────────┐
+│   [Content Area]     │
+├──────────────────────┤
+│ [📊] [🔍] [➕] [👤] │  ← Always visible tabs
+└──────────────────────┘
+```
+- Pros: More discoverable, follows mobile conventions
+- Cons: Takes up permanent screen space
+- **Recommendation**: Ship V1 with FAB, A/B test bottom tabs in V2 if users request
 
 ### Typography
 
@@ -464,21 +769,67 @@ This restructure improves discoverability, reduces cognitive load, and creates a
 
 ---
 
+## Keyboard Shortcuts
+
+### Power User Features
+
+**Primary Shortcuts**:
+- `Cmd/Ctrl + K` → Open quick search (context-aware: searches current tab)
+- `Cmd/Ctrl + 1` → Switch to Comparisons tab
+- `Cmd/Ctrl + 2` → Switch to Analyses tab
+- `Cmd/Ctrl + N` → New comparison/analysis (context-aware based on active tab)
+- `/` → Focus search bar (like GitHub)
+- `Esc` → Close modals, dismiss hero, clear focus
+- `?` → Open keyboard shortcuts help modal
+
+**Why Keyboard Shortcuts Matter**:
+- Improves efficiency for power users
+- Adds professional polish (like GitHub, Linear, Stripe)
+- Accessibility: helps users who prefer keyboard navigation
+- Low cost to implement, high perceived value
+
+**Implementation**:
+```javascript
+// app/javascript/controllers/keyboard_shortcuts_controller.js
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault()
+    openQuickSearch()
+  }
+})
+```
+
+---
+
 ## Technical Notes
 
 ### Stimulus Controllers
 
 **`tabs_controller.js`**:
 ```javascript
-// Handles tab switching, URL param sync, active state
+// Handles tab switching, URL param sync, active state, last tab memory
 connect() {
   this.syncTabFromURL()
+  this.restoreLastActiveTab()
 }
 
 switchTab(event) {
   const tab = event.target.dataset.tab
   this.updateURL(tab)
   this.activateTab(tab)
+  this.saveLastActiveTab(tab)
+  this.analytics.track('tab_switched', { tab })
+}
+
+restoreLastActiveTab() {
+  if (!window.location.search.includes('tab=')) {
+    const lastTab = localStorage.getItem('last_active_tab') || 'comparisons'
+    this.activateTab(lastTab)
+  }
+}
+
+saveLastActiveTab(tab) {
+  localStorage.setItem('last_active_tab', tab)
 }
 ```
 
@@ -494,6 +845,12 @@ connect() {
 dismiss() {
   localStorage.setItem('hero_dismissed', 'true')
   this.element.classList.add('hidden')
+  this.analytics.track('hero_dismissed')
+}
+
+ctaClick(event) {
+  const action = event.target.dataset.action
+  this.analytics.track('hero_cta_clicked', { action })
 }
 ```
 
@@ -506,6 +863,101 @@ openComparison() {
 
 openAnalysis() {
   this.showModal('analysis')
+}
+```
+
+**`search_controller.js`**:
+```javascript
+// Handles search suggestions, recent searches
+connect() {
+  this.loadRecentSearches()
+}
+
+search(query) {
+  this.saveRecentSearch(query)
+  // Perform search...
+}
+
+loadRecentSearches() {
+  const searches = JSON.parse(localStorage.getItem('recent_searches') || '[]')
+  this.renderSuggestions(searches)
+}
+
+saveRecentSearch(query) {
+  let searches = JSON.parse(localStorage.getItem('recent_searches') || '[]')
+  searches = [query, ...searches.filter(s => s !== query)].slice(0, 5)
+  localStorage.setItem('recent_searches', JSON.stringify(searches))
+}
+```
+
+**`progress_controller.js`**:
+```javascript
+// Handles real-time progress updates via ActionCable
+connect() {
+  this.subscription = this.createSubscription()
+}
+
+createSubscription() {
+  return consumer.subscriptions.create("ProgressChannel", {
+    received(data) {
+      this.updateProgress(data)
+    }
+  })
+}
+
+updateProgress(data) {
+  this.element.querySelector('.progress-bar').style.width = `${data.percentage}%`
+  this.element.querySelector('.progress-message').textContent = data.message
+
+  if (data.completed) {
+    this.redirect(data.url)
+  }
+}
+```
+
+**`keyboard_shortcuts_controller.js`**:
+```javascript
+// Handles keyboard shortcuts
+connect() {
+  document.addEventListener('keydown', this.handleKeyPress.bind(this))
+}
+
+handleKeyPress(e) {
+  // Cmd/Ctrl + K: Quick search
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault()
+    this.focusSearch()
+  }
+
+  // Cmd/Ctrl + 1/2: Switch tabs
+  if ((e.metaKey || e.ctrlKey) && e.key === '1') {
+    e.preventDefault()
+    this.switchToTab('comparisons')
+  }
+
+  // /: Focus search
+  if (e.key === '/' && !this.isInputFocused()) {
+    e.preventDefault()
+    this.focusSearch()
+  }
+
+  // ?: Show help modal
+  if (e.key === '?' && !this.isInputFocused()) {
+    e.preventDefault()
+    this.showHelpModal()
+  }
+}
+```
+
+**`analytics_controller.js`**:
+```javascript
+// Handles Microsoft Clarity event tracking
+track(event, properties = {}) {
+  if (window.clarity) {
+    clarity("event", event, properties)
+  }
+
+  console.log(`Analytics: ${event}`, properties) // Dev logging
 }
 ```
 
@@ -538,7 +990,15 @@ get "/repositories", to: redirect("/?tab=analyses")
 - **Lazy Load Tabs**: Only load active tab content initially
 - **Infinite Scroll**: Keep existing Turbo Stream implementation
 - **Modal Forms**: Use Turbo Frames for instant loading
-- **LocalStorage**: Cache hero dismissal, tab preference
+- **LocalStorage**: Cache hero dismissal, tab preference, recent searches
+- **Skeleton Screens**: CSS-only loading states (no JS overhead)
+- **ActionCable**: Real-time progress updates without polling
+- **Performance Budget**:
+  - Total page weight < 500KB (excluding images)
+  - First Contentful Paint < 1.5s
+  - Time to Interactive < 3s
+  - Lighthouse Performance score > 90
+  - Tab switching perceived latency < 100ms
 
 ---
 
@@ -569,7 +1029,21 @@ get "/repositories", to: redirect("/?tab=analyses")
 
 ### V2 Features (Post-Launch)
 
-- [ ] **Saved Searches**: Bookmark comparisons/analyses for later
+- [ ] **Onboarding Tour**: 3-step guided tour for first-time users
+  - Tour steps: Comparisons Tab → Analyses Tab → Cross-Linking
+  - Dismissible, re-triggerable from help menu
+  - Stored in localStorage: `onboarding_completed: true`
+  - Deferred from V1 (empty states + hero sufficient for launch)
+- [ ] **Saved Searches/Star Functionality**: Bookmark comparisons/analyses for later
+  - User can star favorite comparisons
+  - Create personal collections
+  - "My Starred" filter on each tab
+- [ ] **Bottom Tab Bar Mobile Navigation**: A/B test alternative to FAB
+  - Always-visible bottom navigation on mobile
+  - Test discoverability vs FAB approach
+- [ ] **Swipe Gestures**: Swipe to switch between tabs on mobile
+  - Natural mobile interaction pattern
+  - Only add if users request
 - [ ] **History Tab**: See personal activity feed (analyses created, comparisons viewed)
 - [ ] **Collections**: Group related repositories into custom lists
 - [ ] **Notifications**: Email when repo gets new analysis or comparison includes it
@@ -577,10 +1051,19 @@ get "/repositories", to: redirect("/?tab=analyses")
 
 ### V3 Features (Long-term)
 
+- [ ] **Global Search**: Search across both comparisons AND analyses simultaneously
+  - Single unified search bar
+  - Results grouped by type (Comparisons | Analyses)
+  - More complex implementation (deferred to V3)
+  - Note: V1 uses tab-specific search for simplicity
 - [ ] **Compare Mode**: Side-by-side diff view for two repos
+  - Select 2+ repos from comparison results
+  - Show stats, pros/cons, use cases in columns
 - [ ] **Export**: Download comparison/analysis as PDF/Markdown
 - [ ] **API**: Public API for programmatic access
 - [ ] **Browser Extension**: Analyze repos directly from GitHub
+
+**Note**: See `docs/TODO/FUTURE.md` for additional long-term features (admin dashboard, Tier 2 deep analysis, pro subscriptions, etc.)
 
 ---
 
@@ -609,6 +1092,30 @@ get "/repositories", to: redirect("/?tab=analyses")
    - Option A: Desktop + mobile (always accessible)
    - Option B: Mobile only (desktop has hero CTAs)
    - **Recommendation**: Option A (power users love shortcuts)
+
+6. **Should we track user's "last active tab" and default to it?** ✅ ANSWERED
+   - **Decision**: Yes, store in localStorage, fallback to comparisons
+   - Helps returning users land where they left off
+
+7. **Should search be global (across both tabs) or tab-specific?** ✅ ANSWERED
+   - **Decision**: Tab-specific for V1 (simpler implementation, easier to understand)
+   - Global search is a V3 feature (more complex, needs unified results UI)
+   - Each tab has its own search bar with context-specific suggestions
+
+8. **Should we add "Save/Star" functionality for comparisons?** ✅ ANSWERED
+   - **Decision**: Not in V1, defer to V2
+   - Focus V1 on core tab-based interface
+   - V2 can add starring, collections, and saved searches
+
+9. **Should onboarding tour be in V1 or V2?** ✅ ANSWERED
+   - **Decision**: Defer to V2
+   - Empty states + hero section are sufficient for V1
+   - Onboarding tour feels like extra polish, not core functionality
+
+10. **Should we show rate limit counter persistently or only when approaching limit?** ✅ ANSWERED
+    - **Decision**: Always show "X/25 remaining" in header/footer
+    - Helps users understand their usage and limits proactively
+    - Transparency builds trust with invite-only users
 
 ---
 
@@ -642,6 +1149,7 @@ get "/repositories", to: redirect("/?tab=analyses")
 ---
 
 **Created**: 2025-11-11
-**Last Updated**: 2025-11-11
+**Last Updated**: 2025-11-11 (Enhanced with V1 implementation details)
 **Owner**: Jimmy Pocock
-**Status**: Ready for Review
+**Status**: Ready for Implementation
+**Estimated Effort**: 4-5 days (11 phases)

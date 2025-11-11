@@ -17,8 +17,17 @@ class CreateComparisonJob < ApplicationJob
   #--------------------------------------
 
   def broadcast_retry_exhausted(error)
-    session_id = arguments[2]
+    user_id, query, session_id = arguments
     broadcaster = ComparisonProgressBroadcaster.new(session_id)
+
+    Sentry.capture_exception(error, extra: {
+      job: "CreateComparisonJob",
+      user_id:,
+      query:,
+      session_id:,
+      executions:
+    })
+
     broadcaster.broadcast_error(error_message_for(error))
   end
 

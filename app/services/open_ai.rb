@@ -49,6 +49,22 @@ class OpenAi
     track_cost(response, model, track_as)
 
     response
+  rescue Faraday::TimeoutError, Faraday::ConnectionFailed => e
+    Sentry.capture_exception(e, extra: {
+      endpoint: "chat.completions",
+      model:,
+      track_as:,
+      message_count: messages.size
+    })
+    raise
+  rescue OpenAI::Error => e
+    Sentry.capture_exception(e, extra: {
+      endpoint: "chat.completions",
+      error_type: e.class.name,
+      model:,
+      track_as:
+    })
+    raise
   end
 
   #--------------------------------------

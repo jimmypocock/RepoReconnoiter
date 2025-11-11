@@ -17,8 +17,17 @@ class CreateDeepAnalysisJob < ApplicationJob
   #--------------------------------------
 
   def broadcast_retry_exhausted(error)
-    session_id = arguments[2]
+    user_id, repository_id, session_id = arguments
     broadcaster = AnalysisProgressBroadcaster.new(session_id)
+
+    Sentry.capture_exception(error, extra: {
+      job: "CreateDeepAnalysisJob",
+      user_id:,
+      repository_id:,
+      session_id:,
+      executions:
+    })
+
     broadcaster.broadcast_error(error_message_for(error))
   end
 

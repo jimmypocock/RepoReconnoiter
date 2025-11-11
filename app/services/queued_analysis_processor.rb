@@ -129,6 +129,14 @@ class QueuedAnalysisProcessor
     @batch_cost += repo.analyses.current.first&.cost_usd || 0
     @processed_count += 1
   rescue => e
+    Sentry.capture_exception(e, extra: {
+      service: "QueuedAnalysisProcessor",
+      queued_analysis_id: queued.id,
+      repository_id: repo.id,
+      repository_full_name: repo.full_name,
+      analysis_type: queued.analysis_type,
+      retry_count: queued.retry_count
+    })
     handle_failure(queued, e)
     @failed_count += 1
   end
