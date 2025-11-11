@@ -22,6 +22,10 @@ Rails.application.routes.draw do
   # Comparison routes
   resources :comparisons, only: [ :create, :show ]
 
+  # Profile page (requires authentication)
+  get "profile", to: "profile#show"
+  delete "profile", to: "profile#destroy"
+
   # Repository routes (requires authentication)
   resources :repositories, only: [ :index, :show ] do
     member do
@@ -32,6 +36,7 @@ Rails.application.routes.draw do
   # Admin routes (requires authentication + admin status)
   namespace :admin do
     get "stats", to: "stats#index"
+    resources :users, only: [ :index, :create, :destroy ]
 
     # Mission Control for job monitoring
     authenticate :user do

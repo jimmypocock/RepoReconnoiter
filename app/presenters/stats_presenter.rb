@@ -49,6 +49,14 @@ class StatsPresenter
     @repositories_count ||= Repository.count
   end
 
+  def spend_by_model
+    @spend_by_model ||= AiCost.by_model_breakdown(AiCost.this_month)
+  end
+
+  def spend_by_user
+    @spend_by_user ||= AiCost.by_user_breakdown(AiCost.this_month, limit: 10)
+  end
+
   def total_views
     @total_views ||= calculate_total_views
   end

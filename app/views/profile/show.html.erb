@@ -1,0 +1,227 @@
+<div class="mb-8">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center">
+      <% if current_user.github_avatar_url.present? %>
+        <%= image_tag current_user.github_avatar_url, alt: current_user.github_username, class: "h-16 w-16 rounded-full mr-4" %>
+      <% else %>
+        <div class="h-16 w-16 rounded-full bg-gray-300 flex items-center justify-center mr-4">
+          <span class="text-gray-600 text-2xl"><%= current_user.github_username&.first&.upcase %></span>
+        </div>
+      <% end %>
+      <div>
+        <h1 class="text-4xl font-bold text-gray-900"><%= current_user.github_name || current_user.github_username %></h1>
+        <p class="text-gray-600">@<%= current_user.github_username %></p>
+        <% if current_user.admin? %>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mt-1">
+            Admin
+          </span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Usage Stats -->
+<div class="mb-8">
+  <h2 class="text-2xl font-semibold text-gray-800 mb-4">Usage Stats</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Comparisons This Month -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-medium text-gray-500">Comparisons This Month</h3>
+      </div>
+      <p class="text-3xl font-bold text-gray-900"><%= @comparisons_this_month %></p>
+    </div>
+
+    <!-- Analyses This Month -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-medium text-gray-500">Deep Analyses This Month</h3>
+      </div>
+      <p class="text-3xl font-bold text-gray-900"><%= @analyses_this_month %></p>
+    </div>
+
+    <!-- Remaining Comparisons Today -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-medium text-gray-500">Comparisons Remaining Today</h3>
+      </div>
+      <p class="text-3xl font-bold <%= @remaining_comparisons > 5 ? 'text-green-600' : 'text-orange-600' %>">
+        <%= @remaining_comparisons %>/<%= current_user.daily_comparison_limit %>
+      </p>
+    </div>
+
+    <!-- Remaining Analyses Today -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-medium text-gray-500">Analyses Remaining Today</h3>
+      </div>
+      <p class="text-3xl font-bold <%= @remaining_analyses > 1 ? 'text-green-600' : 'text-orange-600' %>">
+        <%= @remaining_analyses %>/<%= AnalysisDeep::RATE_LIMIT_PER_USER %>
+      </p>
+    </div>
+  </div>
+
+  <% if current_user.admin? %>
+    <div class="mt-4 bg-blue-50 rounded-lg shadow p-4">
+      <p class="text-sm text-blue-800">
+        <span class="font-semibold">Total AI Cost Spent:</span>
+        $<%= number_with_precision(@total_cost_spent, precision: 4) %>
+      </p>
+    </div>
+  <% end %>
+</div>
+
+<!-- My Comparisons -->
+<div class="mb-8">
+  <h2 class="text-2xl font-semibold text-gray-800 mb-4">My Comparisons</h2>
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <% if @comparisons.any? %>
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Query
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Repositories
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Views
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Created
+            </th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @comparisons.each do |comparison| %>
+            <tr>
+              <td class="px-6 py-4">
+                <div class="text-sm font-medium text-gray-900"><%= comparison.user_query %></div>
+                <% if comparison.categories.any? %>
+                  <div class="flex flex-wrap gap-1 mt-1">
+                    <% comparison.categories.first(3).each do |category| %>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                        <%= category.name %>
+                      </span>
+                    <% end %>
+                    <% if comparison.categories.count > 3 %>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                        +<%= comparison.categories.count - 3 %> more
+                      </span>
+                    <% end %>
+                  </div>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <%= comparison.repos_compared_count %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <%= comparison.view_count %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <%= time_ago_in_words(comparison.created_at) %> ago
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <%= link_to "View", comparison_path(comparison), class: "text-blue-600 hover:text-blue-900" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="text-center py-12">
+        <p class="text-gray-500 mb-4">You haven't created any comparisons yet.</p>
+        <%= link_to "Create Your First Comparison", root_path, class: "inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- My Deep Analyses -->
+<div class="mb-8">
+  <h2 class="text-2xl font-semibold text-gray-800 mb-4">My Deep Analyses</h2>
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <% if @analyses.any? %>
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Repository
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Model
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Cost
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Created
+            </th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @analyses.each do |analysis| %>
+            <tr>
+              <td class="px-6 py-4">
+                <div class="text-sm font-medium text-gray-900"><%= analysis.repository.full_name %></div>
+                <div class="text-xs text-gray-500"><%= analysis.repository.description&.truncate(60) %></div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <%= analysis.model_used %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                $<%= number_with_precision(analysis.cost_usd, precision: 4) %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <%= time_ago_in_words(analysis.created_at) %> ago
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <%= link_to "View", repository_path(analysis.repository), class: "text-blue-600 hover:text-blue-900" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="text-center py-12">
+        <p class="text-gray-500 mb-4">You haven't run any deep analyses yet.</p>
+        <%= link_to "Analyze a Repository", repositories_path, class: "inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- Account Settings -->
+<div class="mb-8">
+  <h2 class="text-2xl font-semibold text-gray-800 mb-4">Account Settings</h2>
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="space-y-4">
+      <div>
+        <h3 class="text-sm font-medium text-gray-700">GitHub Profile</h3>
+        <p class="text-sm text-gray-600 mt-1"><%= current_user.email %></p>
+        <%= link_to "View on GitHub", "https://github.com/#{current_user.github_username}", target: "_blank", class: "text-sm text-blue-600 hover:text-blue-900" %>
+      </div>
+
+      <div class="border-t border-gray-200 pt-4">
+        <h3 class="text-sm font-medium text-gray-700">Email Notifications</h3>
+        <p class="text-sm text-gray-500 mt-1">Coming soon...</p>
+      </div>
+
+      <div class="border-t border-gray-200 pt-4">
+        <h3 class="text-sm font-medium text-red-700 mb-2">Danger Zone</h3>
+        <p class="text-sm text-gray-600 mb-3">
+          Deleting your account will permanently remove all your comparisons and analyses. This action cannot be undone.
+        </p>
+        <%= button_to "Delete My Account", profile_path, method: :delete, data: { turbo_confirm: "Are you absolutely sure? This will permanently delete your account and all associated data." }, class: "px-4 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2" %>
+      </div>
+    </div>
+  </div>
+</div>

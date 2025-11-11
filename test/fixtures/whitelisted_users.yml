@@ -9,3 +9,9 @@ two:
   github_username: anotheruser
   email: another@example.com
   added_by: system
+
+three:
+  github_id: 11111
+  github_username: notloggedinyet
+  email: notloggedinyet@example.com
+  added_by: system

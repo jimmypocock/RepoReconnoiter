@@ -1,3 +1,5 @@
+<% repo = RepositoryDecorator.new(@repository) %>
+
 <div class="mb-8">
   <%= link_to repositories_path, class: "inline-flex items-center text-blue-600 hover:text-blue-700 mb-4" do %>
     <%= heroicon "chevron-left", variant: :outline, options: { class: "w-5 h-5 mr-1" } %>
@@ -5,21 +7,29 @@
   <% end %>
 
   <div class="flex items-start justify-between gap-4 mb-2">
-    <h1 class="text-4xl font-bold text-gray-900"><%= @repository.full_name %></h1>
+    <h1 class="text-4xl font-bold text-gray-900"><%= repo.full_name %></h1>
 
-    <% if safe_github_url(@repository.html_url) %>
-      <%= link_to safe_github_url(@repository.html_url),
-        target: "_blank",
-        rel: "noopener noreferrer",
-        class: "inline-flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition-colors" do %>
-        <%= heroicon "arrow-top-right-on-square", variant: :outline, options: { class: "w-5 h-5" } %>
-        View on GitHub
+    <div class="flex items-center gap-3">
+      <% if repo.safe_github_url %>
+        <%= link_to repo.safe_github_url,
+          target: "_blank",
+          rel: "noopener noreferrer",
+          class: "inline-flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition-colors" do %>
+          <%= heroicon "arrow-top-right-on-square", variant: :outline, options: { class: "w-5 h-5" } %>
+          View on GitHub
+        <% end %>
       <% end %>
-    <% end %>
+
+      <%= link_to root_path(tab: "comparisons"),
+        class: "inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors" do %>
+        <%= heroicon "magnifying-glass", variant: :outline, options: { class: "w-5 h-5" } %>
+        Compare Similar Tools
+      <% end %>
+    </div>
   </div>
 
-  <% if @repository.description.present? %>
-    <p class="text-gray-600 text-lg"><%= @repository.description %></p>
+  <% if repo.description.present? %>
+    <p class="text-gray-600 text-lg"><%= repo.description %></p>
   <% end %>
 </div>
 
@@ -28,21 +38,21 @@
   <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
     <div class="text-sm text-gray-600">Stars</div>
     <div class="text-2xl font-bold text-gray-900">
-      <%= number_with_delimiter(@repository.stargazers_count) %>
+      <%= number_with_delimiter(repo.stargazers_count) %>
     </div>
   </div>
 
   <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
     <div class="text-sm text-gray-600">Forks</div>
     <div class="text-2xl font-bold text-gray-900">
-      <%= number_with_delimiter(@repository.forks_count) %>
+      <%= number_with_delimiter(repo.forks_count) %>
     </div>
   </div>
 
   <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
     <div class="text-sm text-gray-600">Language</div>
     <div class="text-2xl font-bold text-gray-900">
-      <%= @repository.language || "N/A" %>
+      <%= repo.language_display %>
     </div>
   </div>
 
@@ -72,7 +82,7 @@
     </div>
 
     <%= button_to "Run Deep Analysis",
-      create_analysis_repository_path(@repository),
+      create_analysis_repository_path(repo),
       method: :post,
       class: "bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors",
       data: { turbo_stream: true, turbo_confirm: "This will cost ~$0.05-0.10. Continue?" } %>

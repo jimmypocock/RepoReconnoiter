@@ -54,9 +54,16 @@ class HomepageTest < ApplicationSystemTestCase
 
     visit root_path
 
-    assert_text "No comparisons found"
-    assert_text "Try adjusting your filters or search terms"
-    assert_link "Clear Filters"
+    # New empty state text
+    assert_text "No comparisons yet!"
+    assert_text "Create your first comparison to see AI-powered insights"
+
+    # Should show sign in CTA for unauthenticated users
+    assert_button "Sign In to Create Comparisons"
+
+    # Should show example queries
+    assert_text "Try searching for:"
+    assert_text "Rails authentication library"
   end
 
   test "authenticated user sees same empty state message" do
@@ -65,8 +72,15 @@ class HomepageTest < ApplicationSystemTestCase
 
     visit root_path
 
-    assert_text "No comparisons found"
-    assert_text "Try adjusting your filters or search terms"
-    assert_link "Clear Filters"
+    # New empty state text
+    assert_text "No comparisons yet!"
+    assert_text "Create your first comparison to see AI-powered insights"
+
+    # Should show create button for authenticated users
+    assert_button "Create Your First Comparison"
+
+    # Should show example queries
+    assert_text "Try searching for:"
+    assert_text "Rails authentication library"
   end
 end

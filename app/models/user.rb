@@ -19,6 +19,7 @@ class User < ApplicationRecord
 
   belongs_to :whitelisted_user, optional: true
   has_many :ai_costs, dependent: :nullify
+  has_many :analyses, dependent: :nullify
   has_many :comparisons, dependent: :nullify
 
   #--------------------------------------
@@ -41,8 +42,32 @@ class User < ApplicationRecord
     comparisons.where("created_at > ?", 24.hours.ago).count < daily_comparison_limit
   end
 
+  def analyses_count_this_month
+    analyses.where("created_at >= ?", Time.current.beginning_of_month).count
+  end
+
+  def comparisons_count_this_month
+    comparisons.where("created_at >= ?", Time.current.beginning_of_month).count
+  end
+
   def daily_comparison_limit
     20 # All users get 20/day for now
+  end
+
+  def remaining_analyses_today
+    limit = AnalysisDeep::RATE_LIMIT_PER_USER
+    used = AnalysisDeep.count_for_user_today(self)
+    [ limit - used, 0 ].max
+  end
+
+  def remaining_comparisons_today
+    limit = daily_comparison_limit
+    used = comparisons.where("created_at > ?", 24.hours.ago).count
+    [ limit - used, 0 ].max
+  end
+
+  def total_ai_cost_spent
+    analyses.sum(:cost_usd)
   end
 
   #--------------------------------------
