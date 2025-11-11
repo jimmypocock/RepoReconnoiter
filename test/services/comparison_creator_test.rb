@@ -23,7 +23,7 @@ class ComparisonCreatorTest < ActiveSupport::TestCase
       repos_compared_count: 2,
       input_tokens: 1000,
       output_tokens: 500,
-      model_used: "gpt-4o",
+      model_used: "gpt-5",
       cost_usd: 0.015,
       created_at: 1.day.ago
     )

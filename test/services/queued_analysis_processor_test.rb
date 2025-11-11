@@ -139,7 +139,7 @@ class QueuedAnalysisProcessorTest < ActiveSupport::TestCase
 
     result = QueuedAnalysisProcessor.process_batch
 
-    # Should track cost (will be very small with gpt-4o-mini, returned as BigDecimal or Float)
+    # Should track cost (will be very small with gpt-5-mini, returned as BigDecimal or Float)
     assert result[:cost].is_a?(Numeric)
     assert_operator result[:cost], :>, 0.0
   end
@@ -153,7 +153,7 @@ class QueuedAnalysisProcessorTest < ActiveSupport::TestCase
     @repository.update!(last_analyzed_at: 1.hour.ago)
     @repository.analyses.create!(
       type: "Analysis",
-      model_used: "gpt-4o-mini",
+      model_used: "gpt-5-mini",
       summary: "Already analyzed",
       use_cases: [ "Test" ],
       input_tokens: 100,

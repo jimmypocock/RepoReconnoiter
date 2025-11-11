@@ -1,3 +1,11 @@
+# Database Management Tasks
+#
+# Custom database tasks for syncing and managing data.
+# IMPORTANT: Only run sync tasks in development environment.
+#
+# Examples:
+#   bin/rails db:sync_from_production    # Pull production DB to local (requires PRODUCTION_DATABASE_URL env var)
+
 namespace :db do
   desc "Pull production database and load it locally"
   task sync_from_production: :environment do

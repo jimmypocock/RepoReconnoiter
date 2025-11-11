@@ -1,19 +1,22 @@
 class RepositoryFetcher
-  # Maximum repositories to fetch per comparison (cost control)
+  #--------------------------------------
+  # CONSTANTS
+  #--------------------------------------
+
   DEFAULT_LIMIT = 10
   MAX_LIMIT = 15
 
   attr_reader :github, :broadcaster, :user
+
+  #--------------------------------------
+  # PUBLIC INSTANCE METHODS
+  #--------------------------------------
 
   def initialize(broadcaster: nil, user: nil)
     @github = Github.new
     @broadcaster = broadcaster
     @user = user
   end
-
-  #--------------------------------------
-  # PUBLIC INSTANCE METHODS
-  #--------------------------------------
 
   def fetch_and_prepare(github_queries:, limit: DEFAULT_LIMIT)
     # Enforce maximum limit to prevent runaway costs
@@ -73,7 +76,7 @@ class RepositoryFetcher
 
         # Create analysis record (defaults to Analysis base class)
         repo.analyses.create!(
-          model_used: "gpt-4o-mini",
+          model_used: "gpt-5-mini",
           summary: result[:summary],
           use_cases: result[:use_cases],
           input_tokens: result[:input_tokens],
@@ -112,8 +115,6 @@ class RepositoryFetcher
               confidence_score: 1.0,
               assigned_by: "github_language"
             )
-
-            Rails.logger.info "  📌 Added technology category from GitHub language: #{repo.language}"
           end
         end
 
@@ -122,10 +123,8 @@ class RepositoryFetcher
 
         # Reload to pick up new associations
         repo.reload
-
-        Rails.logger.info "✅ Analyzed: #{repo.full_name}"
       rescue => e
-        Rails.logger.error "❌ Analysis failed for #{repo.full_name}: #{e.message}"
+        Sentry.capture_exception(e, extra: { repo_full_name: repo.full_name, step: "analysis" })
       end
     end
   end
@@ -163,10 +162,8 @@ class RepositoryFetcher
           all_repos << repo
           seen_full_names.add(repo.full_name)
         end
-
-        Rails.logger.info "Query #{idx + 1}: Found #{results.total_count} total, added #{new_repos.size} new (#{all_repos.size} unique so far)"
       rescue => e
-        Rails.logger.error "GitHub search error for query '#{search_query}': #{e.message}"
+        Sentry.capture_exception(e, extra: { query: search_query, query_index: idx })
       end
     end
 
@@ -193,7 +190,7 @@ class RepositoryFetcher
         repo.save!
         repositories << repo
       rescue => e
-        Rails.logger.error "Failed to save repository #{gh_repo.full_name}: #{e.message}"
+        Sentry.capture_exception(e, extra: { repo_full_name: gh_repo.full_name })
       end
     end
 

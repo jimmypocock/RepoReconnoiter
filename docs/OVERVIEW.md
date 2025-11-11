@@ -428,7 +428,7 @@ create_table :ai_analyses do |t|
   
   # What was analyzed
   t.string :analysis_type  # "summary", "categorization", "deep_dive", "issue_scan"
-  t.string :model_used     # "gpt-4o-mini", "claude-haiku", etc.
+  t.string :model_used     # "gpt-5-mini", "claude-haiku", etc.
   t.integer :input_tokens
   t.integer :output_tokens
   t.decimal :cost_usd, precision: 10, scale: 6

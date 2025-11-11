@@ -7,7 +7,7 @@ one:
   repos_compared_count: 3
   input_tokens: 1000
   output_tokens: 500
-  model_used: "gpt-4o"
+  model_used: "gpt-5"
   cost_usd: 0.015
 
 two:
@@ -19,5 +19,5 @@ two:
   repos_compared_count: 3
   input_tokens: 800
   output_tokens: 400
-  model_used: "gpt-4o"
+  model_used: "gpt-5"
   cost_usd: 0.012

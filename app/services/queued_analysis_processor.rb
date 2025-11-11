@@ -1,21 +1,22 @@
 class QueuedAnalysisProcessor
-  # Cost control: Max spend per batch run
-  BATCH_COST_LIMIT = 0.10  # $0.10 per batch (~100 repos at $0.001 each)
+  #--------------------------------------
+  # CONSTANTS
+  #--------------------------------------
 
-  # Batch size: How many to process per run
+  BATCH_COST_LIMIT = 0.10  # $0.10 per batch (~100 repos at $0.001 each)
   BATCH_SIZE = 20
 
   attr_reader :batch_cost, :failed_count, :processed_count
+
+  #--------------------------------------
+  # PUBLIC INSTANCE METHODS
+  #--------------------------------------
 
   def initialize
     @batch_cost = 0.0
     @processed_count = 0
     @failed_count = 0
   end
-
-  #--------------------------------------
-  # PUBLIC INSTANCE METHODS
-  #--------------------------------------
 
   def process_batch
     batch = QueuedAnalysis.ready_to_process.limit(BATCH_SIZE)
@@ -36,9 +37,7 @@ class QueuedAnalysisProcessor
   #--------------------------------------
 
   class << self
-    def process_batch
-      new.process_batch
-    end
+    delegate :process_batch, to: :new
   end
 
   private
@@ -46,51 +45,6 @@ class QueuedAnalysisProcessor
   #--------------------------------------
   # PRIVATE METHODS
   #--------------------------------------
-
-  def process_one(queued)
-    queued.mark_processing!
-
-    repo = queued.repository
-
-    # Skip if already analyzed recently
-    unless repo.needs_analysis?
-      queued.mark_completed!
-      @processed_count += 1
-      return
-    end
-
-    # Run analysis
-    analyzer = RepositoryAnalyzer.new
-    result = analyzer.analyze(repo)
-
-    # Create analysis record
-    repo.analyses.create!(
-      type: queued.analysis_type,
-      model_used: "gpt-4o-mini",
-      summary: result[:summary],
-      use_cases: result[:use_cases],
-      input_tokens: result[:input_tokens],
-      output_tokens: result[:output_tokens],
-      is_current: true
-    )
-
-    # Create category associations
-    assign_categories(repo, result[:categories])
-
-    # Auto-assign technology category from GitHub language
-    assign_language_category(repo)
-
-    # Update timestamp and mark complete
-    repo.update!(last_analyzed_at: Time.current)
-    queued.mark_completed!
-
-    # Track cost
-    @batch_cost += repo.analyses.current.first&.cost_usd || 0
-    @processed_count += 1
-  rescue => e
-    handle_failure(queued, e)
-    @failed_count += 1
-  end
 
   def assign_categories(repo, categories)
     category_matcher = CategoryMatcher.new
@@ -132,5 +86,50 @@ class QueuedAnalysisProcessor
 
     # Retry if eligible
     queued.retry! if queued.can_retry?
+  end
+
+  def process_one(queued)
+    queued.mark_processing!
+
+    repo = queued.repository
+
+    # Skip if already analyzed recently
+    unless repo.needs_analysis?
+      queued.mark_completed!
+      @processed_count += 1
+      return
+    end
+
+    # Run analysis
+    analyzer = RepositoryAnalyzer.new
+    result = analyzer.analyze(repo)
+
+    # Create analysis record
+    repo.analyses.create!(
+      type: queued.analysis_type,
+      model_used: "gpt-5-mini",
+      summary: result[:summary],
+      use_cases: result[:use_cases],
+      input_tokens: result[:input_tokens],
+      output_tokens: result[:output_tokens],
+      is_current: true
+    )
+
+    # Create category associations
+    assign_categories(repo, result[:categories])
+
+    # Auto-assign technology category from GitHub language
+    assign_language_category(repo)
+
+    # Update timestamp and mark complete
+    repo.update!(last_analyzed_at: Time.current)
+    queued.mark_completed!
+
+    # Track cost
+    @batch_cost += repo.analyses.current.first&.cost_usd || 0
+    @processed_count += 1
+  rescue => e
+    handle_failure(queued, e)
+    @failed_count += 1
   end
 end

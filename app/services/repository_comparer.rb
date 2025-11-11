@@ -1,13 +1,13 @@
 class RepositoryComparer
   attr_reader :ai
 
-  def initialize
-    @ai = OpenAi.new
-  end
-
   #--------------------------------------
   # PUBLIC INSTANCE METHODS
   #--------------------------------------
+
+  def initialize
+    @ai = OpenAi.new
+  end
 
   # Tier 3: Compares multiple repositories and creates comparison record
   # Returns: Comparison model instance with all associations
@@ -25,8 +25,8 @@ class RepositoryComparer
           repositories: repo_data
         ) }
       ],
-      model: "gpt-4o",
-      temperature: 0.3,
+      model: "gpt-5",
+      reasoning_effort: "medium",
       response_format: { type: "json_object" },
       track_as: "repository_comparison"
     )
@@ -127,7 +127,7 @@ class RepositoryComparer
       recommendation_reasoning: comparison_data["recommendation_reasoning"],
       ranking_results: comparison_data,
       repos_compared_count: comparison_data["ranking"].size,
-      model_used: "gpt-4o",
+      model_used: "gpt-5",
       input_tokens: input_tokens,
       output_tokens: output_tokens
     )

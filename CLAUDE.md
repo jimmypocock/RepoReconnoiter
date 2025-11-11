@@ -39,7 +39,7 @@ RepoReconnoiter is an Open Source Intelligence Dashboard that analyzes GitHub tr
 - **Database**: PostgreSQL 17 (production: Render managed)
 - **Background Jobs**: Solid Queue (database-backed, no Redis needed)
 - **Job Scheduling**: Solid Queue recurring tasks (see `config/recurring.yml`)
-- **AI Provider**: OpenAI (gpt-4o-mini for categorization, gpt-4o for comparisons)
+- **AI Provider**: OpenAI (gpt-5-mini for categorization, gpt-5 for comparisons and deep analysis)
 - **Authentication**: Devise + OmniAuth GitHub (invite-only whitelist system)
 - **Rate Limiting**: Rack::Attack (25/day per user, 5/day per IP)
 - **Analytics**: Microsoft Clarity (CSP-friendly, free)
@@ -224,8 +224,8 @@ Services use action-oriented names WITHOUT "Service" suffix:
 ### Data Flow
 
 1. **GitHub API Sync**: Solid Queue recurring job fetches trending repos from GitHub API
-2. **Tier 1 Processing (Cheap)**: gpt-4o-mini categorizes repos using metadata + description
-3. **Tier 2 Processing (Expensive)**: gpt-4o performs deep analysis on-demand (README + issues)
+2. **Tier 1 Processing (Cheap)**: gpt-5-mini categorizes repos using metadata + description
+3. **Tier 2 Processing (Expensive)**: gpt-5 performs deep analysis on-demand (README + issues)
 4. **Tier 3 Processing (Comparison)**: Multi-query GitHub search, merge/dedupe, AI-powered comparison with real-time progress tracking
 5. **Real-Time Progress Updates**: ActionCable broadcasts comparison creation progress to browser via Solid Cable
 6. **Caching Strategy**: Aggressive caching to minimize AI API costs - repos only re-analyzed if README changes or significant activity detected
@@ -238,7 +238,7 @@ Transparent wrapper for OpenAI API that automatically tracks costs and enforces 
 
 **Key Features:**
 
-- **Model Whitelisting**: Only allows `gpt-4o-mini` and `gpt-4o` with explicit pricing
+- **Model Whitelisting**: Only allows `gpt-5-mini` and `gpt-5` with explicit pricing
 - **Automatic Cost Tracking**: Every API call updates `ai_costs` table with daily rollup
 - **Transparent API**: Returns same response object as `OpenAI::Client`
 - **Usage Tracking**: Logs model, tokens, and cost for every request
@@ -251,7 +251,7 @@ response = ai.chat(
     { role: "system", content: "You are a helpful assistant" },
     { role: "user", content: "Hello!" }
   ],
-  model: "gpt-4o-mini",
+  model: "gpt-5-mini",
   temperature: 0.3,
   track_as: "description_of_what_this_does"  # Optional: helps with debugging
 )
@@ -559,7 +559,7 @@ The app implements several strategies to keep AI API costs under $10/month:
 1. **Automatic Cost Tracking**: `OpenAi` service automatically tracks all API calls to `ai_costs` table with daily rollup
 2. **Model Whitelisting**: Only allow pre-approved models with known pricing to prevent cost surprises
 3. **Selective Processing**: Only analyze repos that pass metadata filters (stars > 100, active within 30 days, relevant language)
-4. **Tiered AI Models**: Use cheap models (gpt-4o-mini ~$0.001/repo) for categorization, expensive models only for deep dives
+4. **Tiered AI Models**: Use cheap models (gpt-5-mini ~$0.001/repo) for categorization, expensive models only for deep dives
 5. **Aggressive Caching**: Track `readme_sha` to detect changes; don't re-analyze unless content changed or 7+ days passed
 6. **Batch Processing**: Queue repos during the day, process in nightly batches (limit 50/day)
 7. **Multi-Query Strategy**: Use 2-3 GitHub queries to get comprehensive results, reducing need for expensive AI filtering
@@ -611,7 +611,7 @@ class AnalyzeRepositoryJob < ApplicationJob
       use_cases: result[:use_cases],
       input_tokens: result[:input_tokens],
       output_tokens: result[:output_tokens],
-      model_used: "gpt-4o-mini",
+      model_used: "gpt-5-mini",
       is_current: true
     )
 
@@ -687,8 +687,8 @@ end
   - `ci:lint`: Run RuboCop linter
   - `ci:test`: Run all tests (unit + system)
 - `lib/tasks/analyze.rake`: Repository analysis tasks
-  - `analyze:basic` (REPO='owner/name'): Run basic analysis on a single repo (Tier 1, gpt-4o-mini)
-  - `analyze:deep` (REPO='owner/name'): Run deep analysis on a single repo (Tier 2, gpt-4o, expensive)
+  - `analyze:basic` (REPO='owner/name'): Run basic analysis on a single repo (Tier 1, gpt-5-mini)
+  - `analyze:deep` (REPO='owner/name'): Run deep analysis on a single repo (Tier 2, gpt-5, cheaper with 272K context)
 - `lib/tasks/comparisons.rake`: Comparison management tasks
   - `comparisons:create` (QUERY='...'): Create a new comparison (parse → fetch → analyze → compare)
   - `comparisons:search["query"]`: Search for existing comparisons matching a query

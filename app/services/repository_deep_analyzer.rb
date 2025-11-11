@@ -1,17 +1,17 @@
 class RepositoryDeepAnalyzer
   attr_reader :ai, :broadcaster, :github
 
+  #--------------------------------------
+  # PUBLIC INSTANCE METHODS
+  #--------------------------------------
+
   def initialize(broadcaster: nil)
     @ai = OpenAi.new
     @github = Github.new
     @broadcaster = broadcaster
   end
 
-  #--------------------------------------
-  # PUBLIC INSTANCE METHODS
-  #--------------------------------------
-
-  # Performs deep analysis of a repository using gpt-4o
+  # Performs deep analysis of a repository using gpt-5
   # Fetches README, recent issues, and performs comprehensive analysis
   # Returns: Hash with all 5 analysis fields plus token counts
   def analyze(repository)
@@ -27,7 +27,7 @@ class RepositoryDeepAnalyzer
     issues_data = fetch_recent_issues(repository)
 
     # Step 3: Run AI analysis
-    broadcaster&.broadcast_step("running_analysis", message: "Running deep AI analysis with gpt-4o...")
+    broadcaster&.broadcast_step("running_analysis", message: "Running deep AI analysis with gpt-5...")
     response = ai.chat(
       messages: [
         { role: "system", content: Prompter.render("repository_deep_analyzer_system") },
@@ -37,8 +37,8 @@ class RepositoryDeepAnalyzer
           issues_data: issues_data
         ) }
       ],
-      model: "gpt-4o",
-      temperature: 0.3,
+      model: "gpt-5",
+      reasoning_effort: "medium",
       response_format: { type: "json_object" },
       track_as: "repository_deep_analysis"
     )
@@ -78,8 +78,6 @@ class RepositoryDeepAnalyzer
     # Skip if already fetched recently (within last hour)
     return if repository.readme_content.present? && repository.readme_fetched_at.present? && repository.readme_fetched_at > 1.hour.ago
 
-    Rails.logger.info "Fetching README for #{repository.full_name}..."
-
     content = github.fetch_readme(repository.full_name)
 
     if content.present?
@@ -88,9 +86,6 @@ class RepositoryDeepAnalyzer
         readme_fetched_at: Time.current,
         readme_length: content.length
       )
-      Rails.logger.info "  ✅ README fetched (#{content.length} bytes)"
-    else
-      Rails.logger.warn "  ⚠️  No README found"
     end
   end
 

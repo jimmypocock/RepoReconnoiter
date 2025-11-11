@@ -1,15 +1,15 @@
 class RepositoryAnalyzer
   attr_reader :ai
 
-  def initialize
-    @ai = OpenAi.new
-  end
-
   #--------------------------------------
   # PUBLIC INSTANCE METHODS
   #--------------------------------------
 
-  # Analyzes and categorizes a repository using gpt-4o-mini
+  def initialize
+    @ai = OpenAi.new
+  end
+
+  # Analyzes and categorizes a repository using gpt-5-mini
   # Returns: { categories: [...], summary: "...", use_cases: "...", input_tokens:, output_tokens: }
   def analyze(repository)
     available_categories = Category.all.group_by(&:category_type)
@@ -19,8 +19,8 @@ class RepositoryAnalyzer
         { role: "system", content: Prompter.render("repository_analyzer_system") },
         { role: "user", content: Prompter.render("repository_analyzer_build", repository:, available_categories:) }
       ],
-      model: "gpt-4o-mini",
-      temperature: 0.3,
+      model: "gpt-5-mini",
+      reasoning_effort: "minimal",
       response_format: { type: "json_object" },
       track_as: "repository_analysis"
     )
@@ -39,6 +39,10 @@ class RepositoryAnalyzer
       output_tokens: response.usage.completion_tokens
     }
   end
+
+  #--------------------------------------
+  # CLASS METHODS
+  #--------------------------------------
 
   class << self
     delegate :analyze, to: :new

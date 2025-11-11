@@ -41,11 +41,15 @@ class RepositorySyncer
       synced += 1
       repositories << repo
     rescue => e
-      Rails.logger.error "❌ Error syncing repo #{item.full_name}: #{e.message}"
+      Sentry.capture_exception(e, extra: { repo_full_name: item.full_name, step: "sync" })
     end
 
     { created:, repositories:, synced:, updated: }
   end
+
+  #--------------------------------------
+  # CLASS METHODS
+  #--------------------------------------
 
   class << self
     delegate :sync_trending, to: :new

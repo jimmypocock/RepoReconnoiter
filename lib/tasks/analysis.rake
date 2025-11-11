@@ -1,6 +1,16 @@
+# Repository Analysis Tasks
+#
+# Run AI-powered analysis on GitHub repositories.
+# - basic: Quick categorization using gpt-5-mini (~$0.001 per repo)
+# - deep: Comprehensive analysis using gpt-5 (~$0.05-0.10 per repo, budget-limited)
+#
+# Examples:
+#   REPO='mperham/sidekiq' bin/rails analysis:basic    # Basic analysis (cheap, fast)
+#   REPO='rails/rails' bin/rails analysis:deep         # Deep analysis (expensive, slow)
+#   REPO='facebook/react' bin/rails analysis:basic     # Another basic example
+
 namespace :analysis do
   desc "Run basic analysis on a repository (Tier 1 categorization)"
-  desc "Usage: REPO='owner/name' bin/rails analyze:basic"
   task basic: :environment do
     full_name = ENV["REPO"]
 
@@ -49,14 +59,14 @@ namespace :analysis do
     end
 
     # Run basic analysis
-    puts "\n🤖 Running Analysis (gpt-4o-mini)..."
+    puts "\n🤖 Running Analysis (gpt-5-mini)..."
 
     analyzer = RepositoryAnalyzer.new
     result = analyzer.analyze(repo)
 
     # Create analysis record (defaults to Analysis base class)
     analysis = repo.analyses.create!(
-      model_used: "gpt-4o-mini",
+      model_used: "gpt-5-mini",
       summary: result[:summary],
       use_cases: result[:use_cases],
       input_tokens: result[:input_tokens],
@@ -83,7 +93,6 @@ namespace :analysis do
   end
 
   desc "Run deep analysis on a repository (admin only, expensive ~$0.05-0.10)"
-  desc "Usage: REPO='owner/name' bin/rails analyze:deep"
   task deep: :environment do
     full_name = ENV["REPO"]
 
@@ -98,7 +107,7 @@ namespace :analysis do
       puts "  REPO='mperham/sidekiq' bin/rails analyze:deep"
       puts "  REPO='rails/rails' bin/rails analyze:deep"
       puts "  REPO='facebook/react' bin/rails analyze:deep"
-      puts "\n⚠️  WARNING: This uses gpt-4o and costs ~$0.05-0.10 per repo!"
+      puts "\n⚠️  WARNING: This uses gpt-5 and costs ~$0.05-0.10 per repo!"
       puts "=" * 80
       puts ""
       exit
@@ -108,7 +117,7 @@ namespace :analysis do
     puts "🔬 DEEP REPOSITORY ANALYSIS"
     puts "=" * 80
     puts "Repository: #{full_name}"
-    puts "⚠️  Using gpt-4o (expensive model)"
+    puts "⚠️  Using gpt-5 (expensive model)"
     puts "=" * 80
 
     # Check budget
@@ -144,7 +153,7 @@ namespace :analysis do
     end
 
     # Run deep analysis
-    puts "\n🔬 Running Deep Analysis (gpt-4o)..."
+    puts "\n🔬 Running Deep Analysis (gpt-5)..."
     puts "This will take 30-60 seconds and cost ~$0.05-0.10"
     puts ""
 
@@ -154,7 +163,7 @@ namespace :analysis do
     # Create analysis record
     analysis = repo.analyses.create!(
       type: "AnalysisDeep",
-      model_used: "gpt-4o",
+      model_used: "gpt-5",
       readme_analysis: result[:readme_analysis],
       issues_analysis: result[:issues_analysis],
       maintenance_analysis: result[:maintenance_analysis],

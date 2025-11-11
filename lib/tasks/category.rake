@@ -1,3 +1,11 @@
+# Category Management Tasks
+#
+# Tasks for managing categories (technology, problem_domain, architecture_pattern).
+# Used to export current categories to seed files for version control.
+#
+# Examples:
+#   bin/rails category:dump_seeds    # Export current categories to db/seeds/categories.rb
+
 namespace :category do
   desc "Dump current categories to seeds file"
   task dump_seeds: :environment do

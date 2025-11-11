@@ -169,7 +169,7 @@ create_table :ai_analyses do |t|
 
   # Analysis metadata
   t.string :analysis_type, null: false          # "tier1_categorization", "tier2_deep_dive"
-  t.string :model_used, null: false             # "gpt-4o-mini", "gpt-4o"
+  t.string :model_used, null: false             # "gpt-5-mini", "gpt-5"
   t.integer :input_tokens
   t.integer :output_tokens
   t.decimal :cost_usd, precision: 10, scale: 6
@@ -249,7 +249,7 @@ Daily rollup of AI API spending.
 ```ruby
 create_table :ai_spend do |t|
   t.date :date, null: false
-  t.string :model_used, null: false             # "gpt-4o-mini", "gpt-4o"
+  t.string :model_used, null: false             # "gpt-5-mini", "gpt-5"
   t.integer :total_requests, default: 0
   t.bigint :total_input_tokens, default: 0
   t.bigint :total_output_tokens, default: 0

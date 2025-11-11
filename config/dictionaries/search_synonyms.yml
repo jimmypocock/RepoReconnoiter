@@ -1,0 +1,171 @@
+# Query term synonyms for natural language processing
+# Used by SearchSynonymExpander to expand user query terms
+#
+# Format:
+#   base_term: [synonym1, synonym2, ...]
+#
+# Note: Include the base term in the array for consistency
+
+synonyms:
+  auth:
+    - auth
+    - authentication
+    - authorize
+    - authorization
+
+  authentication:
+    - auth
+    - authentication
+    - authorize
+    - authorization
+
+  job:
+    - job
+    - jobs
+    - queue
+    - queues
+    - worker
+    - workers
+
+  jobs:
+    - job
+    - jobs
+    - queue
+    - queues
+    - worker
+    - workers
+
+  queue:
+    - job
+    - jobs
+    - queue
+    - queues
+    - worker
+    - workers
+
+  worker:
+    - job
+    - jobs
+    - queue
+    - queues
+    - worker
+    - workers
+
+  # Backend/API variations
+  api:
+    - api
+    - rest
+    - restful
+    - endpoint
+    - endpoints
+
+  backend:
+    - backend
+    - back-end
+    - server
+    - server-side
+
+  # Frontend variations
+  frontend:
+    - frontend
+    - front-end
+    - client
+    - client-side
+    - ui
+    - interface
+
+  ui:
+    - ui
+    - interface
+    - frontend
+    - front-end
+
+  # Database variations
+  db:
+    - db
+    - database
+    - databases
+    - persistence
+    - storage
+
+  database:
+    - db
+    - database
+    - databases
+    - persistence
+    - storage
+
+  orm:
+    - orm
+    - object-relational
+    - active record
+    - activerecord
+
+  # Testing variations
+  test:
+    - test
+    - tests
+    - testing
+    - spec
+    - specs
+
+  testing:
+    - test
+    - tests
+    - testing
+    - spec
+    - specs
+
+  # State management variations
+  state:
+    - state
+    - states
+    - state management
+    - store
+    - redux
+
+  # Common language aliases
+  js:
+    - js
+    - javascript
+    - node
+    - nodejs
+    - node.js
+
+  javascript:
+    - js
+    - javascript
+    - node
+    - nodejs
+    - node.js
+
+  node:
+    - js
+    - javascript
+    - node
+    - nodejs
+    - node.js
+
+  ts:
+    - ts
+    - typescript
+
+  typescript:
+    - ts
+    - typescript
+
+  py:
+    - py
+    - python
+
+  python:
+    - py
+    - python
+
+  rb:
+    - rb
+    - ruby
+
+  ruby:
+    - rb
+    - ruby

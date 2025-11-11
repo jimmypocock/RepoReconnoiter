@@ -1,3 +1,13 @@
+# OpenAI / Query Parser Tasks
+#
+# Test the AI-powered natural language query parser.
+# Parses user queries into structured GitHub search parameters.
+#
+# Examples:
+#   bin/rails openai:parse                                                    # Test with default query
+#   bin/rails "openai:parse[Rails background job library]"                    # Test with custom query (quotes for spaces)
+#   bin/rails openai:parse[authentication]                                    # Test without spaces (no quotes needed)
+
 namespace :openai do
   desc "Test query parser with a natural language query"
   task :parse, [ :query ] => :environment do |t, args|

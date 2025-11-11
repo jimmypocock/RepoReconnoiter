@@ -145,7 +145,7 @@ class RepositoryTest < ActiveSupport::TestCase
     # Create a current analysis
     current_analysis = repo.analyses.create!(
       type: "Analysis",
-      model_used: "gpt-4o-mini",
+      model_used: "gpt-5-mini",
       summary: "Current analysis",
       is_current: true
     )
@@ -153,7 +153,7 @@ class RepositoryTest < ActiveSupport::TestCase
     # Create old analysis
     repo.analyses.create!(
       type: "Analysis",
-      model_used: "gpt-4o-mini",
+      model_used: "gpt-5-mini",
       summary: "Old analysis",
       is_current: false
     )
@@ -168,7 +168,7 @@ class RepositoryTest < ActiveSupport::TestCase
     # Create only non-current analysis
     repo.analyses.create!(
       type: "Analysis",
-      model_used: "gpt-4o-mini",
+      model_used: "gpt-5-mini",
       summary: "Old analysis",
       is_current: false
     )
@@ -182,7 +182,7 @@ class RepositoryTest < ActiveSupport::TestCase
     # Create current deep analysis (should be ignored)
     repo.analyses.create!(
       type: "AnalysisDeep",
-      model_used: "gpt-4o",
+      model_used: "gpt-5",
       summary: "Deep analysis",
       is_current: true
     )

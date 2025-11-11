@@ -12,6 +12,7 @@
       <p class="mt-2 text-sm text-gray-600">
         Performing comprehensive AI-powered repository analysis...
       </p>
+      <%= render "shared/progress_warning" %>
     </div>
 
     <%# Progress Content %>
@@ -44,7 +45,7 @@
       <div data-analysis-progress-target="stepList" class="space-y-3">
         <%= render "repositories/analysis_progress_step", step: "fetching_readme", label: "Fetch README from GitHub" %>
         <%= render "repositories/analysis_progress_step", step: "fetching_issues", label: "Fetch recent issues" %>
-        <%= render "repositories/analysis_progress_step", step: "running_analysis", label: "Run AI analysis (gpt-4o)" %>
+        <%= render "repositories/analysis_progress_step", step: "running_analysis", label: "Run AI analysis (gpt-5)" %>
         <%= render "repositories/analysis_progress_step", step: "saving_results", label: "Save analysis results" %>
       </div>
 

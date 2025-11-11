@@ -1,13 +1,13 @@
 class UserQueryParser
   attr_reader :ai
 
-  def initialize
-    @ai = OpenAi.new
-  end
-
   #--------------------------------------
   # PUBLIC INSTANCE METHODS
   #--------------------------------------
+
+  def initialize
+    @ai = OpenAi.new
+  end
 
   # Parses natural language query into structured search parameters
   # Returns: { tech_stack:, problem_domain:, constraints:, github_queries:, query_strategy:, valid:, validation_message:, input_tokens:, output_tokens: }
@@ -20,8 +20,8 @@ class UserQueryParser
         { role: "system", content: Prompter.render("user_query_parser_system") },
         { role: "user", content: sanitized_query }
       ],
-      model: "gpt-4o-mini",
-      temperature: 0.3,
+      model: "gpt-5-mini",
+      reasoning_effort: "minimal",
       response_format: { type: "json_object" },
       track_as: "query_parsing"
     )

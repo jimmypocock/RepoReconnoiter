@@ -38,6 +38,9 @@ gem "omniauth-github"
 gem "omniauth-rails_csrf_protection"
 # Rate limiting and throttling [https://github.com/rack/rack-attack]
 gem "rack-attack"
+# Error tracking [https://github.com/getsentry/sentry-ruby]
+gem "sentry-ruby"
+gem "sentry-rails"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"

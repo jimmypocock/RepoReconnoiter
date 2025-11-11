@@ -1,6 +1,6 @@
 one:
   date: 2025-11-05
-  model_used: gpt-4o-mini
+  model_used: gpt-5-mini
   total_cost_usd: 0.05
   total_input_tokens: 1000
   total_output_tokens: 500
@@ -8,7 +8,7 @@ one:
 
 two:
   date: 2025-11-04
-  model_used: gpt-4o
+  model_used: gpt-5
   total_cost_usd: 0.20
   total_input_tokens: 5000
   total_output_tokens: 2000

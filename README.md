@@ -17,7 +17,7 @@ An Open Source Intelligence Dashboard that analyzes GitHub trending repositories
 - **Framework**: Rails 8.1 with Hotwire/Turbo + Stimulus
 - **Database**: PostgreSQL
 - **Background Jobs**: Solid Queue (database-backed, no Redis)
-- **AI Provider**: OpenAI (gpt-4o-mini for categorization, gpt-4o for deep analysis)
+- **AI Provider**: OpenAI (gpt-5-mini for categorization, gpt-5 for deep analysis)
 - **Styling**: Tailwind CSS
 - **Ruby**: 3.4.7
 
@@ -134,7 +134,7 @@ bin/rails console
 
 # Test OpenAI configuration
 > ai = OpenAi.new
-> ai.chat(messages: [{role: "user", content: "Hi"}], model: "gpt-4o-mini")
+> ai.chat(messages: [{role: "user", content: "Hi"}], model: "gpt-5-mini")
 # Should return a response object (not an error)
 
 # Test GitHub configuration
@@ -303,7 +303,7 @@ bin/rails console
 
 # Test with a simple call
 > ai = OpenAi.new
-> ai.chat(messages: [{role: "user", content: "test"}], model: "gpt-4o-mini")
+> ai.chat(messages: [{role: "user", content: "test"}], model: "gpt-5-mini")
 ```
 
 ### GitHub API Rate Limiting

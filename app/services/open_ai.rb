@@ -1,23 +1,23 @@
 # OpenAI API wrapper with automatic cost tracking and model whitelisting
 # Usage:
 #   ai = OpenAi.new
-#   response = ai.chat(messages: [...], model: "gpt-4o-mini", track_as: "query_parsing")
+#   response = ai.chat(messages: [...], model: "gpt-5-mini", track_as: "query_parsing")
 #   content = response.choices[0].message.content  # Same API as OpenAI::Client
 class OpenAi
   class ModelNotWhitelistedError < StandardError; end
 
   # Whitelisted models with pricing (per million tokens)
-  # Source: https://openai.com/api/pricing/
+  # Source: https://openai.com/api/pricing/ (2025)
   MODELS = {
-    "gpt-4o-mini" => {
-      input_cost_per_million: 0.150,
-      output_cost_per_million: 0.600,
-      description: "Fast, cheap model for categorization and parsing"
+    "gpt-5-mini" => {
+      input_cost_per_million: 0.25,
+      output_cost_per_million: 2.00,
+      description: "Fast, cheap model for categorization and parsing (GPT-5 generation)"
     },
-    "gpt-4o" => {
-      input_cost_per_million: 2.50,
+    "gpt-5" => {
+      input_cost_per_million: 1.25,
       output_cost_per_million: 10.00,
-      description: "Powerful model for deep analysis and comparisons"
+      description: "Powerful GPT-5 model for deep analysis and comparisons (272K context, 90% cache discount)"
     }
   }.freeze
 

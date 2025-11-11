@@ -1,3 +1,14 @@
+# User Whitelist Management Tasks
+#
+# Manage the invite-only whitelist for authentication.
+# Users must be whitelisted to sign in via GitHub OAuth.
+#
+# Examples:
+#   bin/rails whitelist:add                                          # Interactive: prompts for GitHub username/ID
+#   bin/rails whitelist:add[12345678,johndoe,john@example.com]      # Add by GitHub ID and username
+#   bin/rails whitelist:list                                         # List all whitelisted users
+#   bin/rails whitelist:remove[johndoe]                              # Remove user by GitHub username
+
 namespace :whitelist do
   desc "Add a user to the whitelist (interactive or with arguments)"
   task :add, [ :github_id, :github_username, :email, :notes ] => :environment do |_t, args|

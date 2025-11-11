@@ -13,7 +13,7 @@ These are features to consider after the MVP is complete and stable in productio
 - [ ] Admin cost dashboard page (`/admin/costs`)
   - Total spend today, this week, this month
   - Spend by user (top 10 users leaderboard)
-  - Spend by model (gpt-4o vs gpt-4o-mini breakdown)
+  - Spend by model (gpt-5 vs gpt-5-mini breakdown)
   - Daily spend chart (last 30 days visualization)
   - Budget status: "$X.XX / $10.00 monthly budget" with progress bar
   - Alert banner if approaching limit (>$8.00/month)
@@ -69,7 +69,7 @@ These are features to consider after the MVP is complete and stable in productio
 
 ### Deep Analysis Features
 
-- [ ] Create `DeepAnalyzeRepositoryJob` (uses gpt-4o)
+- [ ] Create `DeepAnalyzeRepositoryJob` (uses gpt-5)
 - [ ] Fetch README content from GitHub
 - [ ] Fetch recent issues (last 30 days) - either store or analyze on-the-fly
 - [ ] Implement comprehensive analysis prompt

@@ -1,5 +1,14 @@
-# CI tasks that mirror GitHub Actions workflow
-# Run locally before pushing to catch failures early
+# Continuous Integration (CI) Tasks
+#
+# Run locally before pushing to catch failures early.
+# Mirrors the GitHub Actions workflow for consistency.
+#
+# Examples:
+#   bin/rails ci:all         # Run all checks (security + lint + tests)
+#   bin/rails ci:security    # Run security scans only (Brakeman, Bundler Audit, Importmap)
+#   bin/rails ci:lint        # Run RuboCop linter only
+#   bin/rails ci:test        # Run all tests only (unit + system)
+
 namespace :ci do
   desc "Run all CI checks (security, lint, tests)"
   task all: %w[ci:security ci:lint ci:test]

@@ -6,7 +6,7 @@ Confirmed Tech Stack
 - Database: PostgreSQL
 - Background Jobs: Solid Queue (database-backed, no Redis needed)
 - Job Scheduling: Solid Queue recurring tasks (replaces sidekiq-cron/whenever)
-- AI Provider: OpenAI (gpt-4o-mini for categorization, gpt-4o for deep dives)
+- AI Provider: OpenAI (gpt-5-mini for categorization, gpt-5 for deep dives)
 - Deployment: Render (just Rails web service + PostgreSQL)
 - Data Source: GitHub API trending repos (~50/day)
 - Auth: None initially, Sign In With GitHub on future roadmap
@@ -25,14 +25,14 @@ Confirmed Tech Stack
   Phase 2: AI Tier 1 - Categorization
 
   7. OpenAI API wrapper with token/cost tracking
-  8. Tier 1 job: Basic categorization with gpt-4o-mini
+  8. Tier 1 job: Basic categorization with gpt-5-mini
   9. Smart caching logic (don't re-analyze unchanged repos)
   10. Display categorized repos on dashboard with filters
   11. Admin UI for approving/denying AI-suggested categories
 
   Phase 3: AI Tier 2 - Deep Dives
 
-  12. Tier 2 job: Deep analysis with gpt-4o (on-demand)
+  12. Tier 2 job: Deep analysis with gpt-5 (on-demand)
   13. README + issues analysis
   14. Cost tracking dashboard
   15. Rate limiting & budget guards

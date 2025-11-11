@@ -1,13 +1,13 @@
 one:
   repository: one
   type: Analysis
-  model_used: gpt-4o-mini
+  model_used: gpt-5-mini
   summary: "A background job processor"
   is_current: true
 
 two:
   repository: two
   type: Analysis
-  model_used: gpt-4o-mini
+  model_used: gpt-5-mini
   summary: "A Python ORM library"
   is_current: true

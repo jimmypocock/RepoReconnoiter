@@ -1,6 +1,16 @@
+# Comparison Management Tasks
+#
+# Create and search AI-powered repository comparisons.
+# Comparisons are cached to avoid duplicate AI costs.
+#
+# Examples:
+#   QUERY='Rails background job library' bin/rails comparison:create    # Create new comparison
+#   QUERY='Python ORM for PostgreSQL' bin/rails comparison:create       # Another example
+#   bin/rails "comparison:search[background jobs]"                       # Search existing comparisons (note: quotes required for spaces)
+#   bin/rails comparison:search[auth]                                    # Search without spaces (no quotes needed)
+
 namespace :comparison do
   desc "Create a new comparison (parse → fetch → analyze → compare)"
-  desc "Usage: QUERY='your query here' bin/rails comparisons:create"
   task create: :environment do
     query = ENV["QUERY"]
 

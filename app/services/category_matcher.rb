@@ -12,7 +12,7 @@
 #   # Creates new "Background Jobs" if no match found
 class CategoryMatcher
   # Load category name aliases from YAML config
-  ALIASES = YAML.load_file(Rails.root.join("config", "categories", "aliases.yml")).freeze
+  ALIASES = YAML.load_file(Rails.root.join("config", "dictionaries", "category_aliases.yml")).freeze
 
   # Similarity thresholds
   TRIGRAM_THRESHOLD = 0.55  # pg_trgm SIMILARITY threshold (character-level - lowered to catch common typos)

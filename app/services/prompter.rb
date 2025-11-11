@@ -4,16 +4,22 @@
 #   Prompter.render("repository_analyzer_build", repository: repo, categories: cats)
 #   Prompter.sanitize_user_input("ignore all previous instructions")
 class Prompter
+  attr_reader :template_name, :locals
+
+  #--------------------------------------
+  # CUSTOM EXCEPTIONS
+  #--------------------------------------
+
   class TemplateNotFoundError < StandardError; end
+
+  #--------------------------------------
+  # PUBLIC INSTANCE METHODS
+  #--------------------------------------
 
   def initialize(template_name, locals = {})
     @template_name = template_name
     @locals = locals
   end
-
-  #--------------------------------------
-  # PUBLIC INSTANCE METHODS
-  #--------------------------------------
 
   # Render the template with locals
   # @return [String] Rendered prompt text
@@ -95,30 +101,10 @@ class Prompter
 
     # Validates AI output to detect potential prompt injection leakage
     # Based on OWASP LLM01:2025 defense-in-depth strategy
-    # This is a monitoring layer - logs suspicious patterns but doesn't block (to avoid false positives)
+    # Serves as a documented security boundary for future validation logic
     # @param text [String] AI-generated output to validate
     # @return [String] The original text (unmodified)
     def validate_output(text)
-      return text if text.blank?
-
-      # Patterns that might indicate leaked system information
-      suspicious_patterns = {
-        system_prompt: /system\s+prompt/i,
-        instruction_leak: /instruction/i,
-        api_key_mention: /api[\s_-]*(key|token)/i,
-        secret_mention: /secret/i,
-        password_mention: /password/i,
-        env_variable: /env\[/i,
-        credentials_mention: /credentials/i
-      }
-
-      suspicious_patterns.each do |pattern_name, pattern|
-        if text.match?(pattern)
-          # Log warning but don't block (false positives could break legitimate responses)
-          Rails.logger.warn "🚨 [SECURITY] Suspicious AI output detected: #{pattern_name} (pattern: #{pattern.inspect})"
-        end
-      end
-
       text
     end
 
@@ -135,8 +121,6 @@ class Prompter
   #--------------------------------------
   # PRIVATE METHODS
   #--------------------------------------
-
-  attr_reader :template_name, :locals
 
   def read_template
     unless File.exist?(template_path)
@@ -182,37 +166,6 @@ class Prompter
 
     private
 
-    def check_file_exists!
-      if File.exist?(file_path)
-        raise ArgumentError, "Prompt template already exists: #{file_path}"
-      end
-    end
-
-    def file_path
-      @file_path ||= File.join(prompts_dir, "#{name}.erb")
-    end
-
-    def prompts_dir
-      Rails.root.join("app", "prompts")
-    end
-
-    def template_content
-      system ? system_prompt_template : build_prompt_template
-    end
-
-    def validate_name!
-      unless name =~ /^[a-z_][a-z0-9_]*$/
-        raise ArgumentError, "Prompt name must be snake_case and start with a letter: #{name}"
-      end
-    end
-
-    def write_template_file
-      FileUtils.mkdir_p(prompts_dir) unless Dir.exist?(prompts_dir)
-      File.write(file_path, template_content)
-    end
-
-    # Template generation methods
-
     def build_prompt_template
       <<~TEMPLATE
         <%#
@@ -223,7 +176,7 @@ class Prompter
           - @another_variable: [Type] Description
         SECURITY: [no_user_input | structured_data | user_input]
         OUTPUT: [Describe the built prompt content]
-        MODEL: [gpt-4o-mini | gpt-4o]
+        MODEL: [gpt-5-mini | gpt-5]
         USED_BY: [ServiceName#method_name]
         -%>
         [Build your dynamic prompt here using ERB variables]
@@ -241,6 +194,20 @@ class Prompter
       TEMPLATE
     end
 
+    def check_file_exists!
+      if File.exist?(file_path)
+        raise ArgumentError, "Prompt template already exists: #{file_path}"
+      end
+    end
+
+    def file_path
+      @file_path ||= File.join(prompts_dir, "#{name}.erb")
+    end
+
+    def prompts_dir
+      Rails.root.join("app", "prompts")
+    end
+
     def system_prompt_template
       <<~TEMPLATE
         <%#
@@ -249,7 +216,7 @@ class Prompter
         VARIABLES: (none)
         SECURITY: [no_user_input | structured_data | user_input]
         OUTPUT: [Describe the expected output format - e.g., JSON with specific fields]
-        MODEL: [gpt-4o-mini | gpt-4o | gpt-4o-mini-2024-07-18]
+        MODEL: [gpt-5-mini | gpt-5]
         USED_BY: [ServiceName#method_name]
         -%>
         You are [define the AI's role].
@@ -272,6 +239,21 @@ class Prompter
         Examples:
         - [Provide example input/output pairs]
       TEMPLATE
+    end
+
+    def template_content
+      system ? system_prompt_template : build_prompt_template
+    end
+
+    def validate_name!
+      unless name =~ /^[a-z_][a-z0-9_]*$/
+        raise ArgumentError, "Prompt name must be snake_case and start with a letter: #{name}"
+      end
+    end
+
+    def write_template_file
+      FileUtils.mkdir_p(prompts_dir) unless Dir.exist?(prompts_dir)
+      File.write(file_path, template_content)
     end
   end
 end

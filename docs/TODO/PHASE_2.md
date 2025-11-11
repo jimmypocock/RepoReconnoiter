@@ -8,7 +8,7 @@
 - [x] Add API key configuration (credentials)
 - [x] Create cost tracking helpers
 - [x] Test API connection with simple prompt
-- [x] Model whitelisting (only gpt-4o-mini and gpt-4o with explicit pricing)
+- [x] Model whitelisting (only gpt-5-mini and gpt-5 with explicit pricing)
 - [x] Automatic daily rollup to `ai_costs` table
 - [x] All services use `OpenAi` instead of calling OpenAI directly
 
@@ -24,7 +24,7 @@
 
 ## AI Categorization Job (Tier 1 - Cheap)
 
-- [x] Create `AnalyzeRepositoryJob` (uses gpt-4o-mini via `OpenAi` service)
+- [x] Create `AnalyzeRepositoryJob` (uses gpt-5-mini via `OpenAi` service)
 - [x] Create `RepositoryAnalyzer` service (`app/services/repository_analyzer.rb`)
 - [x] Create `Prompter` service for AI prompt template rendering (`app/prompts/`)
 - [x] Implement prompt for quick categorization

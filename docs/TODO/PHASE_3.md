@@ -16,8 +16,8 @@
 
 **Cost per Comparison**: ~$0.045 (220 comparisons per $10 budget)
 
-- Step 1 (Parse): gpt-4o-mini ~$0.0003
-- Step 3 (Compare): gpt-4o ~$0.045
+- Step 1 (Parse): gpt-5-mini ~$0.0003
+- Step 3 (Compare): gpt-5 ~$0.045
 
 ## Database Schema
 
@@ -47,7 +47,7 @@
 - [x] Create models: `Comparison`, `ComparisonRepository`, `ComparisonCategory`
 - [x] Update `Repository` and `Category` models with comparison associations
 
-## Step 1: Query Parser Service (gpt-4o-mini) ✅ COMPLETE
+## Step 1: Query Parser Service (gpt-5-mini) ✅ COMPLETE
 
 - [x] Renamed from `QueryParserService` to `UserQueryParser` (follows "Doer" naming pattern)
 - [x] Parse natural language into structured data
@@ -82,7 +82,7 @@
   - [x] Let GitHub's relevance ranking work - don't be too opinionated
 - [x] **COST TRACKING IMPROVEMENTS**
   - [x] Created `OpenAi` service wrapper with automatic cost tracking
-  - [x] Model whitelisting (gpt-4o-mini, gpt-4o) with explicit pricing
+  - [x] Model whitelisting (gpt-5-mini, gpt-5) with explicit pricing
   - [x] Updated `ai_costs` table precision from 2 to 6 decimal places (tracks $0.000150 costs)
   - [x] All AI calls automatically tracked to daily rollup table
 - [x] Cost: ~1200 tokens = $0.0003 per parse
@@ -127,7 +127,7 @@
   - Categories now auto-created via `find_or_create_by!`
 - [x] Performance optimization: Second run 4x faster (no AI calls for analyzed repos)
 
-## Step 3: Comparative Analysis Service (gpt-4o) ✅ COMPLETE
+## Step 3: Comparative Analysis Service (gpt-5) ✅ COMPLETE
 
 - [x] Create `RepositoryComparer` service (`app/services/repository_comparer.rb`)
 - [x] Build comprehensive comparison prompt including:

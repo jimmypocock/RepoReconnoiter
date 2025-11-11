@@ -1,3 +1,16 @@
+# GitHub API Tasks
+#
+# Tasks for exploring and interacting with the GitHub API directly.
+# Used for debugging, testing queries, and manually syncing trending repos.
+#
+# Examples:
+#   bin/rails github:explore                                    # Explore GitHub API (auth status, trending repos, README)
+#   bin/rails github:trending                                   # Get trending repos (last 7 days, min 10 stars)
+#   bin/rails github:trending[30,ruby,100]                      # Custom: last 30 days, Ruby only, min 100 stars
+#   bin/rails github:search["background job ruby stars:>1000"]  # Custom GitHub search query
+#   bin/rails github:sync                                       # Sync trending repos to database (7 days, 50+ stars)
+#   bin/rails github:sync[30,100,20]                            # Custom sync: 30 days, 100+ stars, 20 per page
+
 namespace :github do
   desc "Explore GitHub API and display available data"
   task explore: :environment do

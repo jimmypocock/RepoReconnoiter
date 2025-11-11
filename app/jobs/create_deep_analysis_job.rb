@@ -38,7 +38,7 @@ class CreateDeepAnalysisJob < ApplicationJob
     broadcaster.broadcast_step("saving_results", message: "Saving analysis results...")
     repository.analyses.create!(
       type: "AnalysisDeep",
-      model_used: "gpt-4o",
+      model_used: "gpt-5",
       readme_analysis: result[:readme_analysis],
       issues_analysis: result[:issues_analysis],
       maintenance_analysis: result[:maintenance_analysis],

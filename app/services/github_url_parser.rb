@@ -6,6 +6,16 @@ class GithubUrlParser
   class InvalidUrlError < StandardError; end
 
   #--------------------------------------
+  # CONSTANTS
+  #--------------------------------------
+
+  GITHUB_HOST_PATTERN = %r{github\.com$}i
+  OWNER_FORMAT = %r{^[a-zA-Z0-9_-]+$}
+  REPO_NAME_FORMAT = %r{^[a-zA-Z0-9_.-]+$}
+  OWNER_REPO_FORMAT = %r{^[a-zA-Z0-9_-]+/[a-zA-Z0-9_.-]+$}
+  PROTOCOL_PATTERN = %r{^https?://}
+
+  #--------------------------------------
   # PUBLIC INSTANCE METHODS
   #--------------------------------------
 
@@ -20,7 +30,7 @@ class GithubUrlParser
     normalized = input.strip
 
     # Handle direct "owner/repo" format
-    if normalized.match?(%r{^[a-zA-Z0-9_-]+/[a-zA-Z0-9_.-]+$})
+    if normalized.match?(OWNER_REPO_FORMAT)
       return parse_owner_repo(normalized)
     end
 
@@ -44,31 +54,39 @@ class GithubUrlParser
 
   def parse_owner_repo(input)
     owner, name = input.split("/", 2)
-    {
-      owner: owner,
-      name: name,
-      full_name: "#{owner}/#{name}"
-    }
+    validate_components!(owner, name)
+
+    { full_name: "#{owner}/#{name}", name:, owner: }
   end
 
   def parse_url(input)
     # Add protocol if missing
-    input = "https://#{input}" unless input.match?(%r{^https?://})
+    input = "https://#{input}" unless input.match?(PROTOCOL_PATTERN)
 
-    begin
-      uri = URI.parse(input)
-    rescue URI::InvalidURIError
-      raise InvalidUrlError, "Invalid URL format: #{input}"
-    end
+    uri = parse_uri(input)
+    validate_github_host!(uri, input)
 
-    # Ensure it's a GitHub URL
-    unless uri.host&.match?(/github\.com$/i)
+    owner, name = extract_path_components(uri, input)
+    validate_components!(owner, name)
+
+    { full_name: "#{owner}/#{name}", name:, owner: }
+  end
+
+  def parse_uri(input)
+    URI.parse(input)
+  rescue URI::InvalidURIError
+    raise InvalidUrlError, "Invalid URL format: #{input}"
+  end
+
+  def validate_github_host!(uri, input)
+    unless uri.host&.match?(GITHUB_HOST_PATTERN)
       raise InvalidUrlError, "Not a GitHub URL: #{input}"
     end
+  end
 
-    # Extract path components
+  def extract_path_components(uri, input)
     path = uri.path
-    return { owner: nil, name: nil, full_name: nil } if path.blank? || path == "/"
+    return [ nil, nil ] if path.blank? || path == "/"
 
     # Remove leading/trailing slashes and split
     parts = path.gsub(%r{^/|/$}, "").split("/")
@@ -78,18 +96,16 @@ class GithubUrlParser
       raise InvalidUrlError, "URL must contain owner and repository name: #{input}"
     end
 
-    owner = parts[0]
-    name = parts[1]
+    [ parts[0], parts[1] ]
+  end
 
-    # Validate owner and name format
-    unless owner.match?(/^[a-zA-Z0-9_-]+$/)
+  def validate_components!(owner, name)
+    unless owner.match?(OWNER_FORMAT)
       raise InvalidUrlError, "Invalid owner format: #{owner}"
     end
 
-    unless name.match?(/^[a-zA-Z0-9_.-]+$/)
+    unless name.match?(REPO_NAME_FORMAT)
       raise InvalidUrlError, "Invalid repository name format: #{name}"
     end
-
-    { full_name: "#{owner}/#{name}", name:, owner: }
   end
 end
