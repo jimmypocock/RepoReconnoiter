@@ -1,4 +1,4 @@
-namespace :query do
+namespace :openai do
   desc "Test query parser with a natural language query"
   task :parse, [ :query ] => :environment do |t, args|
     query = args[:query] || "I need a Rails background job library with retry logic and monitoring"

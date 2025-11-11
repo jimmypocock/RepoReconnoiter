@@ -1,9 +1,10 @@
 class RepositoryDeepAnalyzer
-  attr_reader :ai, :github
+  attr_reader :ai, :broadcaster, :github
 
-  def initialize
+  def initialize(broadcaster: nil)
     @ai = OpenAi.new
     @github = Github.new
+    @broadcaster = broadcaster
   end
 
   #--------------------------------------
@@ -14,16 +15,19 @@ class RepositoryDeepAnalyzer
   # Fetches README, recent issues, and performs comprehensive analysis
   # Returns: Hash with all 5 analysis fields plus token counts
   def analyze(repository)
-    # Ensure README is fetched and cached
+    # Step 1: Ensure README is fetched and cached
+    broadcaster&.broadcast_step("fetching_readme", message: "Fetching README for #{repository.full_name}...")
     ensure_readme_fetched(repository)
 
     # Get README content
     readme_content = fetch_readme(repository)
 
-    # Fetch recent issues for analysis
+    # Step 2: Fetch recent issues for analysis
+    broadcaster&.broadcast_step("fetching_issues", message: "Fetching recent issues...")
     issues_data = fetch_recent_issues(repository)
 
-    # Run AI analysis
+    # Step 3: Run AI analysis
+    broadcaster&.broadcast_step("running_analysis", message: "Running deep AI analysis with gpt-4o...")
     response = ai.chat(
       messages: [
         { role: "system", content: Prompter.render("repository_deep_analyzer_system") },

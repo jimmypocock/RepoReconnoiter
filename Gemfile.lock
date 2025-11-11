@@ -149,6 +149,8 @@ GEM
       activesupport (>= 6.1)
     hashdiff (1.2.1)
     hashie (5.0.0)
+    heroicon (1.0.0)
+      rails (>= 5.2)
     i18n (1.14.7)
       concurrent-ruby (~> 1.0)
     image_processing (1.14.0)
@@ -499,6 +501,7 @@ DEPENDENCIES
   devise
   dotenv-rails
   faraday-retry
+  heroicon
   image_processing (~> 1.2)
   importmap-rails
   jbuilder

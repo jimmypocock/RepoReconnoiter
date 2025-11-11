@@ -18,7 +18,7 @@ class Repository < ApplicationRecord
   validates :node_id, presence: true, uniqueness: true
   validates :full_name, presence: true, uniqueness: true
   validates :name, presence: true
-  validates :html_url, presence: true
+  validates :html_url, presence: true, format: { with: %r{\Ahttps://github\.com/[\w\-./]+\z}, message: "must be a valid GitHub URL" }
 
   #--------------------------------------
   # PUBLIC INSTANCE METHODS

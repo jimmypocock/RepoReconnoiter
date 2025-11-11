@@ -22,6 +22,13 @@ Rails.application.routes.draw do
   # Comparison routes
   resources :comparisons, only: [ :create, :show ]
 
+  # Repository routes (requires authentication)
+  resources :repositories, only: [ :index, :show ] do
+    member do
+      post :create_analysis
+    end
+  end
+
   # Admin routes (requires authentication + admin status)
   namespace :admin do
     get "stats", to: "stats#index"

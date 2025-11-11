@@ -1,0 +1,106 @@
+<%# Progress Modal - Real-time deep analysis progress %>
+<div
+  id="analysis-progress-modal"
+  data-controller="analysis-progress"
+  data-analysis-progress-session-id-value="<%= session_id %>"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 animate-fade-in"
+>
+  <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slide-up">
+    <%# Header %>
+    <div class="px-8 pt-8 pb-6 border-b border-gray-200">
+      <h2 class="text-2xl font-bold text-gray-900">Running Deep Analysis</h2>
+      <p class="mt-2 text-sm text-gray-600">
+        Performing comprehensive AI-powered repository analysis...
+      </p>
+    </div>
+
+    <%# Progress Content %>
+    <div class="px-8 py-6">
+      <%# Current Step Message %>
+      <div class="mb-6">
+        <p data-analysis-progress-target="currentMessage" class="text-lg font-semibold text-gray-900 min-h-[1.75rem]">
+          Starting...
+        </p>
+      </div>
+
+      <%# Progress Bar %>
+      <div class="mb-8">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-medium text-gray-700">Progress</span>
+          <span data-analysis-progress-target="percentage" class="text-sm font-medium text-blue-600">
+            0%
+          </span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+          <div
+            data-analysis-progress-target="progressBar"
+            class="h-full bg-blue-600 rounded-full transition-all duration-500 ease-out"
+            style="width: 0%"
+          ></div>
+        </div>
+      </div>
+
+      <%# Step List %>
+      <div data-analysis-progress-target="stepList" class="space-y-3">
+        <%= render "repositories/analysis_progress_step", step: "fetching_readme", label: "Fetch README from GitHub" %>
+        <%= render "repositories/analysis_progress_step", step: "fetching_issues", label: "Fetch recent issues" %>
+        <%= render "repositories/analysis_progress_step", step: "running_analysis", label: "Run AI analysis (gpt-4o)" %>
+        <%= render "repositories/analysis_progress_step", step: "saving_results", label: "Save analysis results" %>
+      </div>
+
+      <%# Error State Container (Hidden by default) %>
+      <div
+        data-analysis-progress-target="errorContainer"
+        class="hidden mt-6 p-4 bg-red-50 border border-red-200 rounded-lg"
+      >
+        <div class="flex items-start gap-3">
+          <%= heroicon "x-circle", variant: :solid, options: { class: "w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" } %>
+          <div class="flex-1">
+            <h3 class="text-sm font-semibold text-red-900">Error</h3>
+            <p data-analysis-progress-target="errorMessage" class="mt-1 text-sm text-red-700">
+              An error occurred during deep analysis.
+            </p>
+          </div>
+        </div>
+        <div class="mt-4 flex gap-3">
+          <button
+            data-analysis-progress-target="closeButton"
+            data-action="click->analysis-progress#close"
+            class="
+              px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 font-medium text-sm rounded-lg border border-gray-300
+              transition-colors
+            "
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.2s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+  }
+</style>

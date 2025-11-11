@@ -54,8 +54,7 @@ class AnalysisDeep < Analysis
     def count_for_user_today(user)
       return 0 if user.nil?
 
-      joins(:repository)
-        .where(repositories: { user_id: user.id })
+      where(user_id: user.id)
         .today
         .count
     end

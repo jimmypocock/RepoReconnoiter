@@ -1,15 +1,56 @@
-<!-- Hero Search Section (Above the Fold) -->
+<!-- Feature Cards Section (Above the Fold) -->
 <% if user_signed_in? %>
-  <div
-    class="text-center transition-all duration-300 mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4"
-    data-navbar-target="searchSection"
-  >
-    <p class="text-lg font-bold text-gray-600 mb-4">Use AI to find the best open source library for your project</p>
-    <div class="max-w-2xl mx-auto">
-      <%= render "shared/search_form",
-      container_classes: "w-full",
-      input_classes:
-        "w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" %>
+  <div class="grid md:grid-cols-2 gap-6 mb-8" data-navbar-target="searchSection">
+    <!-- Deep Analysis Card -->
+    <div class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl shadow-lg border-2 border-purple-200 p-6 hover:shadow-xl transition-shadow">
+      <div class="flex items-start gap-4 mb-4">
+        <div class="flex-shrink-0 w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
+          <%= heroicon "document-text", variant: :outline, options: { class: "w-7 h-7 text-white" } %>
+        </div>
+        <div class="flex-1">
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">Deep Analysis</h2>
+          <p class="text-gray-700 mb-4">
+            Comprehensive AI-powered analysis of any GitHub repository. Get insights on code quality, maintenance, security, and adoption.
+          </p>
+          <%= link_to repositories_path,
+            class: "inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-md hover:shadow-lg" do %>
+            <%= heroicon "arrow-top-right-on-square", variant: :outline, options: { class: "w-5 h-5" } %>
+            Analyze Repository
+          <% end %>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 text-sm text-purple-800 bg-purple-100 rounded-lg p-3">
+        <span class="font-medium">✨ Features:</span>
+        <span>README Analysis</span>
+        <span>•</span>
+        <span>Issue Tracking</span>
+        <span>•</span>
+        <span>Security Review</span>
+      </div>
+    </div>
+
+    <!-- Compare Libraries Card -->
+    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-lg border-2 border-blue-200 p-6 hover:shadow-xl transition-shadow">
+      <div class="flex items-start gap-4 mb-4">
+        <div class="flex-shrink-0 w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+          <%= heroicon "magnifying-glass", variant: :outline, options: { class: "w-7 h-7 text-white" } %>
+        </div>
+        <div class="flex-1">
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">Compare Libraries</h2>
+          <p class="text-gray-700 mb-4">
+            Use AI to find and compare the best open source libraries for your specific needs. Get ranked recommendations with pros and cons.
+          </p>
+          <%= render "shared/search_form",
+            container_classes: "w-full",
+            input_classes: "w-full px-4 py-3 pr-12 border-2 border-blue-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white" %>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 text-sm text-blue-800 bg-blue-100 rounded-lg p-3">
+        <span class="font-medium">🎯 Perfect for:</span>
+        <span>Library Selection</span>
+        <span>•</span>
+        <span>Tech Stack Decisions</span>
+      </div>
     </div>
   </div>
 <% end %>
@@ -95,14 +136,7 @@
   <!-- Empty State -->
   <div class="bg-white rounded-xl shadow-sm p-12 text-center">
     <div class="text-gray-400 mb-4">
-      <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-        ></path>
-      </svg>
+      <%= heroicon "document-text", variant: :outline, options: { class: "w-16 h-16 mx-auto" } %>
     </div>
     <h3 class="text-xl font-semibold text-gray-900 mb-2">No comparisons found</h3>
     <p class="text-gray-600 mb-6">Try adjusting your filters or search terms</p>

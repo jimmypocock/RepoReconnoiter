@@ -3,11 +3,12 @@ class RepositoryFetcher
   DEFAULT_LIMIT = 10
   MAX_LIMIT = 15
 
-  attr_reader :github, :broadcaster
+  attr_reader :github, :broadcaster, :user
 
-  def initialize(broadcaster: nil)
+  def initialize(broadcaster: nil, user: nil)
     @github = Github.new
     @broadcaster = broadcaster
+    @user = user
   end
 
   #--------------------------------------
@@ -77,7 +78,8 @@ class RepositoryFetcher
           use_cases: result[:use_cases],
           input_tokens: result[:input_tokens],
           output_tokens: result[:output_tokens],
-          is_current: true
+          is_current: true,
+          user:
         )
 
         # Create category associations using CategoryMatcher

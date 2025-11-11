@@ -1,0 +1,5 @@
+<%# Turbo Stream response for deep analysis creation %>
+<%# Renders the progress modal and initializes ActionCable subscription %>
+<%= turbo_stream.append "turbo-stream-target" do %>
+  <%= render "repositories/analysis_progress_modal", session_id: @session_id %>
+<% end %>

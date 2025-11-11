@@ -202,3 +202,197 @@
 ## Next Phase
 
 With real-time progress tracking complete, the next priority is **Phase 4.1: Category & Search Quality** to improve comparison discoverability and browsing experience.
+
+---
+
+# Phase 4.1a: Category Infrastructure & Cleanup ✅ COMPLETE
+
+**Status**: ✅ COMPLETE (Nov 10, 2025)
+
+**Goal**: Build comprehensive category system with 129 canonical categories and three-layer matching to prevent category explosion.
+
+**Actual Time**: ~6 hours
+
+---
+
+## What Was Built
+
+### 1. Category System (129 Canonical Categories)
+
+- **Technology** (61): AI Assistants, Chatbot Framework, htmx, OpenShift, Redux, SVG, etc.
+- **Problem Domain** (49): Data Access, State Management, Web Framework, Icons, Session Management, etc.
+- **Architecture Pattern** (19): ORM Framework, Layered Architecture, Data Processing Framework, etc.
+
+### 2. CategoryMatcher Service (`app/services/category_matcher.rb`)
+
+- Three-layer matching system:
+  1. **Alias mapping**: "Ruby on Rails" → "Rails", "Node.js" variants, "k8s" → "Kubernetes"
+  2. **Fuzzy matching**: PostgreSQL trigram similarity (0.8 threshold)
+  3. **Semantic embeddings**: OpenAI embeddings for intelligent matching
+- Normalization for technology names (titlecase, common patterns)
+- Automatic deduplication prevents category explosion
+
+### 3. Production Migration Tasks
+
+- `categories:map_specific` - Maps 18 overly-specific categories to canonical (e.g., "Rails Wrapper" → "Rails")
+- `comparisons:backfill_categories` - Re-parses all comparison queries with clean categories
+- `categories:generate_embeddings` - Generates semantic embeddings for new categories
+- `categories:test_matrix` - 44-scenario test suite for matching validation
+
+### 4. Database Improvements
+
+- **Seeds file** (`db/seeds/categories.rb`): 129 canonical categories with proper deduplication
+- **Seeds runner** (`db/seeds.rb`): Fixed to preserve associations (no longer destroys all categories)
+- **Sync task** (`lib/tasks/db_sync.rake`): Auto-fixes environment metadata after production sync
+- **Test fixes** (`config/database.yml`): Test suite works with production data sync
+
+### 5. Testing & Quality
+
+- **Test Coverage**: 73 tests (was 49), 184 assertions (was 110), 0 failures
+- **CI Checks**: All passing (security, linter, tests)
+- **Category Matching**: 44/44 scenarios pass (100%)
+- **Comprehensive verification**: Category counts, associations, embeddings, duplicates all validated
+
+## Files Created
+
+- `app/services/category_matcher.rb` - Three-layer matching with normalization
+- `lib/tasks/map_specific_categories.rake` - Production migration for specific → canonical
+- `lib/tasks/backfill_comparison_categories.rake` - Comparison category backfill
+- `lib/tasks/generate_embeddings.rake` - OpenAI embedding generation
+- `lib/tasks/test_category_matrix.rake` - 44-scenario comprehensive test suite
+- `lib/tasks/category_seeds.rake` - Dump canonical categories from database
+- `lib/tasks/categories_sync.rake` - Lightweight category-only sync from production
+
+## Files Modified
+
+- `db/seeds/categories.rb` - 129 canonical categories (was messy duplicates)
+- `db/seeds.rb` - Removed `Category.destroy_all` (now preserves associations)
+- `lib/tasks/db_sync.rake` - Auto-fixes environment metadata for test suite
+- `test/services/category_matcher_test.rb` - Comprehensive matching tests
+
+## Results
+
+- Category count: 142 (production) → 129 (canonical)
+- Category quality: Eliminated duplicates, normalized names, proper types
+- Repository associations: 264 preserved through migration
+- Comparison associations: 13 → 17 (backfilled with correct categories)
+- Test coverage: +24 tests, +74 assertions
+
+## Production Deployment Commands
+
+```bash
+# After deploying code changes, run on production:
+bin/rails db:seed                                    # Add canonical categories
+bin/rails categories:map_specific                    # Map specific → canonical
+bin/rails comparisons:backfill_categories            # Fix comparison categories
+bin/rails categories:generate_embeddings             # Generate embeddings
+```
+
+---
+
+# Phase 4.1b: Comprehensive Search & Admin Features ✅ COMPLETE
+
+**Status**: ✅ COMPLETE (Nov 10, 2025)
+
+**Goal**: Multi-field search with relevance scoring and admin refresh capability.
+
+**Actual Time**: ~4 hours
+
+---
+
+## What Was Built
+
+### 1. Comprehensive Multi-Field Search
+
+- **Multi-field fuzzy search**: Searches across `user_query`, `technologies`, `problem_domains`, `architecture_patterns`, and associated `categories`
+- **Synonym expansion**: 50+ mappings (e.g., "ruby" → ["rb", "ruby"], "auth" → ["auth", "authentication", "authorize", "authorization"])
+- **PostgreSQL WORD_SIMILARITY**: Fuzzy matching with 0.45 threshold for partial matches
+- **Weighted relevance scoring**:
+  - user_query: 100 points (highest - user's exact words)
+  - technologies: 50 points
+  - problem_domains: 30 points
+  - architecture_patterns: 20 points
+  - categories: 10 points
+- **GREATEST function**: Takes best score across synonym variations
+- **Results ordered by relevance**: Best matches appear first (DESC order)
+
+### 2. Database Schema Updates
+
+- **Renamed fields** for consistency:
+  - `tech_stack` → `technologies` (plural, stores multiple comma-separated values)
+  - `problem_domain` → `problem_domains` (plural, stores multiple comma-separated values)
+- **Added `architecture_patterns` column**: Now matches all three category types
+- **GIN trigram indexes**: Added `gin_trgm_ops` indexes on all three searchable fields for performance
+  - `index_comparisons_on_technologies_trgm`
+  - `index_comparisons_on_problem_domains_trgm`
+  - `index_comparisons_on_architecture_patterns_trgm`
+
+### 3. Search Service Layer
+
+- **SearchSynonymExpander** service (`app/services/search_synonym_expander.rb`):
+  - 50+ synonym mappings for common technology terms
+  - Handles abbreviations, variants, common misspellings
+  - Returns expanded term array for comprehensive matching
+  - Fully tested (14 tests, 61 assertions)
+
+### 4. UI Improvements
+
+- **Removed category dropdown**: Text search is now comprehensive enough
+- **Preserved relevance scoring**: SearchComparisonsPresenter no longer overrides search order with manual sort
+- **Search-first UX**: When searching, relevance order takes precedence over "newest" or "popular" sorts
+
+### 5. Admin Features
+
+- **Admin refresh capability**: Admins can refresh comparisons in production
+- **ComparisonPresenter** updated to:
+  - Accept `current_user` parameter
+  - Check `user&.admin?` for refresh authorization
+  - Return `true` for admins or development mode, `false` otherwise
+  - Prevent refresh of newly created comparisons (already fresh)
+
+### 6. Testing & Validation
+
+- **All tests passing**: 95 tests, 261 assertions, 0 failures
+- **Comprehensive search validation**: 21/21 test queries return results
+- **Real-world verification**: "rails state management" query puts Rails result at #1 (was at bottom)
+- **System tests updated**: Removed category dropdown assertions
+
+## Files Created
+
+- `app/services/search_synonym_expander.rb` - Synonym expansion with 50+ mappings
+- `db/migrate/20251110220247_rename_comparison_tech_stack_to_technologies_and_add_gin_indexes.rb`
+- `test/services/search_synonym_expander_test.rb` - 14 comprehensive tests
+
+## Files Modified
+
+- `app/models/comparison.rb` - Added `search` scope with multi-field fuzzy search and relevance scoring
+- `app/presenters/browse_comparisons_presenter.rb` - Preserve relevance scoring, skip sort override when searching
+- `app/presenters/comparison_presenter.rb` - Admin refresh authorization with `current_user` parameter
+- `app/controllers/comparisons_controller.rb` - Pass `current_user` to ComparisonPresenter
+- `app/views/comparisons/index.html.erb` - Removed category dropdown
+- `app/views/comparisons/show.html.erb` - Updated comment "Development & Admins"
+- `lib/tasks/search.rake` - Updated field names, fixed `.count` → `.size` for custom SELECT queries
+- `test/models/comparison_test.rb` - Updated all field name references
+- `test/services/repository_comparer_test.rb` - Updated field name references
+- `test/system/homepage_test.rb` - Removed category dropdown assertions
+
+## Results
+
+- Search "ruby" now finds 5 Rails comparisons (was 0)
+- Search "rails state management" shows Rails result first (was last)
+- Synonym expansion: "auth" finds authentication comparisons
+- Fuzzy matching: "authentic" finds "authentication"
+- Multi-field coverage: Searches all relevant fields + categories
+- Performance: GIN indexes ensure fast fuzzy search on large datasets
+- Admin control: Refresh button only visible to admins (not regular users)
+
+## Success Criteria Met
+
+- ✅ Multi-field search across all relevant comparison data
+- ✅ Synonym expansion for common terms
+- ✅ Fuzzy matching with PostgreSQL trigram similarity
+- ✅ Relevance scoring puts best matches first
+- ✅ GIN indexes for performance
+- ✅ Simplified UI (no category dropdown needed)
+- ✅ Admin refresh capability
+- ✅ All tests passing

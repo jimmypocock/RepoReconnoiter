@@ -1,4 +1,4 @@
-namespace :analyze do
+namespace :analysis do
   desc "Run basic analysis on a repository (Tier 1 categorization)"
   desc "Usage: REPO='owner/name' bin/rails analyze:basic"
   task basic: :environment do

@@ -1,4 +1,4 @@
-namespace :categories do
+namespace :category do
   desc "Dump current categories to seeds file"
   task dump_seeds: :environment do
     puts "\n" + "=" * 100

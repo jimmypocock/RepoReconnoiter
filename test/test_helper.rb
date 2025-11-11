@@ -59,6 +59,7 @@ module ActiveSupport
 
     # Include test helpers
     include GithubHelpers
+    include Heroicon::ApplicationHelper
 
     # Stub OpenAI API calls to prevent hitting real API in tests
     # Call this in your test setup or individual tests

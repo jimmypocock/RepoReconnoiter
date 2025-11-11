@@ -96,7 +96,7 @@ class ComparisonCreator
   end
 
   def fetch_repositories(parsed)
-    fetcher = RepositoryFetcher.new(broadcaster:)
+    fetcher = RepositoryFetcher.new(broadcaster:, user:)
     result = fetcher.fetch_and_prepare(
       github_queries: parsed[:github_queries],
       limit: 15

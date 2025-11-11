@@ -46,23 +46,23 @@
                   w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition cursor-pointer
                 "
               >
-                <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                </svg>
+                <%= heroicon "bars-3", variant: :outline, options: { class: "w-4 h-4 text-gray-700" } %>
               </button>
             </div>
             <div
               data-dropdown-target="menu"
               class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
             >
+              <%= link_to "Deep Analysis", repositories_path, class: "block px-4 py-2 text-gray-700 hover:bg-gray-50" %>
               <% if current_user.admin? %>
+                <div class="border-t border-gray-200 my-1"></div>
                 <%= link_to "Admin Stats", admin_stats_path, target: "_blank", class: "block px-4 py-2 text-gray-700 hover:bg-gray-50" %>
                 <%= link_to "Job Dashboard",
                 admin_mission_control_jobs_path,
                 target: "_blank",
                 class: "block px-4 py-2 text-gray-700 hover:bg-gray-50" %>
-                <div class="border-t border-gray-200 my-1"></div>
               <% end %>
+              <div class="border-t border-gray-200 my-1"></div>
               <%= button_to "Sign Out",
               destroy_user_session_path,
               method: :delete,

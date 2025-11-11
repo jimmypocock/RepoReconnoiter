@@ -1,9 +1,8 @@
 <%# Progress Step Partial
   Parameters:
-    - step: Step identifier (e.g., "parsing_query")
-    - label: User-facing step description
-    - block content (optional): Additional content after the label %>
-<div data-comparison-step="<%= step %>" class="flex items-center gap-3 opacity-40">
+    - step: Step identifier (e.g., "fetching_readme")
+    - label: User-facing step description %>
+<div data-analysis-step="<%= step %>" class="flex items-center gap-3 opacity-40">
   <div data-step-icon class="w-6 h-6 relative">
     <%# Pending: Gray circle %>
     <div class="icon-pending w-6 h-6 rounded-full border-2 border-gray-300"></div>
@@ -18,5 +17,15 @@
     <%= heroicon "check-circle", variant: :solid, options: { class: "icon-completed hidden w-6 h-6 text-green-600 absolute inset-0" } %>
   </div>
   <span class="text-sm text-gray-700"><%= label %></span>
-  <%= yield if block_given? %>
 </div>
+
+<style>
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+</style>

@@ -1,4 +1,4 @@
-namespace :comparisons do
+namespace :comparison do
   desc "Create a new comparison (parse → fetch → analyze → compare)"
   desc "Usage: QUERY='your query here' bin/rails comparisons:create"
   task create: :environment do

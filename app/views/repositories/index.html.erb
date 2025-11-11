@@ -1,0 +1,78 @@
+<div class="mb-8">
+  <h1 class="text-4xl font-bold text-gray-900 mb-2">Deep Analysis</h1>
+  <p class="text-gray-600">Run comprehensive analysis on any GitHub repository</p>
+</div>
+
+<!-- Search Form -->
+<div class="mb-8">
+  <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">Analyze a Repository</h2>
+
+    <%= form_with url: repositories_path, method: :get, class: "space-y-4" do |f| %>
+      <div>
+        <label for="query" class="block text-sm font-medium text-gray-700 mb-2">
+          GitHub URL or Repository
+        </label>
+        <%= f.text_field :query,
+          value: params[:query],
+          placeholder: "https://github.com/owner/repo or owner/repo",
+          class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+          required: true %>
+        <p class="mt-2 text-sm text-gray-500">
+          Examples: https://github.com/sidekiq/sidekiq or sidekiq/sidekiq
+        </p>
+      </div>
+
+      <%= f.submit "Analyze Repository",
+        class: "w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors cursor-pointer" %>
+    <% end %>
+  </div>
+</div>
+
+<!-- Recent Repositories -->
+<% if @repositories.any? %>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Recent Repositories</h2>
+    </div>
+
+    <div class="divide-y divide-gray-200">
+      <% @repositories.each do |repo| %>
+        <%= link_to repository_path(repo), class: "block px-6 py-4 hover:bg-gray-50 transition-colors" do %>
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <h3 class="text-lg font-medium text-blue-600 hover:text-blue-700">
+                <%= repo.full_name %>
+              </h3>
+
+              <% if repo.description.present? %>
+                <p class="mt-1 text-gray-600 text-sm line-clamp-2">
+                  <%= repo.description %>
+                </p>
+              <% end %>
+
+              <div class="mt-2 flex items-center gap-4 text-sm text-gray-500">
+                <span>⭐ <%= number_with_delimiter(repo.stargazers_count) %></span>
+                <span>🍴 <%= number_with_delimiter(repo.forks_count) %></span>
+                <% if repo.language.present? %>
+                  <span>💻 <%= repo.language %></span>
+                <% end %>
+                <% if repo.analyses.any? %>
+                  <span class="text-green-600">
+                    ✓ <%= pluralize(repo.analyses.count, 'analysis', 'analyses') %>
+                  </span>
+                <% end %>
+              </div>
+            </div>
+
+            <%= heroicon "chevron-right", variant: :outline, options: { class: "w-5 h-5 text-gray-400" } %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+<% else %>
+  <div class="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+    <p class="text-gray-500">No repositories analyzed yet. Search for one above to get started!</p>
+  </div>
+<% end %>

@@ -1,0 +1,185 @@
+<div class="mb-8">
+  <%= link_to repositories_path, class: "inline-flex items-center text-blue-600 hover:text-blue-700 mb-4" do %>
+    <%= heroicon "chevron-left", variant: :outline, options: { class: "w-5 h-5 mr-1" } %>
+    Back to Repositories
+  <% end %>
+
+  <div class="flex items-start justify-between gap-4 mb-2">
+    <h1 class="text-4xl font-bold text-gray-900"><%= @repository.full_name %></h1>
+
+    <% if safe_github_url(@repository.html_url) %>
+      <%= link_to safe_github_url(@repository.html_url),
+        target: "_blank",
+        rel: "noopener noreferrer",
+        class: "inline-flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition-colors" do %>
+        <%= heroicon "arrow-top-right-on-square", variant: :outline, options: { class: "w-5 h-5" } %>
+        View on GitHub
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if @repository.description.present? %>
+    <p class="text-gray-600 text-lg"><%= @repository.description %></p>
+  <% end %>
+</div>
+
+<!-- Repository Stats -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+  <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+    <div class="text-sm text-gray-600">Stars</div>
+    <div class="text-2xl font-bold text-gray-900">
+      <%= number_with_delimiter(@repository.stargazers_count) %>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+    <div class="text-sm text-gray-600">Forks</div>
+    <div class="text-2xl font-bold text-gray-900">
+      <%= number_with_delimiter(@repository.forks_count) %>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+    <div class="text-sm text-gray-600">Language</div>
+    <div class="text-2xl font-bold text-gray-900">
+      <%= @repository.language || "N/A" %>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+    <div class="text-sm text-gray-600">Analyses</div>
+    <div class="text-2xl font-bold text-gray-900">
+      <%= @analyses.count %>
+    </div>
+  </div>
+</div>
+
+<!-- Run New Analysis Section -->
+<div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200 mb-8">
+  <h2 class="text-xl font-semibold text-gray-900 mb-4">Deep Analysis</h2>
+
+  <% if @can_create_analysis %>
+    <div class="mb-4">
+      <p class="text-gray-600 mb-2">
+        Run a comprehensive deep analysis on this repository using gpt-4o (expensive model).
+      </p>
+      <p class="text-sm text-gray-500">
+        Cost: ~$0.05-0.10 per analysis • Remaining budget today: $<%= number_with_precision(@remaining_budget, precision: 2) %>
+      </p>
+      <p class="text-sm text-gray-500">
+        Your analyses today: <%= @user_analyses_today %> / <%= AnalysisDeep::RATE_LIMIT_PER_USER %>
+      </p>
+    </div>
+
+    <%= button_to "Run Deep Analysis",
+      create_analysis_repository_path(@repository),
+      method: :post,
+      class: "bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors",
+      data: { turbo_stream: true, turbo_confirm: "This will cost ~$0.05-0.10. Continue?" } %>
+  <% else %>
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+      <p class="text-yellow-800 font-medium">Cannot create new analysis</p>
+      <p class="text-yellow-700 text-sm mt-1">
+        <% if !AnalysisDeep.can_create_today? %>
+          Daily budget exceeded. Remaining: $<%= number_with_precision(@remaining_budget, precision: 2) %>
+        <% elsif !AnalysisDeep.user_can_create_today?(current_user) %>
+          You've reached your daily limit of <%= AnalysisDeep::RATE_LIMIT_PER_USER %> analyses. Try again tomorrow.
+        <% end %>
+      </p>
+    </div>
+  <% end %>
+</div>
+
+<!-- Analyses List -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+  <div class="px-6 py-4 border-b border-gray-200">
+    <h2 class="text-xl font-semibold text-gray-900">Analysis History</h2>
+  </div>
+
+  <% if @analyses.any? %>
+    <div class="divide-y divide-gray-200">
+      <% @analyses.each do |analysis| %>
+        <div class="px-6 py-6">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <%= analysis.type || "Analysis" %>
+                </span>
+                <span class="text-sm text-gray-500">
+                  <%= time_ago_in_words(analysis.created_at) %> ago
+                </span>
+              </div>
+              <div class="text-sm text-gray-600">
+                Model: <%= analysis.model_used %> •
+                Cost: $<%= number_with_precision(analysis.cost_usd, precision: 6) %> •
+                Tokens: <%= number_with_delimiter(analysis.input_tokens) %> in / <%= number_with_delimiter(analysis.output_tokens) %> out
+              </div>
+            </div>
+          </div>
+
+          <% if analysis.type == "AnalysisDeep" %>
+            <!-- Deep Analysis Results -->
+            <div class="space-y-4">
+              <% if analysis.readme_analysis.present? %>
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">📖 README Analysis</h4>
+                  <p class="text-gray-700 whitespace-pre-wrap"><%= analysis.readme_analysis %></p>
+                </div>
+              <% end %>
+
+              <% if analysis.issues_analysis.present? %>
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">🐛 Issues Analysis</h4>
+                  <p class="text-gray-700 whitespace-pre-wrap"><%= analysis.issues_analysis %></p>
+                </div>
+              <% end %>
+
+              <% if analysis.maintenance_analysis.present? %>
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">🔧 Maintenance Analysis</h4>
+                  <p class="text-gray-700 whitespace-pre-wrap"><%= analysis.maintenance_analysis %></p>
+                </div>
+              <% end %>
+
+              <% if analysis.adoption_analysis.present? %>
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">🚀 Adoption Analysis</h4>
+                  <p class="text-gray-700 whitespace-pre-wrap"><%= analysis.adoption_analysis %></p>
+                </div>
+              <% end %>
+
+              <% if analysis.security_analysis.present? %>
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">🔒 Security Analysis</h4>
+                  <p class="text-gray-700 whitespace-pre-wrap"><%= analysis.security_analysis %></p>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <!-- Basic Analysis Results -->
+            <div class="space-y-4">
+              <% if analysis.summary.present? %>
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">Summary</h4>
+                  <p class="text-gray-700"><%= analysis.summary %></p>
+                </div>
+              <% end %>
+
+              <% if analysis.use_cases.present? %>
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">Use Cases</h4>
+                  <p class="text-gray-700"><%= analysis.use_cases %></p>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="px-6 py-12 text-center text-gray-500">
+      <p>No analyses yet. Run a deep analysis to get started!</p>
+    </div>
+  <% end %>
+</div>

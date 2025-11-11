@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_11_030545) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_11_171018) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -53,6 +53,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_11_030545) do
     t.string "type", null: false
     t.datetime "updated_at", null: false
     t.text "use_cases"
+    t.bigint "user_id"
     t.text "why_care"
     t.index ["cost_usd"], name: "index_analyses_on_cost_usd"
     t.index ["created_at"], name: "index_analyses_on_created_at"
@@ -60,6 +61,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_11_030545) do
     t.index ["repository_id", "type", "is_current"], name: "index_analyses_current"
     t.index ["repository_id"], name: "index_analyses_on_repository_id"
     t.index ["type"], name: "index_analyses_on_type"
+    t.index ["user_id"], name: "index_analyses_on_user_id"
   end
 
   create_table "categories", force: :cascade do |t|
@@ -391,6 +393,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_11_030545) do
 
   add_foreign_key "ai_costs", "users"
   add_foreign_key "analyses", "repositories"
+  add_foreign_key "analyses", "users"
   add_foreign_key "comparison_categories", "categories"
   add_foreign_key "comparison_categories", "comparisons"
   add_foreign_key "comparison_repositories", "comparisons"
