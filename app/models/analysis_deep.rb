@@ -3,14 +3,17 @@ class AnalysisDeep < Analysis
   # CONFIGURATION
   #--------------------------------------
 
-  # Daily budget cap for Tier 2 deep analysis (expensive ~$0.05-0.10 per repo)
-  DAILY_BUDGET = 0.50  # $0.50/day max
+  # Daily budget cap for deep analysis (expensive ~$0.05-0.10 per repo)
+  # REQUIRED: Set ANALYSIS_DEEP_DAILY_BUDGET in .env (see .env.example)
+  DAILY_BUDGET = ENV.fetch("ANALYSIS_DEEP_DAILY_BUDGET").to_f
 
   # Rate limit per user per day
-  RATE_LIMIT_PER_USER = 3  # 3 deep analyses per day per user
+  # REQUIRED: Set ANALYSIS_DEEP_RATE_LIMIT_PER_USER in .env (see .env.example)
+  RATE_LIMIT_PER_USER = ENV.fetch("ANALYSIS_DEEP_RATE_LIMIT_PER_USER").to_i
 
   # Default expiration for deep analysis (longer cache since expensive)
-  DEFAULT_EXPIRATION_DAYS = 30
+  # REQUIRED: Set ANALYSIS_DEEP_EXPIRATION_DAYS in .env (see .env.example)
+  DEFAULT_EXPIRATION_DAYS = ENV.fetch("ANALYSIS_DEEP_EXPIRATION_DAYS").to_i
 
   #--------------------------------------
   # DEEP ANALYSIS FIELDS

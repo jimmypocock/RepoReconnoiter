@@ -1,4 +1,4 @@
-class BrowseComparisonsPresenter
+class SearchComparisonsPresenter
   attr_reader :params
 
   def initialize(params)
@@ -15,10 +15,6 @@ class BrowseComparisonsPresenter
 
   def has_filters?
     params[:date].present? || params[:search].present?
-  end
-
-  def recent_comparisons
-    @recent_comparisons ||= Comparison.includes(:categories, :repositories, comparison_repositories: :repository).recent.limit(8)
   end
 
   private

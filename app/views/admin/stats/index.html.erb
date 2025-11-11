@@ -3,61 +3,34 @@
   <p class="text-gray-600">System-wide metrics and usage data</p>
 </div>
 
-<!-- Stats Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Repositories Indexed -->
-      <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="text-sm font-medium text-gray-600">Repositories Indexed</h3>
-          <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
-          </svg>
-        </div>
-        <p class="text-3xl font-bold text-gray-900"><%= number_with_delimiter(@presenter.repositories_count) %></p>
-      </div>
+  <%= render "stat_card",
+    title: "Repositories Indexed",
+    value: number_with_delimiter(@presenter.repositories_count),
+    icon_color: "blue",
+    icon: "folder" %>
 
-      <!-- Comparisons Created -->
-      <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="text-sm font-medium text-gray-600">Comparisons Created</h3>
-          <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-          </svg>
-        </div>
-        <p class="text-3xl font-bold text-gray-900"><%= number_with_delimiter(@presenter.comparisons_count) %></p>
-      </div>
+  <%= render "stat_card",
+    title: "Comparisons Created",
+    value: number_with_delimiter(@presenter.comparisons_count),
+    icon_color: "green",
+    icon: "clipboard" %>
 
-      <!-- Total Views -->
-      <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="text-sm font-medium text-gray-600">Total Views</h3>
-          <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-          </svg>
-        </div>
-        <p class="text-3xl font-bold text-gray-900"><%= number_with_delimiter(@presenter.total_views) %></p>
-      </div>
+  <%= render "stat_card",
+    title: "Total Views",
+    value: number_with_delimiter(@presenter.total_views),
+    icon_color: "purple",
+    icon: "eye" %>
 
-      <!-- Total AI Spend -->
-      <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="text-sm font-medium text-gray-600">Total AI Spend</h3>
-          <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-        </div>
-        <p class="text-3xl font-bold text-gray-900">$<%= number_with_precision(@presenter.ai_spend_total, precision: 2) %></p>
-      </div>
+  <%= render "stat_card",
+    title: "Total AI Spend",
+    value: "$#{number_with_precision(@presenter.ai_spend_total, precision: 2)}",
+    icon_color: "orange",
+    icon: "dollar" %>
 
-      <!-- AI Spend Today -->
-      <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="text-sm font-medium text-gray-600">AI Spend Today</h3>
-          <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-          </svg>
-        </div>
-        <p class="text-3xl font-bold text-gray-900">$<%= number_with_precision(@presenter.ai_spend_today, precision: 2) %></p>
-      </div>
-    </div>
+  <%= render "stat_card",
+    title: "AI Spend Today",
+    value: "$#{number_with_precision(@presenter.ai_spend_today, precision: 2)}",
+    icon_color: "red",
+    icon: "chart" %>
+</div>

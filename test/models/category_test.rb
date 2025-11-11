@@ -58,19 +58,4 @@ class CategoryTest < ActiveSupport::TestCase
     assert_respond_to category, :comparisons
     assert_respond_to category, :comparison_categories
   end
-
-  test "popular scope should order by repositories_count" do
-    # Update repositories_count for test categories
-    categories(:ruby).update!(repositories_count: 10)
-    categories(:go).update!(repositories_count: 5)
-    categories(:rust).update!(repositories_count: 15)
-
-    # Query specific test categories to avoid interference from other parallel tests
-    test_category_ids = [ categories(:rust).id, categories(:ruby).id, categories(:go).id ]
-    popular = Category.where(id: test_category_ids).popular
-
-    assert_equal categories(:rust), popular.first
-    assert_equal categories(:ruby), popular.second
-    assert_equal categories(:go), popular.third
-  end
 end

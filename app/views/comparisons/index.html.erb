@@ -1,124 +1,113 @@
 <!-- Hero Search Section (Above the Fold) -->
-    <% if user_signed_in? %>
-      <div class="mb-8 text-center transition-all duration-300" data-navbar-target="searchSection">
-        <p class="text-sm text-gray-600 mb-4">Use AI to search the best open source library for your project</p>
-        <div class="max-w-2xl mx-auto">
-          <%= render "shared/search_form",
-            container_classes: "w-full",
-            input_classes: "w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" %>
-        </div>
-      </div>
-    <% end %>
-
-    <!-- Recent Searches -->
-    <% if @presenter.recent_comparisons.any? && !@presenter.has_filters? %>
-      <div class="mb-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-3">Recent Searches</h2>
-
-        <!-- Compact List -->
-        <div class="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
-          <% @presenter.recent_comparisons.first(5).each do |comparison| %>
-            <%= link_to comparison_path(comparison), class: "block px-4 py-3 hover:bg-gray-50 transition" do %>
-              <div class="flex items-center justify-between gap-4">
-                <span class="text-gray-900 font-medium line-clamp-1 flex-1"><%= comparison.user_query %></span>
-                <span class="text-sm text-gray-500 flex-shrink-0"><%= time_ago_in_words(comparison.created_at) %> ago</span>
-              </div>
-            <% end %>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
-
-    <!-- Filter Bar -->
-    <div class="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-      <%= form_with url: root_path, method: :get, class: "flex flex-wrap gap-3 items-center" do |f| %>
-        <!-- Search -->
-        <div class="flex-1 min-w-64">
-          <%= f.text_field :search,
-              value: params[:search],
-              placeholder: "Search comparisons...",
-              class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" %>
-        </div>
-
-        <!-- Date Range -->
-        <div>
-          <%= f.select :date,
-              options_for_select(
-                [["All Time", ""], ["This Week", "week"], ["This Month", "month"]],
-                params[:date]
-              ),
-              {},
-              class: "px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" %>
-        </div>
-
-        <!-- Sort -->
-        <div>
-          <%= f.select :sort,
-              options_for_select(
-                [["Newest", "newest"], ["Most Popular", "popular"]],
-                params[:sort]
-              ),
-              {},
-              class: "px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" %>
-        </div>
-
-        <%= f.submit "Apply Filters", class: "px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium" %>
-
-        <% if @presenter.has_filters? %>
-          <%= link_to "Clear", root_path, class: "px-4 py-2 text-gray-600 hover:text-gray-900" %>
-        <% end %>
-      <% end %>
+<% if user_signed_in? %>
+  <div
+    class="text-center transition-all duration-300 mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4"
+    data-navbar-target="searchSection"
+  >
+    <p class="text-lg font-bold text-gray-600 mb-4">Use AI to find the best open source library for your project</p>
+    <div class="max-w-2xl mx-auto">
+      <%= render "shared/search_form",
+      container_classes: "w-full",
+      input_classes:
+        "w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" %>
+    </div>
+  </div>
+<% end %>
+<!-- Filter Bar -->
+<div class="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+  <%= form_with url: root_path, method: :get, class: "flex flex-wrap gap-3 items-center" do |f| %>
+    <!-- Search -->
+    <div class="flex-1 min-w-64">
+      <%= f.text_field :search,
+                   value: params[:search],
+                   placeholder: "Search existing comparisons...",
+                   class:
+                     "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+    </div>
+    <!-- Date Range -->
+    <div>
+      <%= f.select :date,
+               options_for_select([["All Time", ""], ["This Week", "week"], ["This Month", "month"]], params[:date]),
+               {},
+               class: "px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+    </div>
+    <!-- Sort -->
+    <div>
+      <%= f.select :sort,
+               options_for_select([%w[Newest newest], ["Most Popular", "popular"]], params[:sort]),
+               {},
+               class: "px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" %>
     </div>
 
-    <!-- Comparisons List with Infinite Scroll -->
-    <% if @comparisons.any? %>
-      <div id="comparisons_list" class="space-y-4">
-        <% @comparisons.each do |comparison| %>
-          <%= render "comparison_card", comparison: comparison %>
+    <%= f.submit "Apply Filters", class: "px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium" %>
+
+    <% if @presenter.has_filters? %>
+      <%= link_to "Clear", root_path, class: "px-4 py-2 text-gray-600 hover:text-gray-900" %>
+    <% end %>
+  <% end %>
+</div>
+<!-- Comparisons List with Infinite Scroll -->
+<% if @comparisons.any? %>
+  <div id="comparisons_list" class="space-y-4">
+    <% @comparisons.each do |comparison| %>
+      <%= render "comparison_card", comparison: comparison %>
+    <% end %>
+  </div>
+  <!-- Pagination Controls -->
+  <div id="pagination_controls" class="mt-8" data-controller="infinite-scroll">
+    <% if @pagy.next %>
+      <!-- Invisible trigger for infinite scroll -->
+      <div data-infinite-scroll-target="trigger"></div>
+
+      <div class="flex items-center justify-center gap-4">
+        <% if @pagy.previous %>
+          <%= link_to "Previous Page",
+          root_path(page: @pagy.previous, search: params[:search], date: params[:date], sort: params[:sort]),
+          class:
+            "inline-flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-xl transition-colors shadow-md hover:shadow-lg",
+          data: {
+            infinite_scroll_target: "previous",
+          } %>
         <% end %>
+
+        <%= link_to "Load More",
+        root_path(page: @pagy.next, search: params[:search], date: params[:date], sort: params[:sort]),
+        class:
+          "inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl transition-colors shadow-md hover:shadow-lg",
+        data: {
+          turbo_stream: true,
+          infinite_scroll_target: "load",
+        } %>
       </div>
-
-      <!-- Pagination Controls -->
-      <div id="pagination_controls" class="mt-8" data-controller="infinite-scroll">
-        <% if @pagy.next %>
-          <!-- Invisible trigger for infinite scroll -->
-          <div data-infinite-scroll-target="trigger"></div>
-
-          <div class="flex items-center justify-center gap-4">
-            <% if @pagy.previous %>
-              <%= link_to "Previous Page",
-                  root_path(page: @pagy.previous, search: params[:search], date: params[:date], sort: params[:sort]),
-                  class: "inline-flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-xl transition-colors shadow-md hover:shadow-lg",
-                  data: { infinite_scroll_target: "previous" } %>
-            <% end %>
-
-            <%= link_to "Load More",
-                root_path(page: @pagy.next, search: params[:search], date: params[:date], sort: params[:sort]),
-                class: "inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl transition-colors shadow-md hover:shadow-lg",
-                data: {
-                  turbo_stream: true,
-                  infinite_scroll_target: "load"
-                } %>
-          </div>
-        <% elsif @pagy.previous %>
-          <div class="flex items-center justify-center gap-4">
-            <%= link_to "Previous Page",
-                root_path(page: @pagy.previous, search: params[:search], date: params[:date], sort: params[:sort]),
-                class: "inline-flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-xl transition-colors shadow-md hover:shadow-lg",
-                data: { infinite_scroll_target: "previous" } %>
-          </div>
-        <% end %>
-      </div>
-    <% else %>
-      <!-- Empty State -->
-      <div class="bg-white rounded-xl shadow-sm p-12 text-center">
-        <div class="text-gray-400 mb-4">
-          <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-          </svg>
-        </div>
-        <h3 class="text-xl font-semibold text-gray-900 mb-2">No comparisons found</h3>
-        <p class="text-gray-600 mb-6">Try adjusting your filters or search terms</p>
-        <%= link_to "Clear Filters", root_path, class: "inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium" %>
+    <% elsif @pagy.previous %>
+      <div class="flex items-center justify-center gap-4">
+        <%= link_to "Previous Page",
+        root_path(page: @pagy.previous, search: params[:search], date: params[:date], sort: params[:sort]),
+        class:
+          "inline-flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-xl transition-colors shadow-md hover:shadow-lg",
+        data: {
+          infinite_scroll_target: "previous",
+        } %>
       </div>
     <% end %>
+  </div>
+<% else %>
+  <!-- Empty State -->
+  <div class="bg-white rounded-xl shadow-sm p-12 text-center">
+    <div class="text-gray-400 mb-4">
+      <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        ></path>
+      </svg>
+    </div>
+    <h3 class="text-xl font-semibold text-gray-900 mb-2">No comparisons found</h3>
+    <p class="text-gray-600 mb-6">Try adjusting your filters or search terms</p>
+    <%= link_to "Clear Filters",
+    root_path,
+    class: "inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium" %>
+  </div>
+<% end %>

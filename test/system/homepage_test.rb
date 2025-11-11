@@ -41,19 +41,6 @@ class HomepageTest < ApplicationSystemTestCase
     assert_selector "select[name='sort']"
   end
 
-  test "recent searches section displays when comparisons exist" do
-    visit root_path
-
-    # Recent searches section header
-    assert_text "Recent Searches"
-
-    # Should show recent searches in compact list format if comparisons exist
-    if Comparison.any?
-      # Check for list container with dividers
-      assert_selector ".divide-y"
-    end
-  end
-
   test "comparisons list displays comparison cards correctly" do
     visit root_path
 

@@ -5,10 +5,13 @@
   <%= form_with url: comparisons_path, method: :post, class: container_classes, data: { turbo_stream: true } do |f| %>
     <div class="relative">
       <%= f.text_field :query,
-          placeholder: "What library or tool are you looking for?",
-          class: input_classes,
-          maxlength: 500,
-          data: { search_sync_target: "input", action: "input->search-sync#sync" } %>
+                   placeholder: "What library or tool are you looking for?",
+                   class: input_classes,
+                   maxlength: 500,
+                   data: {
+                     search_sync_target: "input",
+                     action: "input->search-sync#sync",
+                   } %>
       <button
         type="submit"
         class="

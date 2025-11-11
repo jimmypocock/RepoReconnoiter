@@ -15,25 +15,32 @@
       <div class="flex items-center justify-center gap-4">
         <% if @pagy.previous %>
           <%= link_to "Previous Page",
-              root_path(page: @pagy.previous, search: params[:search], date: params[:date], sort: params[:sort]),
-              class: "inline-flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-xl transition-colors shadow-md hover:shadow-lg",
-              data: { infinite_scroll_target: "previous" } %>
+          root_path(page: @pagy.previous, search: params[:search], date: params[:date], sort: params[:sort]),
+          class:
+            "inline-flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-xl transition-colors shadow-md hover:shadow-lg",
+          data: {
+            infinite_scroll_target: "previous",
+          } %>
         <% end %>
 
         <%= link_to "Load More",
-            root_path(page: @pagy.next, search: params[:search], date: params[:date], sort: params[:sort]),
-            class: "inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl transition-colors shadow-md hover:shadow-lg",
-            data: {
-              turbo_stream: true,
-              infinite_scroll_target: "load"
-            } %>
+        root_path(page: @pagy.next, search: params[:search], date: params[:date], sort: params[:sort]),
+        class:
+          "inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl transition-colors shadow-md hover:shadow-lg",
+        data: {
+          turbo_stream: true,
+          infinite_scroll_target: "load",
+        } %>
       </div>
     <% elsif @pagy.previous %>
       <div class="flex items-center justify-center gap-4">
         <%= link_to "Previous Page",
-            root_path(page: @pagy.previous, search: params[:search], date: params[:date], sort: params[:sort]),
-            class: "inline-flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-xl transition-colors shadow-md hover:shadow-lg",
-            data: { infinite_scroll_target: "previous" } %>
+        root_path(page: @pagy.previous, search: params[:search], date: params[:date], sort: params[:sort]),
+        class:
+          "inline-flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-xl transition-colors shadow-md hover:shadow-lg",
+        data: {
+          infinite_scroll_target: "previous",
+        } %>
       </div>
     <% end %>
   </div>

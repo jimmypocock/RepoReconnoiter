@@ -4,7 +4,7 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["logoText", "searchSection", "searchInline"]
   static values = {
-    threshold: { type: Number, default: 100 }, // Scroll threshold in pixels
+    threshold: { type: Number, default: 144 }, // Scroll threshold in pixels
     homepage: { type: Boolean, default: false } // True only on homepage (enables scroll behavior)
   }
 

@@ -1,158 +1,158 @@
 <!-- Query Info -->
-    <div class="mb-6">
-      <h2 class="text-2xl font-bold text-gray-900 mb-2"><%= @comparison.user_query %></h2>
-      <div class="flex items-center gap-4 text-sm text-gray-600">
-        <span><%= @comparison.repos_compared_count %> repositories compared</span>
-        <span>•</span>
-        <span><%= @comparison.technologies || "Language-agnostic" %></span>
-        <% if @comparison.problem_domains.present? %>
-          <span>•</span>
-          <span><%= @comparison.problem_domains %></span>
-        <% end %>
-      </div>
-    </div>
-
-    <!-- Cache Status Indicator (Always shown for debugging) -->
-    <div class="mb-6 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
-      <div class="flex items-start gap-2">
-        <svg class="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        <div class="flex-1">
-          <p class="text-sm text-gray-700">
-            Created <%= time_ago_in_words(@comparison.created_at) %> ago (<%= @comparison.created_at.strftime("%B %d, %Y at %l:%M %p") %>)
-            <% if @comparison.newly_created %>
-              <span class="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded">Newly Created</span>
-            <% elsif @comparison.newly_created == false %>
-              <span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">From Cache</span>
-            <% end %>
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Refresh Button (Development & Admins) -->
-    <% if @comparison.can_refresh? %>
-      <div class="mb-6">
-        <%= button_to comparisons_path(query: @comparison.user_query, refresh: true),
-          method: :post,
-          class: "text-sm text-gray-600 hover:text-gray-900 underline flex items-center gap-1",
-          data: { turbo_submits_with: "Refreshing..." } do %>
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-          </svg>
-          Re-run with Fresh Data
-        <% end %>
-      </div>
+<div class="mb-6">
+  <h2 class="text-2xl font-bold text-gray-900 mb-2"><%= @comparison.user_query %></h2>
+  <div class="flex items-center gap-4 text-sm text-gray-600">
+    <span><%= @comparison.repos_compared_count %> repositories compared</span>
+    <span>•</span>
+    <span><%= @comparison.technologies || "Language-agnostic" %></span>
+    <% if @comparison.problem_domains.present? %>
+      <span>•</span>
+      <span><%= @comparison.problem_domains %></span>
     <% end %>
+  </div>
+</div>
 
-    <!-- Recommendation Card -->
-    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 mb-8">
-      <div class="flex items-start gap-3 mb-3">
-        <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-        </svg>
+<!-- Cache Status Indicator (Always shown for debugging) -->
+<div class="mb-6 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
+  <div class="flex items-start gap-2">
+    <svg class="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    <div class="flex-1">
+      <p class="text-sm text-gray-700">
+        Created <%= time_ago_in_words(@comparison.created_at) %> ago (<%= @comparison.created_at.strftime("%B %d, %Y at %l:%M %p") %>)
+        <% if @comparison.newly_created %>
+          <span class="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded">Newly Created</span>
+        <% elsif @comparison.newly_created == false %>
+          <span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">From Cache</span>
+        <% end %>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Refresh Button (Development & Admins) -->
+<% if @comparison.can_refresh? %>
+  <div class="mb-6">
+    <%= button_to comparisons_path(query: @comparison.user_query, refresh: true),
+      method: :post,
+      class: "text-sm text-gray-600 hover:text-gray-900 underline flex items-center gap-1",
+      data: { turbo_submits_with: "Refreshing..." } do %>
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+      </svg>
+      Re-run with Fresh Data
+    <% end %>
+  </div>
+<% end %>
+
+<!-- Recommendation Card -->
+<div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 mb-8">
+  <div class="flex items-start gap-3 mb-3">
+    <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    </svg>
+    <div class="flex-1">
+      <h3 class="text-lg font-semibold text-gray-900 mb-1">Recommended</h3>
+      <div class="flex items-baseline gap-2 mb-2">
+        <%= link_to "https://github.com/#{@comparison.recommended_repo_full_name}",
+          target: "_blank",
+          rel: "noopener noreferrer",
+          class: "text-2xl font-bold text-blue-600 hover:text-blue-700 hover:underline" do %>
+          <%= @comparison.recommended_repo_full_name %>
+        <% end %>
+      </div>
+      <p class="text-gray-700"><%= @comparison.recommendation_reasoning %></p>
+    </div>
+  </div>
+</div>
+
+<!-- Ranked Repositories -->
+<div class="space-y-4">
+  <h3 class="text-xl font-bold text-gray-900 mb-4">All Options Ranked</h3>
+
+  <% @comparison.comparison_repositories.order(:rank).each do |cr| %>
+    <div class="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+      <!-- Rank and Name -->
+      <div class="flex items-start gap-4 mb-4">
+        <div class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+          <span class="text-lg font-bold text-gray-700"><%= cr.rank %></span>
+        </div>
+
         <div class="flex-1">
-          <h3 class="text-lg font-semibold text-gray-900 mb-1">Recommended</h3>
-          <div class="flex items-baseline gap-2 mb-2">
-            <%= link_to "https://github.com/#{@comparison.recommended_repo_full_name}",
+          <div class="flex items-baseline gap-3 mb-2">
+            <%= link_to cr.repository.html_url,
               target: "_blank",
               rel: "noopener noreferrer",
-              class: "text-2xl font-bold text-blue-600 hover:text-blue-700 hover:underline" do %>
-              <%= @comparison.recommended_repo_full_name %>
+              class: "text-xl font-bold text-gray-900 hover:text-blue-600 hover:underline" do %>
+              <%= cr.repository.full_name %>
+            <% end %>
+            <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-semibold rounded-full">
+              <%= cr.score %>/100
+            </span>
+          </div>
+
+          <p class="text-gray-600 text-sm mb-3"><%= cr.repository.description %></p>
+
+          <!-- GitHub Stats -->
+          <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
+            <span>⭐ <%= number_with_delimiter(cr.repository.stargazers_count) %></span>
+            <span>🍴 <%= number_with_delimiter(cr.repository.forks_count) %></span>
+            <% if cr.repository.language.present? %>
+              <span>💻 <%= cr.repository.language %></span>
             <% end %>
           </div>
-          <p class="text-gray-700"><%= @comparison.recommendation_reasoning %></p>
+
+          <!-- Fit Reasoning -->
+          <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+            <p class="text-gray-700"><%= cr.fit_reasoning %></p>
+          </div>
+
+          <!-- Pros and Cons -->
+          <div class="grid md:grid-cols-2 gap-4">
+            <!-- Pros -->
+            <div>
+              <h4 class="text-sm font-semibold text-green-800 mb-2 flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Pros
+              </h4>
+              <ul class="space-y-1">
+                <% cr.pros.each do |pro| %>
+                  <li class="text-sm text-gray-700 flex items-start gap-2">
+                    <span class="text-green-600 flex-shrink-0">•</span>
+                    <span><%= pro %></span>
+                  </li>
+                <% end %>
+              </ul>
+            </div>
+
+            <!-- Cons -->
+            <% if cr.cons.any? %>
+              <div>
+                <h4 class="text-sm font-semibold text-orange-800 mb-2 flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                  Cons
+                </h4>
+                <ul class="space-y-1">
+                  <% cr.cons.each do |con| %>
+                    <li class="text-sm text-gray-700 flex items-start gap-2">
+                      <span class="text-orange-600 flex-shrink-0">•</span>
+                      <span><%= con %></span>
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+          </div>
         </div>
       </div>
     </div>
-
-    <!-- Ranked Repositories -->
-    <div class="space-y-4">
-      <h3 class="text-xl font-bold text-gray-900 mb-4">All Options Ranked</h3>
-
-      <% @comparison.comparison_repositories.order(:rank).each do |cr| %>
-        <div class="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-          <!-- Rank and Name -->
-          <div class="flex items-start gap-4 mb-4">
-            <div class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-              <span class="text-lg font-bold text-gray-700"><%= cr.rank %></span>
-            </div>
-
-            <div class="flex-1">
-              <div class="flex items-baseline gap-3 mb-2">
-                <%= link_to cr.repository.html_url,
-                  target: "_blank",
-                  rel: "noopener noreferrer",
-                  class: "text-xl font-bold text-gray-900 hover:text-blue-600 hover:underline" do %>
-                  <%= cr.repository.full_name %>
-                <% end %>
-                <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-semibold rounded-full">
-                  <%= cr.score %>/100
-                </span>
-              </div>
-
-              <p class="text-gray-600 text-sm mb-3"><%= cr.repository.description %></p>
-
-              <!-- GitHub Stats -->
-              <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                <span>⭐ <%= number_with_delimiter(cr.repository.stargazers_count) %></span>
-                <span>🍴 <%= number_with_delimiter(cr.repository.forks_count) %></span>
-                <% if cr.repository.language.present? %>
-                  <span>💻 <%= cr.repository.language %></span>
-                <% end %>
-              </div>
-
-              <!-- Fit Reasoning -->
-              <div class="mb-4 p-4 bg-gray-50 rounded-lg">
-                <p class="text-gray-700"><%= cr.fit_reasoning %></p>
-              </div>
-
-              <!-- Pros and Cons -->
-              <div class="grid md:grid-cols-2 gap-4">
-                <!-- Pros -->
-                <div>
-                  <h4 class="text-sm font-semibold text-green-800 mb-2 flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Pros
-                  </h4>
-                  <ul class="space-y-1">
-                    <% cr.pros.each do |pro| %>
-                      <li class="text-sm text-gray-700 flex items-start gap-2">
-                        <span class="text-green-600 flex-shrink-0">•</span>
-                        <span><%= pro %></span>
-                      </li>
-                    <% end %>
-                  </ul>
-                </div>
-
-                <!-- Cons -->
-                <% if cr.cons.any? %>
-                  <div>
-                    <h4 class="text-sm font-semibold text-orange-800 mb-2 flex items-center gap-1">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                      </svg>
-                      Cons
-                    </h4>
-                    <ul class="space-y-1">
-                      <% cr.cons.each do |con| %>
-                        <li class="text-sm text-gray-700 flex items-start gap-2">
-                          <span class="text-orange-600 flex-shrink-0">•</span>
-                          <span><%= con %></span>
-                        </li>
-                      <% end %>
-                    </ul>
-                  </div>
-                <% end %>
-              </div>
-            </div>
-          </div>
-        </div>
-      <% end %>
-    </div>
+  <% end %>
+</div>
 
 <!-- Footer Info -->
 <div class="mt-8 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">

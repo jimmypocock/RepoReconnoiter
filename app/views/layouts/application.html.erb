@@ -15,11 +15,9 @@
     <% if ENV["CLARITY_PROJECT_ID"].present? %>
       <!-- Microsoft Clarity -->
       <%= javascript_tag do %>
-        (function(c,l,a,r,i,t,y){
-          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-          t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-        })(window, document, "clarity", "script", "<%= ENV['CLARITY_PROJECT_ID'] %>");
+        (function(c,l,a,r,i,t,y){ c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y); })(window, document, "clarity", "script", "<%= ENV["CLARITY_PROJECT_ID"] %>");
       <% end %>
     <% end %>
 
@@ -37,10 +35,9 @@
 
   <body class="bg-gray-50" data-controller="search-sync">
     <%= render "shared/navigation", homepage: (controller_name == "comparisons" && action_name == "index") %>
-
     <!-- Flash Messages -->
     <% if flash[:notice] || flash[:alert] %>
-      <div class="container mx-auto px-4 mt-4">
+      <div class="container mx-auto px-4 mt-4 max-w-6xl">
         <% if flash[:notice] %>
           <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 mb-4">
             <%= flash[:notice] %>

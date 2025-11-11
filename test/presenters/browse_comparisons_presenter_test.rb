@@ -1,6 +1,6 @@
 require "test_helper"
 
-class BrowseComparisonsPresenterTest < ActiveSupport::TestCase
+class SearchComparisonsPresenterTest < ActiveSupport::TestCase
   #--------------------------------------
   # SEARCH INTEGRATION
   #--------------------------------------
@@ -13,7 +13,7 @@ class BrowseComparisonsPresenterTest < ActiveSupport::TestCase
     low_relevance = create_comparison("Background job library")
     low_relevance.update!(technologies: "Python")
 
-    presenter = BrowseComparisonsPresenter.new(search: "rails")
+    presenter = SearchComparisonsPresenter.new(search: "rails")
     results = presenter.comparisons.to_a
 
     # High relevance should be first
@@ -26,7 +26,7 @@ class BrowseComparisonsPresenterTest < ActiveSupport::TestCase
 
     new_python = create_comparison("Python library xyz", created_at: 1.day.ago)
 
-    presenter = BrowseComparisonsPresenter.new(search: "rails xyz", sort: "newest")
+    presenter = SearchComparisonsPresenter.new(search: "rails xyz", sort: "newest")
     results = presenter.comparisons.to_a
 
     # Should use relevance (old Rails match), not created_at DESC (new Python)
@@ -41,7 +41,7 @@ class BrowseComparisonsPresenterTest < ActiveSupport::TestCase
     recent = create_comparison("Recent", created_at: 3.days.ago)
     old = create_comparison("Old", created_at: 10.days.ago)
 
-    presenter = BrowseComparisonsPresenter.new(date: "week")
+    presenter = SearchComparisonsPresenter.new(date: "week")
 
     assert_includes presenter.comparisons, recent
     refute_includes presenter.comparisons, old
@@ -51,7 +51,7 @@ class BrowseComparisonsPresenterTest < ActiveSupport::TestCase
     recent = create_comparison("Recent", created_at: 20.days.ago)
     old = create_comparison("Old", created_at: 40.days.ago)
 
-    presenter = BrowseComparisonsPresenter.new(date: "month")
+    presenter = SearchComparisonsPresenter.new(date: "month")
 
     assert_includes presenter.comparisons, recent
     refute_includes presenter.comparisons, old
@@ -65,7 +65,7 @@ class BrowseComparisonsPresenterTest < ActiveSupport::TestCase
     old = create_comparison("Old unique xyz", created_at: 2.days.ago)
     new = create_comparison("New unique xyz", created_at: 1.hour.ago)
 
-    presenter = BrowseComparisonsPresenter.new(sort: "newest")
+    presenter = SearchComparisonsPresenter.new(sort: "newest")
     results = presenter.comparisons.to_a
 
     # Find our test records in results
@@ -82,7 +82,7 @@ class BrowseComparisonsPresenterTest < ActiveSupport::TestCase
     popular = create_comparison("Popular")
     popular.update!(view_count: 100)
 
-    presenter = BrowseComparisonsPresenter.new(sort: "popular")
+    presenter = SearchComparisonsPresenter.new(sort: "popular")
     results = presenter.comparisons.to_a
 
     assert_equal popular.id, results.first.id
@@ -95,7 +95,7 @@ class BrowseComparisonsPresenterTest < ActiveSupport::TestCase
     recent_popular = create_comparison("Recent Popular unique xyz", created_at: 2.days.ago)
     recent_popular.update!(view_count: 50)
 
-    presenter = BrowseComparisonsPresenter.new(sort: "trending")
+    presenter = SearchComparisonsPresenter.new(sort: "trending")
     results = presenter.comparisons.to_a
 
     # Find our test records in results
@@ -110,17 +110,17 @@ class BrowseComparisonsPresenterTest < ActiveSupport::TestCase
   #--------------------------------------
 
   test "has_filters? returns true when search present" do
-    presenter = BrowseComparisonsPresenter.new(search: "rails")
+    presenter = SearchComparisonsPresenter.new(search: "rails")
     assert presenter.has_filters?
   end
 
   test "has_filters? returns true when date present" do
-    presenter = BrowseComparisonsPresenter.new(date: "week")
+    presenter = SearchComparisonsPresenter.new(date: "week")
     assert presenter.has_filters?
   end
 
   test "has_filters? returns false when no filters" do
-    presenter = BrowseComparisonsPresenter.new({})
+    presenter = SearchComparisonsPresenter.new({})
     refute presenter.has_filters?
   end
 

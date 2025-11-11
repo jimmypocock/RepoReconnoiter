@@ -143,6 +143,38 @@ These are features to consider after the MVP is complete and stable in productio
 - [ ] Weekly trend report generation
 - [ ] Visualization of technology adoption over time
 
+## Comparison Relationship Analysis
+
+**Status**: Enhancement to ComparisonRepository join table to track richer context about how repositories relate within a specific comparison.
+
+**Current State**: ComparisonRepository only stores `rank` and `score` - minimal metadata about the relationship.
+
+**Proposed Enhancement**:
+
+- [ ] Add `alternatives_mentioned` field (jsonb) to ComparisonRepository
+  - Store other tool names mentioned when discussing this repo
+  - Example: When comparing Sidekiq, might mention "Resque", "DelayedJob", "GoodJob"
+  - Enables "Users also considered..." recommendations
+  - AI can extract these during comparison generation
+- [ ] Add `ecosystem_position` field (text) to ComparisonRepository
+  - Brief description of where this repo fits relative to others in THIS comparison
+  - Example: "Most popular, battle-tested option" or "Newer, simpler alternative"
+  - Context-aware: same repo might have different positions in different comparisons
+  - Enables more nuanced comparison cards and explanations
+- [ ] Update comparison creation prompt to extract this data
+  - Add structured output format for these new fields
+  - No additional API calls needed (extract from existing comparison analysis)
+- [ ] Display relationship data in comparison cards
+  - Show "Position: X" badge or inline text
+  - "Also mentioned: Y, Z" pills below repo name
+  - Helps users understand the comparison landscape at a glance
+
+**Benefits**:
+- Richer comparison context without extra AI cost
+- Better user understanding of how tools relate
+- Foundation for recommendation engine
+- Enables ecosystem visualization features later
+
 ## UI/UX Polish
 
 ### Skeleton Loaders for Infinite Scroll

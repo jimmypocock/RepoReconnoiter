@@ -276,6 +276,33 @@ class ComparisonTest < ActiveSupport::TestCase
     assert_operator first_result.relevance_score, :>, 0, "Relevance score should be positive"
   end
 
+  test "search can be scoped to subset of comparisons" do
+    # Create Rails and Python comparisons
+    rails_comp = create_comparison("rails cache library")
+    rails_comp.update!(technologies: "Rails, Ruby, Redis")
+
+    python_comp = create_comparison("python cache library")
+    python_comp.update!(technologies: "Python, Redis")
+
+    # Search only Rails comparisons using where scope
+    results = Comparison.where("technologies ILIKE ?", "%Rails%").search("cache")
+
+    assert_includes results, rails_comp, "Should include Rails comparison"
+    assert_not_includes results, python_comp, "Should not include Python comparison"
+  end
+
+  test "with_similarity_to can be scoped to subset of comparisons" do
+    # Create cached and old comparisons
+    cached_comp = create_comparison("rails background jobs", created_at: 2.days.ago)
+    old_comp = create_comparison("rails background processing", created_at: 10.days.ago)
+
+    # Use with_similarity_to only on cached comparisons
+    results = Comparison.cached.with_similarity_to("rails background jobs", 0.3)
+
+    assert_includes results, cached_comp, "Should include cached comparison"
+    assert_not_includes results, old_comp, "Should not include old comparison"
+  end
+
   private
 
   def create_comparison(query, created_at: Time.current)

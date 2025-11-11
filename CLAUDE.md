@@ -19,11 +19,13 @@ RepoReconnoiter is an Open Source Intelligence Dashboard that analyzes GitHub tr
 ## Logging Philosophy
 
 **Development Environment:**
+
 - Log level: `:debug` (verbose SQL queries, full stack traces, detailed debugging info)
 - Framework logging: Enabled (SQL, ActiveRecord, ActionCable, etc.)
 - Custom logger statements: Avoid (but acceptable for temporary debugging)
 
 **Production Environment:**
+
 - Log level: `:info` (request/response, errors, warnings only)
 - Framework logging: Minimal (no SQL queries, concise output)
 - Custom logger statements: Never use `Rails.logger` in code - keeps logs clean
@@ -382,6 +384,7 @@ authenticated = gh.authenticated?
 The `Comparison.search(search_term, fuzzy: true)` scope provides intelligent search with synonym expansion and fuzzy matching:
 
 **Search Fields:**
+
 - **user_query**: Original search query entered by user
 - **tech_stack**: Parsed technologies (e.g., "Rails, Ruby", "Python")
 - **problem_domain**: Identified problem area (e.g., "Background Job Processing")
@@ -424,8 +427,8 @@ results = Comparison.search("jobs")
 # Exact search - strict substring matching
 results = Comparison.search("exact term", fuzzy: false)
 
-# Via BrowseComparisonsPresenter (used in UI)
-presenter = BrowseComparisonsPresenter.new(params)
+# Via SearchComparisonsPresenter (used in UI)
+presenter = SearchComparisonsPresenter.new(params)
 comparisons = presenter.comparisons # Automatically applies fuzzy search
 ```
 

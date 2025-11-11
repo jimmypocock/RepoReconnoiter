@@ -3,6 +3,9 @@ ENV["RAILS_ENV"] ||= "test"
 # Set required environment variables for test environment
 ENV["COMPARISON_SIMILARITY_THRESHOLD"] ||= "0.8"
 ENV["COMPARISON_CACHE_DAYS"] ||= "7"
+ENV["ANALYSIS_DEEP_DAILY_BUDGET"] ||= "0.50"
+ENV["ANALYSIS_DEEP_RATE_LIMIT_PER_USER"] ||= "3"
+ENV["ANALYSIS_DEEP_EXPIRATION_DAYS"] ||= "30"
 
 require_relative "../config/environment"
 require "rails/test_help"
