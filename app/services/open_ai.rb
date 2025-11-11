@@ -21,8 +21,6 @@ class OpenAi
     }
   }.freeze
 
-  attr_reader :client
-
   def initialize
     @client = OpenAI::Client.new(
       api_key: Rails.application.credentials.openai&.api_key
@@ -42,7 +40,7 @@ class OpenAi
   def chat(messages:, model:, track_as: nil, **options)
     validate_model!(model)
 
-    response = client.chat.completions.create(
+    response = @client.chat.completions.create(
       model: model,
       messages: messages,
       **options
@@ -136,12 +134,6 @@ class OpenAi
     ai_cost.total_cost_usd += cost_usd
 
     ai_cost.save!
-
-    Rails.logger.info "💰 AI Cost tracked: #{model} - #{track_as || infer_cost_type} - $#{cost_usd.round(6)} (#{input_tokens} in / #{output_tokens} out)"
-  rescue => e
-    # Log error but don't fail the request
-    Rails.logger.error "Failed to track AI cost: #{e.message}"
-    Rails.logger.error e.backtrace.first(5).join("\n")
   end
 
   def validate_model!(model)

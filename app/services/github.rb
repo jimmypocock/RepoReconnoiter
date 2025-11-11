@@ -66,10 +66,4 @@ class Github
   class << self
     delegate :search, :search_trending, to: :new
   end
-
-  private
-
-  #--------------------------------------
-  # PRIVATE METHODS
-  #--------------------------------------
 end
