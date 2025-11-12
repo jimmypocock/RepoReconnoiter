@@ -57,7 +57,11 @@ class OpenAi
       message_count: messages.size
     })
     raise
-  rescue OpenAI::Error => e
+  rescue StandardError => e
+    # Catch any other errors (OpenAI API errors, network issues, etc.)
+    # Re-raise ModelNotWhitelistedError without capturing to Sentry
+    raise if e.is_a?(ModelNotWhitelistedError)
+
     Sentry.capture_exception(e, extra: {
       endpoint: "chat.completions",
       error_type: e.class.name,

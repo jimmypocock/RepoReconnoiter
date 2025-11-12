@@ -2,7 +2,7 @@ class SearchComparisonsPresenter
   attr_reader :params
 
   def initialize(params)
-    @params = params
+    @params = params || {}
   end
 
   #--------------------------------------

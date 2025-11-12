@@ -48,7 +48,10 @@ class Comparison < ApplicationRecord
   #--------------------------------------
 
   scope :cached, -> { where("created_at > ?", CACHE_TTL_DAYS.days.ago) }
+  scope :past_7_days, -> { where("created_at >= ?", 7.days.ago) }
+  scope :past_30_days, -> { where("created_at >= ?", 30.days.ago) }
   scope :popular, -> { order(view_count: :desc) }
+  scope :recent, -> { order(created_at: :desc) }
 
   # Comprehensive search across all relevant comparison fields and associated categories
   # Searches: user_query, technologies, problem_domains, architecture_patterns, and category names
