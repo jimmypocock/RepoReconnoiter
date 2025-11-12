@@ -1,0 +1,97 @@
+openapi: 3.0.3
+
+info:
+  title: RepoReconnoiter API
+  version: 1.0.0
+  description: |
+    REST API for RepoReconnoiter - AI-powered GitHub repository comparison and discovery platform.
+
+    ## Features
+    - Search and filter repository comparisons
+    - AI-generated repository recommendations
+    - Category-based browsing
+
+    ## Authentication (Three-Tier Access Model)
+
+    ### Tier 1: Public Access (No Authentication)
+    - **Read-only access** to all endpoints
+    - **Rate limit**: 100 requests/hour per IP
+    - **Burst limit**: 20 requests/10 minutes per IP
+    - Returns `429 Too Many Requests` when exceeded
+
+    ### Tier 2: Trusted Client Access (API Key)
+    - **Bypasses rate limits** for server-side applications
+    - Add `Authorization: Bearer <API_KEY>` header
+    - **Server-side only** - never expose key in browser
+    - Contact admin to obtain API key
+
+    ### Tier 3: User Authentication (OAuth)
+    - **GitHub OAuth** for creating comparisons (future)
+    - Session-based authentication via cookies
+
+    ## Rate Limiting
+
+    Without API key:
+    - `100 requests/hour` per IP (general limit)
+    - `20 requests/10 minutes` per IP (burst protection)
+
+    With valid API key:
+    - **Unlimited** requests (bypasses rate limits)
+
+    Rate limit responses include `Retry-After` header with seconds until reset.
+
+  contact:
+    name: API Support
+    url: https://reporeconnoiter.com
+  license:
+    name: MIT
+
+servers:
+  - url: https://reporeconnoiter.com/api/v1
+    description: Production server
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+
+tags:
+  - name: Comparisons
+    description: Repository comparison operations
+
+paths:
+  /comparisons:
+    $ref: './paths/comparisons.yml'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
+      description: |
+        API key authentication for trusted clients (server-side only).
+
+        **How to use:**
+        1. Contact admin to obtain a 64-character API key
+        2. Add to `Authorization` header: `Bearer <API_KEY>`
+        3. **Server-side only** - never expose in browser/client code
+
+        **Benefits:**
+        - Bypasses rate limits (100/hour → unlimited)
+        - Usage tracking and analytics
+        - Revocable without code changes
+
+        **Example:**
+        ```
+        Authorization: Bearer 266eda3d711399ca87ab19dfbebff1ad2430d7b374a50577eea057de1ad0224a
+        ```
+
+  schemas:
+    Comparison:
+      $ref: './schemas/Comparison.yml'
+    Category:
+      $ref: './schemas/Category.yml'
+    Repository:
+      $ref: './schemas/Repository.yml'
+    PaginationMeta:
+      $ref: './schemas/PaginationMeta.yml'
+    Error:
+      $ref: './schemas/Error.yml'

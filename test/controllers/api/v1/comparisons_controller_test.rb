@@ -8,7 +8,7 @@ module Api
       #--------------------------------------
 
       test "GET /api/v1/comparisons returns success" do
-        get api_v1_comparisons_path, as: :json
+        get v1_comparisons_path, as: :json
 
         assert_response :success
         assert_equal "application/json; charset=utf-8", response.content_type
@@ -16,7 +16,7 @@ module Api
       end
 
       test "GET /api/v1/comparisons returns data and meta structure" do
-        get api_v1_comparisons_path, as: :json
+        get v1_comparisons_path, as: :json
 
         json = JSON.parse(response.body)
 
@@ -27,7 +27,7 @@ module Api
       end
 
       test "GET /api/v1/comparisons returns pagination metadata" do
-        get api_v1_comparisons_path, as: :json
+        get v1_comparisons_path, as: :json
 
         json = JSON.parse(response.body)
         pagination = json["meta"]["pagination"]
@@ -49,7 +49,7 @@ module Api
           repos_compared_count: 3
         )
 
-        get api_v1_comparisons_path, as: :json
+        get v1_comparisons_path, as: :json
 
         json = JSON.parse(response.body)
         comparison_data = json["data"].find { |c| c["id"] == comparison.id }
@@ -68,7 +68,7 @@ module Api
       #--------------------------------------
 
       test "GET /api/v1/comparisons respects per_page parameter" do
-        get api_v1_comparisons_path, params: { per_page: 10 }, as: :json
+        get v1_comparisons_path, params: { per_page: 10 }, as: :json
 
         json = JSON.parse(response.body)
         # Should return 10 items or less if fewer exist
@@ -78,23 +78,26 @@ module Api
       end
 
       test "GET /api/v1/comparisons caps per_page at 100" do
-        get api_v1_comparisons_path, params: { per_page: 500 }, as: :json
+        get v1_comparisons_path, params: { per_page: 500 }, as: :json
 
         json = JSON.parse(response.body)
         assert_equal 100, json["meta"]["pagination"]["per_page"]
       end
 
       test "GET /api/v1/comparisons handles page parameter" do
-        # Ensure we have enough data for multiple pages
-        total_count = Comparison.count
-        skip "Need at least 11 comparisons for this test" if total_count < 11
+        # Fixtures provide 15 comparisons, enough for page 2
+        # First verify we have enough data
+        total = Comparison.count
+        assert_operator total, :>=, 11, "Should have at least 11 comparisons for pagination test"
 
-        get api_v1_comparisons_path, params: { page: 2, per_page: 10 }, as: :json
+        get v1_comparisons_path, params: { page: 2, per_page: 10 }, as: :json
 
         json = JSON.parse(response.body)
-        assert_equal 2, json["meta"]["pagination"]["page"]
-        # Page 2 should have items if total > 10
-        assert_operator json["data"].size, :>, 0
+        pagination = json["meta"]["pagination"]
+
+        assert_equal 2, pagination["page"], "Should be on page 2"
+        assert_operator pagination["total_count"], :>=, 11, "Should have at least 11 total items"
+        assert_operator json["data"].size, :>, 0, "Page 2 should have items"
       end
 
       #--------------------------------------
@@ -116,7 +119,7 @@ module Api
           repos_compared_count: 1
         )
 
-        get api_v1_comparisons_path, params: { search: "Rails" }, as: :json
+        get v1_comparisons_path, params: { search: "Rails" }, as: :json
 
         json = JSON.parse(response.body)
         ids = json["data"].map { |c| c["id"] }
@@ -141,7 +144,7 @@ module Api
           created_at: 10.days.ago
         )
 
-        get api_v1_comparisons_path, params: { date: "week" }, as: :json
+        get v1_comparisons_path, params: { date: "week" }, as: :json
 
         json = JSON.parse(response.body)
         ids = json["data"].map { |c| c["id"] }
@@ -169,7 +172,7 @@ module Api
           created_at: 1.day.ago
         )
 
-        get api_v1_comparisons_path, as: :json
+        get v1_comparisons_path, as: :json
 
         json = JSON.parse(response.body)
 
@@ -195,7 +198,7 @@ module Api
           view_count: 100
         )
 
-        get api_v1_comparisons_path, params: { sort: "popular" }, as: :json
+        get v1_comparisons_path, params: { sort: "popular" }, as: :json
 
         json = JSON.parse(response.body)
 
@@ -225,7 +228,7 @@ module Api
           confidence_score: 0.95
         )
 
-        get api_v1_comparisons_path, as: :json
+        get v1_comparisons_path, as: :json
 
         json = JSON.parse(response.body)
         comparison_data = json["data"].find { |c| c["id"] == comparison.id }
@@ -252,7 +255,7 @@ module Api
           score: 95
         )
 
-        get api_v1_comparisons_path, as: :json
+        get v1_comparisons_path, as: :json
 
         json = JSON.parse(response.body)
         comparison_data = json["data"].find { |c| c["id"] == comparison.id }

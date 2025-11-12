@@ -1,0 +1,39 @@
+type: object
+description: Pagination metadata using Pagy::Offset
+required:
+  - page
+  - per_page
+  - total_pages
+  - total_count
+properties:
+  page:
+    type: integer
+    description: Current page number
+    minimum: 1
+    example: 1
+  per_page:
+    type: integer
+    description: Number of items per page
+    minimum: 1
+    maximum: 100
+    example: 20
+  total_pages:
+    type: integer
+    description: Total number of pages
+    minimum: 0
+    example: 5
+  total_count:
+    type: integer
+    description: Total number of items across all pages
+    minimum: 0
+    example: 95
+  next_page:
+    type: integer
+    nullable: true
+    description: Next page number (null if on last page)
+    example: 2
+  prev_page:
+    type: integer
+    nullable: true
+    description: Previous page number (null if on first page)
+    example: null

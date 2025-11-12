@@ -7,8 +7,11 @@
 module Api
   module V1
     class BaseController < ActionController::API
-      # ActionController::API doesn't include CSRF protection by default
-      # (only ActionController::Base does)
+      # ActionController::API is a stripped-down controller optimized for APIs:
+      # - No CSRF protection (not needed for stateless APIs)
+      # - No view rendering (JSON only)
+      # - No cookies/session by default
+      # - No asset pipeline middleware
 
       # Include Pagy for pagination support
       include Pagy::Method

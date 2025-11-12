@@ -1,0 +1,19 @@
+type: object
+description: Error response format
+required:
+  - message
+properties:
+  message:
+    type: string
+    description: Human-readable error message
+    example: "Invalid request parameters"
+  details:
+    type: array
+    description: Additional error details (optional)
+    items:
+      type: string
+    example: ["per_page must be between 1 and 100"]
+  code:
+    type: string
+    description: Machine-readable error code (optional)
+    example: "VALIDATION_ERROR"

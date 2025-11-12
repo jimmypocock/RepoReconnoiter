@@ -29,7 +29,7 @@ module Api
         scope = presenter.comparisons.includes(:categories, :repositories)
 
         # Apply pagination (Pagy v43 uses :limit instead of :items)
-        @pagy, comparisons = pagy(scope, limit: per_page)
+        @pagy, comparisons = pagy(scope, limit: per_page, page: params[:page])
 
         render_success(
           data: ComparisonSerializer.collection(comparisons),

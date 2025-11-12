@@ -1,0 +1,89 @@
+type: object
+description: A GitHub repository with cached metadata
+required:
+  - id
+  - full_name
+  - html_url
+properties:
+  id:
+    type: integer
+    description: Unique repository identifier (internal database ID)
+    example: 123
+  github_id:
+    type: integer
+    description: GitHub's repository ID
+    example: 45678901
+  full_name:
+    type: string
+    description: Repository full name (owner/repo)
+    example: "sidekiq/sidekiq"
+  description:
+    type: string
+    nullable: true
+    description: Repository description
+    example: "Simple, efficient background processing for Ruby"
+  html_url:
+    type: string
+    format: uri
+    description: GitHub URL for this repository
+    example: "https://github.com/sidekiq/sidekiq"
+  homepage:
+    type: string
+    format: uri
+    nullable: true
+    description: Project homepage URL
+    example: "https://sidekiq.org"
+  stargazers_count:
+    type: integer
+    description: Number of GitHub stars
+    example: 13000
+  forks_count:
+    type: integer
+    description: Number of forks
+    example: 2400
+  open_issues_count:
+    type: integer
+    description: Number of open issues
+    example: 42
+  language:
+    type: string
+    nullable: true
+    description: Primary programming language
+    example: "Ruby"
+  topics:
+    type: array
+    description: GitHub topics/tags
+    items:
+      type: string
+    example: ["ruby", "background-jobs", "sidekiq"]
+  license:
+    type: string
+    nullable: true
+    description: SPDX license identifier
+    example: "MIT"
+  created_at:
+    type: string
+    format: date-time
+    description: Timestamp when repository was created on GitHub
+    example: "2025-01-15T10:30:00Z"
+  updated_at:
+    type: string
+    format: date-time
+    description: Timestamp when repository was last updated
+    example: "2025-01-15T10:30:00Z"
+  pushed_at:
+    type: string
+    format: date-time
+    description: Timestamp of last push to repository
+    example: "2025-01-15T10:30:00Z"
+  last_analyzed_at:
+    type: string
+    format: date-time
+    nullable: true
+    description: Timestamp of last AI analysis
+    example: "2025-01-15T10:30:00Z"
+  categories:
+    type: array
+    description: Associated categories (loaded when available)
+    items:
+      $ref: './Category.yml'

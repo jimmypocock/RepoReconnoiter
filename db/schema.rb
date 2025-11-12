@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_11_225858) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_12_035136) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -62,6 +62,21 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_11_225858) do
     t.index ["repository_id"], name: "index_analyses_on_repository_id"
     t.index ["type"], name: "index_analyses_on_type"
     t.index ["user_id"], name: "index_analyses_on_user_id"
+  end
+
+  create_table "api_keys", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "key_digest", null: false
+    t.datetime "last_used_at"
+    t.string "name", null: false
+    t.integer "request_count", default: 0, null: false
+    t.datetime "revoked_at"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["key_digest"], name: "index_api_keys_on_key_digest", unique: true
+    t.index ["revoked_at"], name: "index_api_keys_on_revoked_at"
+    t.index ["user_id", "revoked_at"], name: "index_api_keys_on_user_id_and_revoked_at"
+    t.index ["user_id"], name: "index_api_keys_on_user_id"
   end
 
   create_table "categories", force: :cascade do |t|
@@ -395,6 +410,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_11_225858) do
   add_foreign_key "ai_costs", "users"
   add_foreign_key "analyses", "repositories"
   add_foreign_key "analyses", "users"
+  add_foreign_key "api_keys", "users"
   add_foreign_key "comparison_categories", "categories"
   add_foreign_key "comparison_categories", "comparisons"
   add_foreign_key "comparison_repositories", "comparisons"
