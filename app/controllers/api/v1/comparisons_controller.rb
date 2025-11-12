@@ -1,5 +1,5 @@
 # API v1 Comparisons Controller
-# Public read-only access to comparisons (no auth required for index)
+# Requires API key authentication (Authorization: Bearer <API_KEY>)
 #
 # Endpoints:
 #   GET /api/v1/comparisons - List comparisons with filtering, search, pagination
@@ -8,7 +8,7 @@ module Api
   module V1
     class ComparisonsController < BaseController
       #--------------------------------------
-      # PUBLIC ACTIONS
+      # ACTIONS
       #--------------------------------------
 
       # GET /api/v1/comparisons

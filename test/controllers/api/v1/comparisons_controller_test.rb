@@ -4,11 +4,83 @@ module Api
   module V1
     class ComparisonsControllerTest < ActionDispatch::IntegrationTest
       #--------------------------------------
+      # SETUP
+      #--------------------------------------
+
+      def setup
+        # Create a test API key for authenticated requests
+        result = ApiKey.generate(name: "Test API Key")
+        @api_key = result[:api_key]
+        @raw_key = result[:raw_key]
+      end
+
+      def teardown
+        # Clean up test API key
+        @api_key&.destroy
+      end
+
+      # Helper to add Authorization header to requests
+      def auth_headers
+        { "Authorization" => "Bearer #{@raw_key}" }
+      end
+
+      #--------------------------------------
+      # AUTHENTICATION TESTS
+      #--------------------------------------
+
+      test "GET /api/v1/comparisons requires authentication" do
+        get v1_comparisons_path, as: :json
+
+        assert_response :unauthorized
+        json = JSON.parse(response.body)
+        assert_equal "API key required", json["error"]["message"]
+        assert_includes json["error"]["details"].first, "Missing Authorization header"
+      end
+
+      test "GET /api/v1/comparisons rejects invalid API key" do
+        get v1_comparisons_path, headers: { "Authorization" => "Bearer invalid-key" }, as: :json
+
+        assert_response :unauthorized
+        json = JSON.parse(response.body)
+        assert_equal "Invalid API key", json["error"]["message"]
+        assert_includes json["error"]["details"].first, "invalid or has been revoked"
+      end
+
+      test "GET /api/v1/comparisons rejects X-API-Key header format" do
+        get v1_comparisons_path, headers: { "X-API-Key" => @raw_key }, as: :json
+
+        assert_response :unauthorized
+        json = JSON.parse(response.body)
+        assert_equal "API key required", json["error"]["message"]
+      end
+
+      test "GET /api/v1/comparisons accepts valid API key" do
+        get v1_comparisons_path, headers: auth_headers, as: :json
+
+        assert_response :success
+      end
+
+      test "GET /api/v1/comparisons tracks API key usage" do
+        initial_count = @api_key.request_count
+
+        get v1_comparisons_path, headers: auth_headers, as: :json
+
+        assert_response :success
+
+        # Usage tracking is async, so we need to process the job
+        assert_enqueued_jobs 1, only: TrackApiKeyUsageJob
+        perform_enqueued_jobs
+
+        @api_key.reload
+        assert_equal initial_count + 1, @api_key.request_count
+      end
+
+      #--------------------------------------
       # INDEX ENDPOINT TESTS
       #--------------------------------------
 
       test "GET /api/v1/comparisons returns success" do
-        get v1_comparisons_path, as: :json
+        get v1_comparisons_path, headers: auth_headers, as: :json
 
         assert_response :success
         assert_equal "application/json; charset=utf-8", response.content_type
@@ -16,7 +88,7 @@ module Api
       end
 
       test "GET /api/v1/comparisons returns data and meta structure" do
-        get v1_comparisons_path, as: :json
+        get v1_comparisons_path, headers: auth_headers, as: :json
 
         json = JSON.parse(response.body)
 
@@ -27,7 +99,7 @@ module Api
       end
 
       test "GET /api/v1/comparisons returns pagination metadata" do
-        get v1_comparisons_path, as: :json
+        get v1_comparisons_path, headers: auth_headers, as: :json
 
         json = JSON.parse(response.body)
         pagination = json["meta"]["pagination"]
@@ -49,7 +121,7 @@ module Api
           repos_compared_count: 3
         )
 
-        get v1_comparisons_path, as: :json
+        get v1_comparisons_path, headers: auth_headers, as: :json
 
         json = JSON.parse(response.body)
         comparison_data = json["data"].find { |c| c["id"] == comparison.id }
@@ -68,7 +140,7 @@ module Api
       #--------------------------------------
 
       test "GET /api/v1/comparisons respects per_page parameter" do
-        get v1_comparisons_path, params: { per_page: 10 }, as: :json
+        get v1_comparisons_path, params: { per_page: 10 }, headers: auth_headers, as: :json
 
         json = JSON.parse(response.body)
         # Should return 10 items or less if fewer exist
@@ -78,7 +150,7 @@ module Api
       end
 
       test "GET /api/v1/comparisons caps per_page at 100" do
-        get v1_comparisons_path, params: { per_page: 500 }, as: :json
+        get v1_comparisons_path, params: { per_page: 500 }, headers: auth_headers, as: :json
 
         json = JSON.parse(response.body)
         assert_equal 100, json["meta"]["pagination"]["per_page"]
@@ -90,7 +162,7 @@ module Api
         total = Comparison.count
         assert_operator total, :>=, 11, "Should have at least 11 comparisons for pagination test"
 
-        get v1_comparisons_path, params: { page: 2, per_page: 10 }, as: :json
+        get v1_comparisons_path, params: { page: 2, per_page: 10 }, headers: auth_headers, as: :json
 
         json = JSON.parse(response.body)
         pagination = json["meta"]["pagination"]
@@ -119,7 +191,7 @@ module Api
           repos_compared_count: 1
         )
 
-        get v1_comparisons_path, params: { search: "Rails" }, as: :json
+        get v1_comparisons_path, params: { search: "Rails" }, headers: auth_headers, as: :json
 
         json = JSON.parse(response.body)
         ids = json["data"].map { |c| c["id"] }
@@ -144,7 +216,7 @@ module Api
           created_at: 10.days.ago
         )
 
-        get v1_comparisons_path, params: { date: "week" }, as: :json
+        get v1_comparisons_path, params: { date: "week" }, headers: auth_headers, as: :json
 
         json = JSON.parse(response.body)
         ids = json["data"].map { |c| c["id"] }
@@ -172,7 +244,7 @@ module Api
           created_at: 1.day.ago
         )
 
-        get v1_comparisons_path, as: :json
+        get v1_comparisons_path, headers: auth_headers, as: :json
 
         json = JSON.parse(response.body)
 
@@ -198,7 +270,7 @@ module Api
           view_count: 100
         )
 
-        get v1_comparisons_path, params: { sort: "popular" }, as: :json
+        get v1_comparisons_path, params: { sort: "popular" }, headers: auth_headers, as: :json
 
         json = JSON.parse(response.body)
 
@@ -228,7 +300,7 @@ module Api
           confidence_score: 0.95
         )
 
-        get v1_comparisons_path, as: :json
+        get v1_comparisons_path, headers: auth_headers, as: :json
 
         json = JSON.parse(response.body)
         comparison_data = json["data"].find { |c| c["id"] == comparison.id }
@@ -255,7 +327,7 @@ module Api
           score: 95
         )
 
-        get v1_comparisons_path, as: :json
+        get v1_comparisons_path, headers: auth_headers, as: :json
 
         json = JSON.parse(response.body)
         comparison_data = json["data"].find { |c| c["id"] == comparison.id }

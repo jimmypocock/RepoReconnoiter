@@ -1,9 +1,13 @@
 # API Documentation Controller
 # Serves OpenAPI specification in multiple formats
+# Documentation is public (no auth required)
 #
 module Api
   module V1
     class DocsController < BaseController
+      # Skip authentication for documentation endpoints (public access)
+      skip_before_action :authenticate_api_key!
+
       # GET /api/v1/openapi.json
       # Returns OpenAPI spec as JSON (for Swagger UI)
       # Resolves all external $ref references into a single document

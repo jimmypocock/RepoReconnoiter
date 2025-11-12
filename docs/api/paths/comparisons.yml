@@ -5,19 +5,14 @@ get:
 
     Supports fuzzy search across query text, technologies, problem domains, and categories.
 
-    **Authentication:** Optional API key (bypasses rate limits)
+    **Authentication:** Required - API key via `Authorization: Bearer <API_KEY>` header
 
-    **Rate Limits (without API key):**
-    - 100 requests/hour per IP
-    - 20 requests/10 minutes per IP (burst protection)
-
-    **With API key:** Unlimited requests
+    **Rate Limiting:** None (API key authentication bypasses Rack::Attack rate limits)
   operationId: listComparisons
   tags:
     - Comparisons
   security:
     - BearerAuth: []
-    - {}  # Allow unauthenticated access (rate-limited)
   parameters:
     - name: search
       in: query
@@ -120,6 +115,25 @@ get:
             error:
               message: "Invalid request parameters"
               details: ["per_page must be between 1 and 100"]
+    '401':
+      description: Unauthorized (missing or invalid API key)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          examples:
+            missing_auth:
+              summary: Missing Authorization header
+              value:
+                error:
+                  message: "API key required"
+                  details: ["Missing Authorization header. Expected format: 'Authorization: Bearer <API_KEY>'"]
+            invalid_auth:
+              summary: Invalid or revoked API key
+              value:
+                error:
+                  message: "Invalid API key"
+                  details: ["The provided API key is invalid or has been revoked"]
     '429':
       description: Rate limit exceeded (too many requests)
       headers:

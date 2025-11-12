@@ -11,34 +11,27 @@ info:
     - AI-generated repository recommendations
     - Category-based browsing
 
-    ## Authentication (Three-Tier Access Model)
+    ## Authentication
 
-    ### Tier 1: Public Access (No Authentication)
-    - **Read-only access** to all endpoints
-    - **Rate limit**: 100 requests/hour per IP
-    - **Burst limit**: 20 requests/10 minutes per IP
-    - Returns `429 Too Many Requests` when exceeded
+    **All API endpoints require authentication** via API key.
 
-    ### Tier 2: Trusted Client Access (API Key)
-    - **Bypasses rate limits** for server-side applications
-    - Add `Authorization: Bearer <API_KEY>` header
-    - **Server-side only** - never expose key in browser
-    - Contact admin to obtain API key
+    ### API Key Authentication (Required)
+    - Add `Authorization: Bearer <API_KEY>` header to all requests
+    - **Server-side only** - never expose key in browser/client code
+    - Contact admin to obtain a 64-character API key
+    - Keys can be revoked without code changes
+    - Usage is tracked for analytics
 
-    ### Tier 3: User Authentication (OAuth)
-    - **GitHub OAuth** for creating comparisons (future)
-    - Session-based authentication via cookies
+    ### Public Endpoints (No Authentication)
+    - `/api/v1` - API root (discovery endpoint)
+    - `/api/v1/openapi.json` - OpenAPI JSON specification
+    - `/api/v1/openapi.yml` - OpenAPI YAML specification
 
-    ## Rate Limiting
+    ### Rate Limiting
 
-    Without API key:
-    - `100 requests/hour` per IP (general limit)
-    - `20 requests/10 minutes` per IP (burst protection)
-
-    With valid API key:
-    - **Unlimited** requests (bypasses rate limits)
-
-    Rate limit responses include `Retry-After` header with seconds until reset.
+    API key authentication bypasses Rack::Attack rate limits:
+    - Without valid API key: **Requests will be rejected with 401 Unauthorized**
+    - With valid API key: **Unlimited** requests (no rate limiting)
 
   contact:
     name: API Support

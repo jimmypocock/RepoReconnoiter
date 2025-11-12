@@ -20,6 +20,14 @@ module Api
       respond_to :json
 
       #--------------------------------------
+      # AUTHENTICATION
+      #--------------------------------------
+
+      # Require API key authentication for all endpoints
+      # Override with `skip_before_action :authenticate_api_key!` in child controllers if needed
+      before_action :authenticate_api_key!
+
+      #--------------------------------------
       # ERROR HANDLING
       #--------------------------------------
 
@@ -27,6 +35,43 @@ module Api
       rescue_from ActionController::ParameterMissing, with: :render_bad_request
 
       private
+
+      #--------------------------------------
+      # AUTHENTICATION HELPERS
+      #--------------------------------------
+
+      # Authenticate API key from Authorization header
+      # Returns 401 Unauthorized if missing or invalid
+      def authenticate_api_key!
+        auth_header = request.headers["Authorization"]
+
+        unless auth_header&.start_with?("Bearer ")
+          return render_error(
+            message: "API key required",
+            errors: [ "Missing Authorization header. Expected format: 'Authorization: Bearer <API_KEY>'" ],
+            status: :unauthorized
+          )
+        end
+
+        raw_key = auth_header.sub("Bearer ", "")
+        @current_api_key = ApiKey.authenticate(raw_key)
+
+        unless @current_api_key
+          return render_error(
+            message: "Invalid API key",
+            errors: [ "The provided API key is invalid or has been revoked" ],
+            status: :unauthorized
+          )
+        end
+
+        # Track usage asynchronously (doesn't slow down request)
+        ApiKeyUsageTracker.track_async(@current_api_key.id)
+      end
+
+      # Current authenticated API key
+      def current_api_key
+        @current_api_key
+      end
 
       #--------------------------------------
       # RESPONSE HELPERS

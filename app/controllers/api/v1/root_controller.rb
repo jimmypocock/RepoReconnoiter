@@ -1,9 +1,13 @@
 # API root endpoint for discoverability
 # Returns available endpoints and API information
+# Root endpoint is public (no auth required)
 #
 module Api
   module V1
     class RootController < BaseController
+      # Skip authentication for root endpoint (public access for API discovery)
+      skip_before_action :authenticate_api_key!
+
       # GET /api/v1
       # Returns API version info and available endpoints
       def index
