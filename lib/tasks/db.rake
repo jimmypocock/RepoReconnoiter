@@ -101,12 +101,17 @@ namespace :db do
 
     category_count = Category.count rescue 0
     maturity_count = Category.where(category_type: "maturity").count rescue 0
+    api_key_count = ApiKey.active.count rescue 0
+    comparison_count = Comparison.count rescue 0
 
     puts "\nLocal database now has production data:"
-    puts "  Categories: #{category_count}"
-    puts "  Maturity categories: #{maturity_count}"
+    puts "  Categories:       #{category_count}"
+    puts "  Comparisons:      #{comparison_count}"
+    puts "  API Keys (active):#{api_key_count}"
     puts "\n📂 Files created:"
     puts "  Local backup:     #{backup_file}"
     puts "  Production dump:  #{dump_file}"
+    puts "\nYou can now use production API keys locally!"
+    puts "Run: bin/rails api_keys:list"
   end
 end

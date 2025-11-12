@@ -758,9 +758,9 @@ end
 
 **Test Suite:**
 
-- 63 tests, 152 assertions (all passing)
-- 54 unit tests + 9 system tests
-- Run with: `bin/rails test && bin/rails test:system`
+- 242 tests, 615 assertions (all passing)
+- 229 unit tests + 13 API integration tests + system tests
+- Run with: `bin/rails test` (runs in parallel)
 
 **Test Coverage:**
 
@@ -770,7 +770,15 @@ end
 - Model tests (Repository analysis logic, needs_analysis? behavior)
 - Service tests (RepositoryFetcher, correct method names)
 - Presenter tests (homepage stats, trending, categories)
+- API tests (pagination, filtering, search, OpenAPI schema validation)
 - System tests (homepage UI for authenticated/unauthenticated users)
+
+**OpenAPI Schema Validation:**
+
+- `committee` gem automatically validates API responses against `docs/openapi.yml`
+- Every API test includes `assert_schema_conform` to prevent documentation drift
+- Tests fail if response doesn't match OpenAPI specification
+- Configuration in `test/test_helper.rb` (see Committee section)
 
 **Test Philosophy:**
 
@@ -779,6 +787,7 @@ end
 - Fail-closed security (empty admin IDs should error, not allow all)
 - Use realistic fixture data instead of empty stubs
 - Create dedicated fixtures (e.g., `:no_analyses`) instead of destroying data in tests
+- Parallel test safety: never use `destroy_all` or other database-wide operations
 
 ## Environment Variables
 

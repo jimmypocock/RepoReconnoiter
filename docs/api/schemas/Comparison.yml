@@ -1,0 +1,69 @@
+type: object
+description: A repository comparison created by AI analysis
+required:
+  - id
+  - user_query
+  - normalized_query
+  - created_at
+  - updated_at
+properties:
+  id:
+    type: integer
+    description: Unique comparison identifier
+    example: 1
+  user_query:
+    type: string
+    description: Original user search query
+    example: "Rails background job library with retry logic"
+  normalized_query:
+    type: string
+    description: Normalized/cleaned version of user query
+    example: "rails background job library with retry logic"
+  technologies:
+    type: string
+    nullable: true
+    description: Comma-separated list of technologies/frameworks
+    example: "Rails, Ruby, Redis"
+  problem_domains:
+    type: string
+    nullable: true
+    description: Problem domains addressed by this search
+    example: "Background Job Processing, Task Queuing"
+  architecture_patterns:
+    type: string
+    nullable: true
+    description: Architectural patterns identified
+    example: "Worker Pattern, Queue-based Architecture"
+  repos_compared_count:
+    type: integer
+    description: Number of repositories compared in this analysis
+    example: 3
+  recommended_repo:
+    type: string
+    nullable: true
+    description: Full name of the top recommended repository
+    example: "sidekiq/sidekiq"
+  view_count:
+    type: integer
+    description: Number of times this comparison has been viewed
+    example: 42
+  created_at:
+    type: string
+    format: date-time
+    description: Timestamp when comparison was created
+    example: "2025-01-15T10:30:00Z"
+  updated_at:
+    type: string
+    format: date-time
+    description: Timestamp when comparison was last updated
+    example: "2025-01-15T10:30:00Z"
+  categories:
+    type: array
+    description: Associated categories (loaded when available)
+    items:
+      $ref: './Category.yml'
+  repositories:
+    type: array
+    description: Compared repositories (loaded when available)
+    items:
+      $ref: './Repository.yml'

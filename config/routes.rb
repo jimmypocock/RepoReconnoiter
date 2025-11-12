@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  mount Rswag::Ui::Engine => "/api-docs"
   # Skip everything except OmniAuth - we're OAuth-only (no email/password, no password resets)
   devise_for :users, skip: [ :registrations, :sessions, :passwords ],
              controllers: { omniauth_callbacks: "users/omniauth_callbacks" }
@@ -21,6 +22,24 @@ Rails.application.routes.draw do
 
   # Comparison routes
   resources :comparisons, only: [ :create, :show ]
+
+  # API routes (v1) - Conditional subdomain routing
+  # Development:  localhost:3000/api/v1/comparisons
+  # Production:   api.reporeconnoiter.com/v1/comparisons
+  constraints(Rails.env.production? ? { subdomain: "api" } : {}) do
+    scope path: (Rails.env.production? ? nil : "api"), module: "api" do
+      namespace :v1, defaults: { format: :json } do
+        # API root - shows available endpoints
+        root to: "root#index"
+
+        resources :comparisons, only: [ :index ]
+
+        # OpenAPI documentation endpoints
+        get "openapi.json", to: "docs#openapi_json", as: :openapi_json  # For Swagger UI
+        get "openapi.yml", to: "docs#openapi_yaml", as: :openapi_yaml   # For AI/programmatic access
+      end
+    end
+  end
 
   # Profile page (requires authentication)
   get "profile", to: "profile#show"

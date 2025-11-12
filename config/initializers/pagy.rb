@@ -4,5 +4,5 @@
 # Pagy v43+ integrates extras directly into core - no need to require them
 
 # Pagy defaults
-Pagy.options[:items] = 20
-Pagy.options[:page_key] = "page"  # Changed from :page_param (symbol) to :page_key (string) in v43
+Pagy.options[:limit] = 20  # Changed from :items to :limit in v43
+Pagy.options[:page_key] = "page"  # Changed from :page_param to :page_key in v43
