@@ -12,6 +12,7 @@ require "rails/test_help"
 require "minitest/mock"
 require "ostruct"
 require "webmock/minitest"
+require "committee/test/methods"
 
 # Load test support files
 Dir[Rails.root.join("test/support/**/*.rb")].each { |f| require f }
@@ -106,4 +107,35 @@ end
 class ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   include Pagy::Method
+  include Committee::Test::Methods
+
+  #--------------------------------------
+  # COMMITTEE (OPENAPI VALIDATION)
+  #--------------------------------------
+
+  # Required by Committee: Returns schema configuration
+  def committee_options
+    @committee_options ||= {
+      schema_path: Rails.root.join("docs", "openapi.yml").to_s,
+      prefix: "/api/v1",  # Base path for all API routes
+      parse_response_by_content_type: true
+    }
+  end
+
+  # Required by Committee: Returns request object for validation
+  # Adapts Rails @request to Rack::Request interface
+  def request_object
+    @committee_request ||= Rack::Request.new(@request.env)
+  end
+
+  # Required by Committee: Returns [status, headers, body] for response validation
+  def response_data
+    [@response.status, @response.headers, @response.body]
+  end
+
+  # Alias for assert_response_schema_confirm to match our naming convention
+  # Call this after any API request to ensure response matches OpenAPI spec
+  def assert_schema_conform
+    assert_response_schema_confirm(@response.status)
+  end
 end

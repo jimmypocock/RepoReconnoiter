@@ -98,6 +98,9 @@ group :test do
   # Block all HTTP requests during tests to prevent accidental API calls
   gem "webmock"
 
+  # Validate API responses against OpenAPI spec
+  gem "committee"
+
   # Stub environment variables in tests
   gem "climate_control"
 end

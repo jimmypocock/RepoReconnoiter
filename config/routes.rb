@@ -22,6 +22,13 @@ Rails.application.routes.draw do
   # Comparison routes
   resources :comparisons, only: [ :create, :show ]
 
+  # API routes (v1)
+  namespace :api do
+    namespace :v1 do
+      resources :comparisons, only: [ :index ]
+    end
+  end
+
   # Profile page (requires authentication)
   get "profile", to: "profile#show"
   delete "profile", to: "profile#destroy"

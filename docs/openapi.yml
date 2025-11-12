@@ -1,0 +1,321 @@
+openapi: 3.0.3
+info:
+  title: RepoReconnoiter API
+  version: 1.0.0
+  description: |
+    REST API for RepoReconnoiter - AI-powered GitHub repository comparison and discovery platform.
+
+    ## Features
+    - Search and filter repository comparisons
+    - AI-generated repository recommendations
+    - Category-based browsing
+
+    ## Authentication
+    Currently public read-only access. Authentication will be added in future versions.
+
+  contact:
+    name: API Support
+    url: https://reporeconnoiter.com
+  license:
+    name: MIT
+
+servers:
+  - url: https://reporeconnoiter.com/api/v1
+    description: Production server
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+
+tags:
+  - name: Comparisons
+    description: Repository comparison operations
+
+paths:
+  /comparisons:
+    get:
+      summary: List comparisons
+      description: |
+        Returns a paginated list of repository comparisons with optional filtering and search.
+
+        Supports fuzzy search across query text, technologies, problem domains, and categories.
+      operationId: listComparisons
+      tags:
+        - Comparisons
+      parameters:
+        - name: search
+          in: query
+          description: Fuzzy search term (searches across query, technologies, domains, categories)
+          required: false
+          schema:
+            type: string
+            example: "rails background job"
+        - name: date
+          in: query
+          description: Filter by date range
+          required: false
+          schema:
+            type: string
+            enum: [week, month]
+            example: "week"
+        - name: sort
+          in: query
+          description: Sort order (ignored when searching - uses relevance instead)
+          required: false
+          schema:
+            type: string
+            enum: [recent, popular]
+            default: recent
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 1
+        - name: per_page
+          in: query
+          description: Items per page (max 100)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Comparison'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+              example:
+                data:
+                  - id: 1
+                    user_query: "Rails background job library with retry logic"
+                    normalized_query: "rails background job library with retry logic"
+                    technologies: "Rails, Ruby"
+                    problem_domains: "Background Job Processing"
+                    architecture_patterns: null
+                    repos_compared_count: 3
+                    recommended_repo: "sidekiq/sidekiq"
+                    view_count: 42
+                    created_at: "2025-01-15T10:30:00Z"
+                    updated_at: "2025-01-15T10:30:00Z"
+                    categories:
+                      - id: 5
+                        name: "Ruby"
+                        category_type: "language"
+                      - id: 12
+                        name: "Background Jobs"
+                        category_type: "problem_domain"
+                    repositories:
+                      - id: 123
+                        full_name: "sidekiq/sidekiq"
+                        description: "Simple, efficient background processing for Ruby"
+                        stargazers_count: 13000
+                        language: "Ruby"
+                        html_url: "https://github.com/sidekiq/sidekiq"
+                meta:
+                  pagination:
+                    page: 1
+                    per_page: 20
+                    total_pages: 5
+                    total_count: 95
+                    next_page: 2
+                    prev_page: null
+        '400':
+          description: Bad request (invalid parameters)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  message: "Invalid request parameters"
+                  details: ["per_page must be between 1 and 100"]
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Comparison:
+      type: object
+      description: A repository comparison created by AI analysis
+      required:
+        - id
+        - user_query
+        - normalized_query
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          description: Unique comparison identifier
+          example: 1
+        user_query:
+          type: string
+          description: Original user search query
+          example: "Rails background job library with retry logic"
+        normalized_query:
+          type: string
+          description: Normalized/cleaned version of user query
+          example: "rails background job library with retry logic"
+        technologies:
+          type: string
+          nullable: true
+          description: Comma-separated list of technologies/frameworks
+          example: "Rails, Ruby, Redis"
+        problem_domains:
+          type: string
+          nullable: true
+          description: Problem domains addressed by this search
+          example: "Background Job Processing, Task Queuing"
+        architecture_patterns:
+          type: string
+          nullable: true
+          description: Architectural patterns identified
+          example: "Worker Pattern, Queue-based Architecture"
+        repos_compared_count:
+          type: integer
+          description: Number of repositories compared in this analysis
+          example: 3
+        recommended_repo:
+          type: string
+          nullable: true
+          description: Full name of the top recommended repository
+          example: "sidekiq/sidekiq"
+        view_count:
+          type: integer
+          description: Number of times this comparison has been viewed
+          example: 42
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when comparison was created
+          example: "2025-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when comparison was last updated
+          example: "2025-01-15T10:30:00Z"
+        categories:
+          type: array
+          description: Associated categories (loaded when available)
+          items:
+            $ref: '#/components/schemas/Category'
+        repositories:
+          type: array
+          description: Compared repositories (loaded when available)
+          items:
+            $ref: '#/components/schemas/Repository'
+
+    Category:
+      type: object
+      description: A category tag for organizing comparisons
+      properties:
+        id:
+          type: integer
+          example: 5
+        name:
+          type: string
+          example: "Ruby"
+        category_type:
+          type: string
+          enum: [language, framework, problem_domain, architecture_pattern, maturity_level]
+          example: "language"
+
+    Repository:
+      type: object
+      description: A GitHub repository included in comparison
+      properties:
+        id:
+          type: integer
+          example: 123
+        full_name:
+          type: string
+          description: Repository full name (owner/name)
+          example: "sidekiq/sidekiq"
+        description:
+          type: string
+          nullable: true
+          description: Repository description
+          example: "Simple, efficient background processing for Ruby"
+        stargazers_count:
+          type: integer
+          description: Number of GitHub stars
+          example: 13000
+        language:
+          type: string
+          nullable: true
+          description: Primary programming language
+          example: "Ruby"
+        html_url:
+          type: string
+          format: uri
+          description: GitHub repository URL
+          example: "https://github.com/sidekiq/sidekiq"
+
+    PaginationMeta:
+      type: object
+      description: Pagination metadata
+      properties:
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+              description: Current page number
+              example: 1
+            per_page:
+              type: integer
+              description: Items per page
+              example: 20
+            total_pages:
+              type: integer
+              description: Total number of pages
+              example: 5
+            total_count:
+              type: integer
+              description: Total number of items across all pages
+              example: 95
+            next_page:
+              type: integer
+              nullable: true
+              description: Next page number (null if on last page)
+              example: 2
+            prev_page:
+              type: integer
+              nullable: true
+              description: Previous page number (null if on first page)
+              example: null
+
+    Error:
+      type: object
+      description: Standard error response
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+              description: Human-readable error message
+              example: "Resource not found"
+            details:
+              type: array
+              items:
+                type: string
+              description: Additional error details
+              example: ["Comparison with id 999 not found"]

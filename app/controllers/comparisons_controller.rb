@@ -4,7 +4,7 @@ class ComparisonsController < ApplicationController
 
   def index
     @presenter = SearchComparisonsPresenter.new(params)
-    @pagy, @comparisons = pagy(@presenter.comparisons, items: 20)
+    @pagy, @comparisons = pagy(@presenter.comparisons, limit: 20)
     @comparisons_count = @presenter.comparisons.count
 
     # Fetch repositories for analyses tab
