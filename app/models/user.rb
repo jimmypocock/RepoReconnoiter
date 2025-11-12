@@ -42,32 +42,74 @@ class User < ApplicationRecord
     comparisons.where("created_at > ?", 24.hours.ago).count < daily_comparison_limit
   end
 
+  # Returns AI cost spent this month by this user
+  # @return [Float] Cost in USD
+  def ai_cost_spent_this_month
+    analyses.where("created_at >= ?", Time.current.beginning_of_month)
+            .sum(:cost_usd)
+            .to_f
+  end
+
+  # Returns deep analyses created this month by this user
+  # @return [Integer] Count of analyses
   def analyses_count_this_month
     analyses.where("created_at >= ?", Time.current.beginning_of_month).count
   end
 
+  # Returns comparisons created this month by this user
+  # @return [Integer] Count of comparisons
   def comparisons_count_this_month
     comparisons.where("created_at >= ?", Time.current.beginning_of_month).count
   end
 
+  # Returns daily comparison limit (currently 20 for all users)
+  # @return [Integer] Daily limit
   def daily_comparison_limit
     20 # All users get 20/day for now
   end
 
+  # Returns analyses remaining today (3/day limit)
+  # @return [Integer, Float::INFINITY] Remaining analyses for today
   def remaining_analyses_today
+    return Float::INFINITY if admin? # Unlimited for admins
+
     limit = AnalysisDeep::RATE_LIMIT_PER_USER
     used = AnalysisDeep.count_for_user_today(self)
     [ limit - used, 0 ].max
   end
 
+  # Returns comparisons remaining today (20/day limit)
+  # @return [Integer, Float::INFINITY] Remaining comparisons for today
   def remaining_comparisons_today
+    return Float::INFINITY if admin? # Unlimited for admins
+
     limit = daily_comparison_limit
     used = comparisons.where("created_at > ?", 24.hours.ago).count
     [ limit - used, 0 ].max
   end
 
+  # Soft delete user and anonymize data
+  # Keeps comparisons/analyses for data integrity but removes personal info
+  # @return [Boolean] Success status
+  def soft_delete!
+    transaction do
+      update!(
+        deleted_at: Time.current,
+        email: "deleted_#{id}@example.com",
+        github_username: "deleted_user_#{id}",
+        github_avatar_url: nil
+      )
+
+      # Keep comparisons/analyses for data integrity, but anonymize
+      comparisons.update_all(user_id: nil)
+      analyses.update_all(user_id: nil)
+    end
+  end
+
+  # Returns total AI cost spent by this user (all time)
+  # @return [Float] Cost in USD
   def total_ai_cost_spent
-    analyses.sum(:cost_usd)
+    analyses.sum(:cost_usd).to_f
   end
 
   #--------------------------------------
