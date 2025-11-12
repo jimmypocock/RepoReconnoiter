@@ -55,13 +55,28 @@ class Rack::Attack
 
   ### Blocklist ###
 
-  # Block specific IPs (add abusive IPs here)
-  # Example: blocklist("1.2.3.4") { |req| req.ip == "1.2.3.4" }
-  # Can also use ENV["BLOCKED_IPS"] in production
-  blocklist_ips = ENV.fetch("BLOCKED_IPS", "").split(",").map(&:strip)
-  blocklist("blocked-ips") do |req|
-    blocklist_ips.include?(req.ip)
-  end if blocklist_ips.any?
+  # Block specific IPs via environment variable
+  # Format: BLOCKED_IPS="1.2.3.4,5.6.7.8" (comma-separated)
+  # Use: Set in Render dashboard → Environment → Add BLOCKED_IPS
+  # Note: Requires redeploy to take effect (~2-3 minutes on Render)
+  #
+  # Why ENV var is acceptable for this app:
+  # - API requires authentication (primary defense)
+  # - Can revoke API keys instantly (no IP blocking needed)
+  # - IP blocking is defense-in-depth, not primary security
+  # - Expected to block 0-2 IPs per year at this scale
+  #
+  # To block an IP:
+  #   1. Add to Render env vars: BLOCKED_IPS="1.2.3.4"
+  #   2. Redeploy (automatic on git push, or manual trigger)
+  #   3. Verify: bin/rails ips:list (shows blocked IPs)
+  #
+  # Alternative for frequent blocking: Database-backed blocklist
+  # (not implemented - overkill for current scale)
+  blocklist("blocked IPs") do |req|
+    blocked_ips = ENV.fetch("BLOCKED_IPS", "").split(",").map(&:strip)
+    blocked_ips.include?(req.ip)
+  end
 
   ### Custom Responses ###
 

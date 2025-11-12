@@ -7,19 +7,23 @@ This document outlines the security measures in place for RepoReconnoiter's API 
 ### 1. **Rate Limiting (Rack::Attack)**
 
 #### API Endpoints
+
 - **General API**: 100 requests/hour per IP
 - **Burst Protection**: 20 requests/10 minutes for unauthenticated users
 - **Returns**: HTTP 429 with `Retry-After` header and JSON error
 
 #### User Actions
+
 - **Comparison Creation**: 25/day per authenticated user, 5/day per IP
 - **OAuth Login**: 10 attempts per 5 minutes per IP
 
 #### IP Blocklist
+
 - **Environment Variable**: `BLOCKED_IPS="1.2.3.4,5.6.7.8"` (comma-separated)
 - **Response**: HTTP 403 Forbidden
 
 #### Cache Backend
+
 - **Development**: Rails.cache (Solid Cache)
 - **Production**: Solid Cache (persistent, shared across servers)
 - **Note**: Previous MemoryStore configuration would NOT work with multiple servers
@@ -52,15 +56,17 @@ This document outlines the security measures in place for RepoReconnoiter's API 
 
 ### 5. **Authentication**
 
-#### Three-Tier Authentication Model:
+#### Three-Tier Authentication Model
 
 **Tier 1: Public Read Access (Rate Limited)**
+
 - **Endpoints**: GET /api/v1/comparisons, GET /api/v1
 - **Access**: Anyone, no authentication required
 - **Limits**: 100 requests/hour, 20/10min burst
 - **Use Case**: Public sharing, SEO, discoverability
 
 **Tier 2: Trusted Client Access (API Key)**
+
 - **Client**: Next.js server on Vercel (SSR/ISR requests)
 - **Authentication**: Bearer token in Authorization header
 - **Limits**: Bypasses rate limits (trusted client)
@@ -68,6 +74,7 @@ This document outlines the security measures in place for RepoReconnoiter's API 
 - **Security**: API key never exposed to browser (server-side only)
 
 **Tier 3: User Authentication (OAuth)**
+
 - **Method**: Devise + GitHub OAuth (invite-only whitelist)
 - **Access**: Create comparisons, profile, admin features
 - **Session**: Cookie-based, works across reporeconnoiter.com domain
@@ -106,6 +113,7 @@ All configured in `config/application.rb`:
 **Recommended: Cloudflare Free Plan**
 
 Benefits:
+
 - DDoS protection (Layer 3, 4, 7)
 - WAF (Web Application Firewall)
 - Bot protection
@@ -114,6 +122,7 @@ Benefits:
 - Rate limiting (in addition to Rack::Attack)
 
 **Setup**:
+
 1. Sign up at cloudflare.com
 2. Add domain: `reporeconnoiter.com`
 3. Update nameservers at domain registrar
@@ -127,6 +136,7 @@ Benefits:
 ### 2. **Render.com Built-in Security**
 
 Render provides:
+
 - **DDoS Protection**: Basic Layer 3/4 protection
 - **SSL/TLS**: Automatic Let's Encrypt certificates
 - **Firewall**: Port restrictions (only 443/80 exposed)
@@ -137,6 +147,7 @@ Render provides:
 ### 3. **Database Security**
 
 PostgreSQL on Render:
+
 - **Encryption**: At-rest encryption (automatic)
 - **SSL**: Enforced for all connections
 - **Access**: Restricted to Render internal network only
@@ -145,12 +156,14 @@ PostgreSQL on Render:
 ### 4. **Environment Variables**
 
 **Critical Secrets** (set in Render dashboard):
+
 - `SECRET_KEY_BASE` - Rails encryption key
 - `RAILS_MASTER_KEY` - Credentials decryption
 - `OPENAI_ACCESS_TOKEN` - OpenAI API key
 - `GITHUB_CLIENT_SECRET` - OAuth secret
 
 **Never commit**:
+
 - `.env` (in `.gitignore`)
 - `config/master.key` (in `.gitignore`)
 - Any API keys or secrets
@@ -159,9 +172,10 @@ PostgreSQL on Render:
 
 ## 🚨 Incident Response
 
-### When You Detect Abuse:
+### When You Detect Abuse
 
 #### 1. **Block IP Address**
+
 ```bash
 # On Render, set environment variable:
 BLOCKED_IPS="1.2.3.4,5.6.7.8"
@@ -170,12 +184,15 @@ BLOCKED_IPS="1.2.3.4,5.6.7.8"
 ```
 
 #### 2. **Check Sentry**
+
 - Review error patterns
 - Identify suspicious requests
 - Look for 429 (rate limit) spikes
 
 #### 3. **Adjust Rate Limits**
+
 Edit `config/initializers/rack_attack.rb`:
+
 ```ruby
 # Lower limit temporarily
 throttle("api/ip", limit: 50, period: 1.hour) do |req|
@@ -184,10 +201,12 @@ end
 ```
 
 #### 4. **Enable Cloudflare "Under Attack" Mode**
+
 - Adds JavaScript challenge before accessing site
 - Blocks bots automatically
 
 #### 5. **Monitor Costs**
+
 - Check `ai_costs` table for unusual spikes
 - OpenAI usage should stay under $10/month
 
@@ -195,7 +214,7 @@ end
 
 ## 📊 Monitoring
 
-### What to Monitor:
+### What to Monitor
 
 1. **Request Volume**: Track `/api/v1/comparisons` hits
 2. **429 Errors**: Rate limit triggers (indicates abuse attempts)
@@ -204,7 +223,7 @@ end
 5. **AI Costs**: Daily spending in `ai_costs` table
 6. **Database Connections**: Should stay under 97 (Render limit)
 
-### Tools:
+### Tools
 
 - **Sentry**: Error tracking, performance monitoring
 - **Render Metrics**: CPU, memory, response times
@@ -218,12 +237,12 @@ end
 Before going live:
 
 - [ ] Set `NEXTJS_DOMAIN` to production frontend URL
-- [ ] Enable Force SSL in production (already done)
-- [ ] Add Cloudflare in front of Render
-- [ ] Set up Sentry alerts for error spikes
+- [x] Enable Force SSL in production (already done)
+- [x] Add Cloudflare in front of Render
+- [x] Set up Sentry alerts for error spikes
 - [ ] Test rate limiting with curl (simulate abuse)
 - [ ] Verify CORS only allows your Next.js domain
-- [ ] Check security headers: https://securityheaders.com/
+- [ ] Check security headers: <https://securityheaders.com/>
 - [ ] Run security scans: `bin/rails ci:security`
 - [ ] Set strong `SECRET_KEY_BASE` (run `bin/rails secret`)
 - [ ] Whitelist admin GitHub ID in `ALLOWED_ADMIN_GITHUB_IDS`

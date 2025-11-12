@@ -7,8 +7,8 @@ class ComparisonsController < ApplicationController
     @pagy, @comparisons = pagy(@presenter.comparisons, limit: 20)
     @comparisons_count = @presenter.comparisons.count
 
-    # Fetch repositories for analyses tab
-    @repositories = Repository.order(updated_at: :desc).limit(50)
+    # Fetch repositories for analyses tab (eager load analyses to prevent N+1)
+    @repositories = Repository.includes(:analyses).order(updated_at: :desc).limit(50)
     @repositories_count = Repository.count
   end
 

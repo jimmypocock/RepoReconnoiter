@@ -21,6 +21,9 @@ require "rails/test_unit/railtie"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
+# Require custom middleware (must be explicit since lib/middleware is excluded from autoload)
+require_relative "../lib/middleware/request_size_limiter"
+
 module RepoReconnoiter
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
@@ -29,7 +32,7 @@ module RepoReconnoiter
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
-    config.autoload_lib(ignore: %w[assets tasks])
+    config.autoload_lib(ignore: %w[assets tasks middleware])
 
     # Configuration for the application, engines, and railties goes here.
     #
@@ -41,6 +44,10 @@ module RepoReconnoiter
 
     # Enable Rack::Attack for rate limiting
     config.middleware.use Rack::Attack
+
+    # Request size limits (prevent large payload attacks)
+    # Middleware class: lib/middleware/request_size_limiter.rb
+    config.middleware.use RequestSizeLimiter
 
     #--------------------------------------
     # SECURITY HEADERS (OWASP Recommendations)
