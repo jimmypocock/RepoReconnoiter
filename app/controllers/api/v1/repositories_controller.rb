@@ -9,8 +9,8 @@
 module Api
   module V1
     class RepositoriesController < BaseController
-      # User authentication required for analyze action only
-      before_action :authenticate_user_token!, only: [ :analyze ]
+      # User authentication required for analyze actions only
+      before_action :authenticate_user_token!, only: [ :analyze, :analyze_by_url ]
       before_action :set_repository, only: [ :show, :analyze ]
 
       #--------------------------------------
@@ -113,47 +113,85 @@ module Api
       #   }
       #
       def analyze
-        # Check daily budget
-        unless AnalysisDeep.can_create_today?
+        create_deep_analysis(@repository)
+      end
+
+      # POST /api/v1/repositories/analyze_by_url
+      # Triggers a deep analysis for a GitHub URL (fetches repo if not in database)
+      #
+      # Headers:
+      #   Authorization: Bearer <API_KEY>
+      #   X-User-Token: <JWT>
+      #
+      # Body:
+      #   {
+      #     "url": "https://github.com/sidekiq/sidekiq"
+      #   }
+      #
+      # Response (202 Accepted):
+      #   {
+      #     "session_id": "uuid",
+      #     "status": "processing",
+      #     "repository_id": 123,
+      #     "websocket_url": "ws://localhost:3001/cable",
+      #     "status_url": "/api/v1/repositories/status/uuid"
+      #   }
+      #
+      # Response (400 Bad Request):
+      #   {
+      #     "error": {
+      #       "message": "Invalid GitHub URL",
+      #       "details": ["Not a GitHub URL: invalid-url"]
+      #     }
+      #   }
+      #
+      def analyze_by_url
+        # Validate URL parameter
+        unless params[:url].present?
           return render_error(
-            message: "Daily analysis budget exceeded",
-            errors: [ "Please try again tomorrow" ],
-            status: :forbidden
+            message: "URL parameter is required",
+            errors: [ "Please provide a GitHub repository URL" ],
+            status: :bad_request
           )
         end
 
-        # Check user rate limit
-        unless AnalysisDeep.user_can_create_today?(current_user)
-          remaining = AnalysisDeep::RATE_LIMIT_PER_USER - AnalysisDeep.count_for_user_today(current_user)
+        # Parse GitHub URL
+        begin
+          parsed = GithubUrlParser.parse(params[:url])
+          full_name = parsed[:full_name]
+
+          unless full_name
+            return render_error(
+              message: "Invalid GitHub URL",
+              errors: [ "Could not parse repository from URL: #{params[:url]}" ],
+              status: :bad_request
+            )
+          end
+        rescue GithubUrlParser::InvalidUrlError => e
           return render_error(
-            message: "Rate limit exceeded",
-            errors: [ "You have reached your daily limit of #{AnalysisDeep::RATE_LIMIT_PER_USER} deep analyses" ],
-            status: :too_many_requests
+            message: "Invalid GitHub URL",
+            errors: [ e.message ],
+            status: :bad_request
           )
         end
 
-        # Generate session ID for tracking
-        session_id = SecureRandom.uuid
+        # Find or fetch repository
+        repository = Repository.find_by(full_name: full_name)
 
-        # Create status tracking record with cost reservation (prevents race condition)
-        AnalysisStatus.create!(
-          session_id: session_id,
-          user: current_user,
-          repository: @repository,
-          status: :processing,
-          pending_cost_usd: AnalysisDeep::ESTIMATED_COST
-        )
+        unless repository
+          begin
+            repository = fetch_repository_from_github(full_name)
+          rescue => e
+            return render_error(
+              message: "Failed to fetch repository from GitHub",
+              errors: [ e.message ],
+              status: :not_found
+            )
+          end
+        end
 
-        # Queue background job
-        CreateDeepAnalysisJob.perform_later(current_user.id, @repository.id, session_id)
-
-        # Return 202 Accepted with tracking info
-        render json: {
-          session_id: session_id,
-          status: "processing",
-          websocket_url: websocket_url,
-          status_url: v1_repository_status_url(session_id)
-        }, status: :accepted
+        # Create deep analysis (same logic as analyze action)
+        create_deep_analysis(repository)
       end
 
       # GET /api/v1/repositories/status/:session_id
@@ -196,6 +234,65 @@ module Api
       #--------------------------------------
       # PRIVATE METHODS
       #--------------------------------------
+
+      def create_deep_analysis(repository)
+        # Check daily budget
+        unless AnalysisDeep.can_create_today?
+          return render_error(
+            message: "Daily analysis budget exceeded",
+            errors: [ "Please try again tomorrow" ],
+            status: :forbidden
+          )
+        end
+
+        # Check user rate limit
+        unless AnalysisDeep.user_can_create_today?(current_user)
+          return render_error(
+            message: "Rate limit exceeded",
+            errors: [ "You have reached your daily limit of #{AnalysisDeep::RATE_LIMIT_PER_USER} deep analyses" ],
+            status: :too_many_requests
+          )
+        end
+
+        # Generate session ID for tracking
+        session_id = SecureRandom.uuid
+
+        # Create status tracking record with cost reservation (prevents race condition)
+        AnalysisStatus.create!(
+          session_id: session_id,
+          user: current_user,
+          repository: repository,
+          status: :processing,
+          pending_cost_usd: AnalysisDeep::ESTIMATED_COST
+        )
+
+        # Queue background job
+        CreateDeepAnalysisJob.perform_later(current_user.id, repository.id, session_id)
+
+        # Return 202 Accepted with tracking info
+        render json: {
+          session_id: session_id,
+          status: "processing",
+          repository_id: repository.id,
+          websocket_url: websocket_url,
+          status_url: v1_repository_status_url(session_id)
+        }, status: :accepted
+      end
+
+      def fetch_repository_from_github(full_name)
+        client = Octokit::Client.new(
+          access_token: Rails.application.credentials.github&.personal_access_token
+        )
+
+        gh_repo = client.repository(full_name)
+        repo = Repository.from_github_api(gh_repo.to_attrs)
+        repo.save!
+        repo
+      rescue Octokit::NotFound
+        raise "Repository not found on GitHub: #{full_name}"
+      rescue => e
+        raise "Error fetching from GitHub: #{e.message}"
+      end
 
       def pagination_meta
         # Use Pagy::Offset's built-in properties

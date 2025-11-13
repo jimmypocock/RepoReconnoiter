@@ -41,6 +41,9 @@ Rails.application.routes.draw do
 
         # Repository endpoints
         resources :repositories, only: [ :index, :show ] do
+          collection do
+            post :analyze_by_url
+          end
           member do
             post :analyze
           end

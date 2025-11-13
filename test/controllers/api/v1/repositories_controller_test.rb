@@ -253,6 +253,122 @@ module Api
       end
 
       #--------------------------------------
+      # ANALYZE BY URL TESTS
+      #--------------------------------------
+
+      test "POST /api/v1/repositories/analyze_by_url requires API key" do
+        post analyze_by_url_v1_repositories_path, params: { url: "https://github.com/test/repo" }, as: :json
+
+        assert_response :unauthorized
+        json = JSON.parse(response.body)
+        assert_equal "API key required", json["error"]["message"]
+      end
+
+      test "POST /api/v1/repositories/analyze_by_url requires user JWT token" do
+        post analyze_by_url_v1_repositories_path, params: { url: "https://github.com/test/repo" }, headers: auth_headers, as: :json
+
+        assert_response :unauthorized
+        json = JSON.parse(response.body)
+        assert_equal "User authentication required", json["error"]["message"]
+      end
+
+      test "POST /api/v1/repositories/analyze_by_url requires url parameter" do
+        post analyze_by_url_v1_repositories_path, headers: user_headers(@user), as: :json
+
+        assert_response :bad_request
+        json = JSON.parse(response.body)
+        assert_equal "URL parameter is required", json["error"]["message"]
+      end
+
+      test "POST /api/v1/repositories/analyze_by_url validates GitHub URL format" do
+        post analyze_by_url_v1_repositories_path, params: { url: "https://example.com/test" }, headers: user_headers(@user), as: :json
+
+        assert_response :bad_request
+        json = JSON.parse(response.body)
+        assert_equal "Invalid GitHub URL", json["error"]["message"]
+        assert_includes json["error"]["details"].first, "Not a GitHub URL"
+      end
+
+      test "POST /api/v1/repositories/analyze_by_url uses existing repository if found" do
+        # Use existing test repository
+        url = @repo1.html_url
+
+        post analyze_by_url_v1_repositories_path, params: { url: url }, headers: user_headers(@user), as: :json
+
+        assert_response :accepted
+        json = JSON.parse(response.body)
+        assert_equal @repo1.id, json["repository_id"]
+      end
+
+      test "POST /api/v1/repositories/analyze_by_url accepts owner/repo format" do
+        # Use existing test repository
+        url = @repo1.full_name
+
+        post analyze_by_url_v1_repositories_path, params: { url: url }, headers: user_headers(@user), as: :json
+
+        assert_response :accepted
+        json = JSON.parse(response.body)
+        assert_equal @repo1.id, json["repository_id"]
+      end
+
+      test "POST /api/v1/repositories/analyze_by_url creates analysis job for existing repo" do
+        url = @repo1.html_url
+
+        assert_enqueued_jobs 1, only: CreateDeepAnalysisJob do
+          post analyze_by_url_v1_repositories_path, params: { url: url }, headers: user_headers(@user), as: :json
+        end
+
+        assert_response :accepted
+        json = JSON.parse(response.body)
+        assert json["session_id"].present?
+        assert_equal "processing", json["status"]
+        assert json["websocket_url"].present?
+        assert json["status_url"].present?
+      end
+
+      test "POST /api/v1/repositories/analyze_by_url creates AnalysisStatus record" do
+        url = @repo1.html_url
+
+        assert_difference "AnalysisStatus.count", 1 do
+          post analyze_by_url_v1_repositories_path, params: { url: url }, headers: user_headers(@user), as: :json
+        end
+
+        status = AnalysisStatus.last
+        assert_equal @user.id, status.user_id
+        assert_equal @repo1.id, status.repository_id
+        assert_equal "processing", status.status
+      end
+
+      test "POST /api/v1/repositories/analyze_by_url reserves budget with pending_cost_usd" do
+        url = @repo1.html_url
+
+        post analyze_by_url_v1_repositories_path, params: { url: url }, headers: user_headers(@user), as: :json
+
+        status = AnalysisStatus.last
+        assert_equal AnalysisDeep::ESTIMATED_COST, status.pending_cost_usd
+      end
+
+      test "POST /api/v1/repositories/analyze_by_url returns 403 when budget exceeded" do
+        AnalysisDeep.stub :can_create_today?, false do
+          post analyze_by_url_v1_repositories_path, params: { url: @repo1.html_url }, headers: user_headers(@user), as: :json
+
+          assert_response :forbidden
+          json = JSON.parse(response.body)
+          assert_equal "Daily analysis budget exceeded", json["error"]["message"]
+        end
+      end
+
+      test "POST /api/v1/repositories/analyze_by_url returns 429 when user rate limit exceeded" do
+        AnalysisDeep.stub :user_can_create_today?, false do
+          post analyze_by_url_v1_repositories_path, params: { url: @repo1.html_url }, headers: user_headers(@user), as: :json
+
+          assert_response :too_many_requests
+          json = JSON.parse(response.body)
+          assert_equal "Rate limit exceeded", json["error"]["message"]
+        end
+      end
+
+      #--------------------------------------
       # STATUS TESTS
       #--------------------------------------
 

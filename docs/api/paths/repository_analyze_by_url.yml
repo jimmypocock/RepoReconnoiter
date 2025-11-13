@@ -1,0 +1,167 @@
+post:
+  summary: Trigger deep analysis for a repository by GitHub URL (async)
+  description: |
+    Creates a deep analysis job for a GitHub repository specified by URL and returns immediately with session tracking info.
+    The repository will be fetched from GitHub if not already in the database.
+    The analysis runs asynchronously in the background. Use WebSocket or REST polling to track progress.
+
+    **Authentication:** API key + User JWT token required
+
+    **Rate Limiting:**
+    - Per-user limit: 10 analyses per day (configurable via ANALYSIS_DEEP_RATE_LIMIT_PER_USER)
+    - Platform budget: $2.00 per day (configurable via ANALYSIS_DEEP_DAILY_BUDGET)
+
+    **URL Formats Supported:**
+    - Full GitHub URL: `https://github.com/sidekiq/sidekiq`
+    - Owner/repo format: `sidekiq/sidekiq`
+    - URL without protocol: `github.com/sidekiq/sidekiq`
+
+    **Use Case:** Trigger comprehensive AI analysis of any GitHub repository without needing to know its internal database ID.
+
+    **Deep Analysis Includes:**
+    - README analysis (documentation quality, examples, getting started)
+    - Issues analysis (bug patterns, maintainer responsiveness)
+    - Maintenance analysis (activity level, project health)
+    - Adoption analysis (integration difficulty, API design)
+    - Security analysis (CVEs, security practices)
+
+    **Real-Time Progress:**
+    - Subscribe to `AnalysisProgressChannel` via WebSocket with `session_id`
+    - Or poll `/api/v1/repositories/status/:session_id` via REST
+
+    **Cost:** ~$0.05-0.10 per analysis (uses gpt-5 model)
+  operationId: analyzeRepositoryByUrl
+  tags:
+    - Repositories
+  security:
+    - BearerAuth: []
+    - UserAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - url
+          properties:
+            url:
+              type: string
+              description: GitHub repository URL or owner/repo format
+              example: "https://github.com/sidekiq/sidekiq"
+        examples:
+          full_url:
+            summary: Full GitHub URL
+            value:
+              url: "https://github.com/sidekiq/sidekiq"
+          owner_repo:
+            summary: Owner/repo format
+            value:
+              url: "sidekiq/sidekiq"
+          url_without_protocol:
+            summary: URL without protocol
+            value:
+              url: "github.com/sidekiq/sidekiq"
+  responses:
+    '202':
+      description: Analysis job created and processing
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - session_id
+              - status
+              - repository_id
+              - websocket_url
+              - status_url
+            properties:
+              session_id:
+                type: string
+                format: uuid
+                description: Unique session ID for tracking this analysis
+                example: "550e8400-e29b-41d4-a716-446655440000"
+              status:
+                type: string
+                enum: [processing]
+                description: Current status (always "processing" on creation)
+                example: "processing"
+              repository_id:
+                type: integer
+                description: Internal database ID of the repository being analyzed
+                example: 123
+              websocket_url:
+                type: string
+                format: uri
+                description: WebSocket URL for real-time progress updates
+                example: "wss://reporeconnoiter.com/cable"
+              status_url:
+                type: string
+                format: uri
+                description: REST endpoint for polling status
+                example: "/api/v1/repositories/status/550e8400-e29b-41d4-a716-446655440000"
+    '400':
+      description: Bad Request (invalid or missing URL parameter)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          examples:
+            missing_url:
+              summary: Missing URL parameter
+              value:
+                error:
+                  message: "URL parameter is required"
+                  details: ["Please provide a GitHub repository URL"]
+            invalid_format:
+              summary: Invalid GitHub URL format
+              value:
+                error:
+                  message: "Invalid GitHub URL"
+                  details: ["Not a GitHub URL: https://example.com/repo"]
+            parse_error:
+              summary: Unable to parse repository from URL
+              value:
+                error:
+                  message: "Invalid GitHub URL"
+                  details: ["Could not parse repository from URL: https://github.com"]
+    '401':
+      description: Unauthorized (missing or invalid API key or user token)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "User authentication required"
+              details: ["X-User-Token header is missing or invalid"]
+    '403':
+      description: Forbidden (daily budget exceeded)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "Daily analysis budget exceeded"
+              details: ["Please try again tomorrow"]
+    '404':
+      description: Repository not found on GitHub
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "Failed to fetch repository from GitHub"
+              details: ["Repository not found on GitHub: sidekiq/nonexistent"]
+    '429':
+      description: Too Many Requests (user rate limit exceeded)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "Rate limit exceeded"
+              details: ["You have reached your daily limit of 10 deep analyses"]

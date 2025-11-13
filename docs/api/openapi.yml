@@ -117,6 +117,8 @@ paths:
     $ref: './paths/repository_show.yml'
   /repositories/{id}/analyze:
     $ref: './paths/repository_analyze.yml'
+  /repositories/analyze_by_url:
+    $ref: './paths/repository_analyze_by_url.yml'
   /repositories/status/{session_id}:
     $ref: './paths/repository_status.yml'
   /profile:
@@ -146,6 +148,25 @@ components:
         **Example:**
         ```
         Authorization: Bearer 266eda3d711399ca87ab19dfbebff1ad2430d7b374a50577eea057de1ad0224a
+        ```
+
+    UserAuth:
+      type: apiKey
+      in: header
+      name: X-User-Token
+      description: |
+        JWT token for user-level authentication.
+
+        **How to use:**
+        1. User authenticates with GitHub OAuth (in your app)
+        2. Exchange GitHub token for JWT via `/api/v1/auth/exchange`
+        3. Add JWT to `X-User-Token` header for user-authenticated requests
+
+        **Token Lifespan:** 24 hours (refresh by exchanging GitHub token again)
+
+        **Example:**
+        ```
+        X-User-Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         ```
 
   schemas:
