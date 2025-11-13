@@ -7,6 +7,10 @@ class AnalysisDeep < Analysis
   # REQUIRED: Set ANALYSIS_DEEP_DAILY_BUDGET in .env (see .env.example)
   DAILY_BUDGET = ENV.fetch("ANALYSIS_DEEP_DAILY_BUDGET").to_f
 
+  # Conservative cost estimate for budget reservation (actual cost varies)
+  # Set higher than average to avoid budget overruns
+  ESTIMATED_COST = 0.08  # $0.08 per analysis (actual: $0.05-0.10)
+
   # Rate limit per user per day
   # REQUIRED: Set ANALYSIS_DEEP_RATE_LIMIT_PER_USER in .env (see .env.example)
   RATE_LIMIT_PER_USER = ENV.fetch("ANALYSIS_DEEP_RATE_LIMIT_PER_USER").to_i
@@ -36,16 +40,26 @@ class AnalysisDeep < Analysis
 
   class << self
     # Check if we can create a new deep analysis today without exceeding budget
+    # Includes pending cost reservations to prevent race conditions
     # @return [Boolean] true if within budget
     def can_create_today?
-      remaining_budget_today > 0
+      remaining_budget_today > ESTIMATED_COST
     end
 
-    # Calculate remaining budget for today
+    # Calculate remaining budget for today INCLUDING pending reservations
+    # This prevents race conditions where multiple requests check budget simultaneously
     # @return [Float] remaining budget in USD
     def remaining_budget_today
+      # Actual costs from completed analyses
       spent = today.sum(:cost_usd) || 0
-      DAILY_BUDGET - spent
+
+      # Pending cost reservations from in-flight analyses (prevents race condition)
+      pending = AnalysisStatus
+        .where(status: :processing)
+        .where("created_at >= ?", Time.zone.now.beginning_of_day)
+        .sum(:pending_cost_usd) || 0
+
+      DAILY_BUDGET - spent - pending
     end
 
     # Get count of deep analyses created by user today

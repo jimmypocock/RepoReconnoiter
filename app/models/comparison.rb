@@ -13,6 +13,11 @@ class Comparison < ApplicationRecord
   # REQUIRED: Set COMPARISON_CACHE_DAYS in .env (see .env.example)
   CACHE_TTL_DAYS = ENV.fetch("COMPARISON_CACHE_DAYS").to_i
 
+  # Conservative cost estimate for budget reservation
+  # Varies by number of repos analyzed (typically 5-15 repos @ ~$0.01 each)
+  # Set higher than average to avoid budget overruns
+  ESTIMATED_COST = 0.15  # $0.15 per comparison (actual: $0.05-0.20)
+
   #--------------------------------------
   # ASSOCIATIONS
   #--------------------------------------

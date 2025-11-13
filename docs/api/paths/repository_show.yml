@@ -1,0 +1,99 @@
+get:
+  summary: Get a single repository with full details
+  description: |
+    Returns detailed information about a specific repository including categories and analyses.
+
+    **Authentication:** API key required (no user auth needed)
+
+    **Use Case:** View full repository details, check analysis history, see categorization.
+
+    **Response includes:**
+    - Complete repository metadata (stars, forks, language, topics, license, etc.)
+    - Owner information
+    - GitHub timestamps
+    - Associated categories
+    - All analyses (basic and deep) with summaries
+  operationId: getRepository
+  tags:
+    - Repositories
+  security:
+    - BearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Repository ID
+      example: 123
+  responses:
+    '200':
+      description: Repository retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '../schemas/Repository.yml'
+          example:
+            data:
+              id: 123
+              github_id: 78952000
+              full_name: "sidekiq/sidekiq"
+              name: "sidekiq"
+              description: "Simple, efficient background processing for Ruby"
+              html_url: "https://github.com/sidekiq/sidekiq"
+              homepage_url: "https://sidekiq.org"
+              language: "Ruby"
+              stargazers_count: 13000
+              forks_count: 2400
+              open_issues_count: 50
+              watchers_count: 13000
+              topics: ["ruby", "background-jobs", "redis"]
+              license: "lgpl-3.0"
+              is_fork: false
+              archived: false
+              github_created_at: "2012-10-08T00:00:00Z"
+              github_updated_at: "2025-11-12T00:00:00Z"
+              github_pushed_at: "2025-11-11T00:00:00Z"
+              owner_login: "sidekiq"
+              owner_avatar_url: "https://avatars.githubusercontent.com/u/12345"
+              owner_type: "Organization"
+              categories:
+                - id: 1
+                  name: "Ruby"
+                  category_type: "technology"
+                - id: 2
+                  name: "Background Job Processing"
+                  category_type: "problem_domain"
+              analyses:
+                - id: 456
+                  type: "Analysis"
+                  model_used: "gpt-5-mini"
+                  is_current: true
+                  created_at: "2025-11-12T00:00:00Z"
+                  summary: "Modern background job processor with Redis backend"
+                  use_cases: ["Email sending", "Report generation", "Data processing"]
+    '401':
+      description: Unauthorized (missing or invalid API key)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "API key required"
+              details: ["Authorization header is missing or invalid"]
+    '404':
+      description: Repository not found
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "Repository not found"
+              details: ["Repository with ID 123 does not exist"]

@@ -48,11 +48,12 @@ module Api
         # Generate session ID for tracking
         session_id = SecureRandom.uuid
 
-        # Create status tracking record
+        # Create status tracking record with cost reservation (prevents race condition)
         ComparisonStatus.create!(
           session_id: session_id,
           user: current_user,
-          status: :processing
+          status: :processing,
+          pending_cost_usd: Comparison::ESTIMATED_COST
         )
 
         # Queue background job

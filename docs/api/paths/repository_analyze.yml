@@ -1,0 +1,113 @@
+post:
+  summary: Trigger deep analysis for a repository (async)
+  description: |
+    Creates a deep analysis job for the specified repository and returns immediately with session tracking info.
+    The analysis runs asynchronously in the background. Use WebSocket or REST polling to track progress.
+
+    **Authentication:** API key + User JWT token required
+
+    **Rate Limiting:**
+    - Per-user limit: 10 analyses per day (configurable via ANALYSIS_DEEP_RATE_LIMIT_PER_USER)
+    - Platform budget: $2.00 per day (configurable via ANALYSIS_DEEP_DAILY_BUDGET)
+
+    **Use Case:** Trigger comprehensive AI analysis of repository README, issues, maintenance status, adoption, and security.
+
+    **Deep Analysis Includes:**
+    - README analysis (documentation quality, examples, getting started)
+    - Issues analysis (bug patterns, maintainer responsiveness)
+    - Maintenance analysis (activity level, project health)
+    - Adoption analysis (integration difficulty, API design)
+    - Security analysis (CVEs, security practices)
+
+    **Real-Time Progress:**
+    - Subscribe to `AnalysisProgressChannel` via WebSocket with `session_id`
+    - Or poll `/api/v1/repositories/status/:session_id` via REST
+
+    **Cost:** ~$0.05-0.10 per analysis (uses gpt-5 model)
+  operationId: analyzeRepository
+  tags:
+    - Repositories
+  security:
+    - BearerAuth: []
+    - UserAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: Repository ID to analyze
+      example: 123
+  responses:
+    '202':
+      description: Analysis job created and processing
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - session_id
+              - status
+              - websocket_url
+              - status_url
+            properties:
+              session_id:
+                type: string
+                format: uuid
+                description: Unique session ID for tracking this analysis
+                example: "550e8400-e29b-41d4-a716-446655440000"
+              status:
+                type: string
+                enum: [processing]
+                description: Current status (always "processing" on creation)
+                example: "processing"
+              websocket_url:
+                type: string
+                format: uri
+                description: WebSocket URL for real-time progress updates
+                example: "wss://reporeconnoiter.com/cable"
+              status_url:
+                type: string
+                format: uri
+                description: REST endpoint for polling status
+                example: "/api/v1/repositories/status/550e8400-e29b-41d4-a716-446655440000"
+    '401':
+      description: Unauthorized (missing or invalid API key or user token)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "User authentication required"
+              details: ["X-User-Token header is missing or invalid"]
+    '403':
+      description: Forbidden (daily budget exceeded)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "Daily analysis budget exceeded"
+              details: ["Please try again tomorrow"]
+    '404':
+      description: Repository not found
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "Repository not found"
+              details: ["Repository with ID 123 does not exist"]
+    '429':
+      description: Too Many Requests (user rate limit exceeded)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "Rate limit exceeded"
+              details: ["You have reached your daily limit of 10 deep analyses"]

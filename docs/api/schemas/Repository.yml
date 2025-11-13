@@ -1,22 +1,36 @@
 type: object
-description: A GitHub repository with cached metadata
 required:
   - id
+  - github_id
   - full_name
+  - name
   - html_url
+  - language
+  - stargazers_count
+  - forks_count
+  - open_issues_count
+  - watchers_count
+  - is_fork
+  - archived
+  - categories
+  - analyses
 properties:
   id:
     type: integer
-    description: Unique repository identifier (internal database ID)
+    description: Internal database ID
     example: 123
   github_id:
     type: integer
-    description: GitHub's repository ID
-    example: 45678901
+    description: GitHub's unique repository ID
+    example: 78952000
   full_name:
     type: string
     description: Repository full name (owner/repo)
     example: "sidekiq/sidekiq"
+  name:
+    type: string
+    description: Repository name only
+    example: "sidekiq"
   description:
     type: string
     nullable: true
@@ -25,17 +39,22 @@ properties:
   html_url:
     type: string
     format: uri
-    description: GitHub URL for this repository
+    description: GitHub repository URL
     example: "https://github.com/sidekiq/sidekiq"
-  homepage:
+  homepage_url:
     type: string
     format: uri
     nullable: true
     description: Project homepage URL
     example: "https://sidekiq.org"
+  language:
+    type: string
+    nullable: true
+    description: Primary programming language
+    example: "Ruby"
   stargazers_count:
     type: integer
-    description: Number of GitHub stars
+    description: Number of stars
     example: 13000
   forks_count:
     type: integer
@@ -44,46 +63,135 @@ properties:
   open_issues_count:
     type: integer
     description: Number of open issues
-    example: 42
-  language:
-    type: string
-    nullable: true
-    description: Primary programming language
-    example: "Ruby"
+    example: 50
+  watchers_count:
+    type: integer
+    description: Number of watchers
+    example: 13000
   topics:
     type: array
-    description: GitHub topics/tags
     items:
       type: string
-    example: ["ruby", "background-jobs", "sidekiq"]
+    description: Repository topics/tags
+    example: ["ruby", "background-jobs", "redis"]
   license:
     type: string
     nullable: true
-    description: SPDX license identifier
-    example: "MIT"
-  created_at:
-    type: string
-    format: date-time
-    description: Timestamp when repository was created on GitHub
-    example: "2025-01-15T10:30:00Z"
-  updated_at:
-    type: string
-    format: date-time
-    description: Timestamp when repository was last updated
-    example: "2025-01-15T10:30:00Z"
-  pushed_at:
-    type: string
-    format: date-time
-    description: Timestamp of last push to repository
-    example: "2025-01-15T10:30:00Z"
-  last_analyzed_at:
+    description: License key (SPDX identifier)
+    example: "lgpl-3.0"
+  is_fork:
+    type: boolean
+    description: Whether this repository is a fork
+    example: false
+  archived:
+    type: boolean
+    description: Whether repository is archived
+    example: false
+  github_created_at:
     type: string
     format: date-time
     nullable: true
-    description: Timestamp of last AI analysis
-    example: "2025-01-15T10:30:00Z"
+    description: When repository was created on GitHub
+    example: "2012-10-08T00:00:00Z"
+  github_updated_at:
+    type: string
+    format: date-time
+    nullable: true
+    description: When repository was last updated on GitHub
+    example: "2025-11-12T00:00:00Z"
+  github_pushed_at:
+    type: string
+    format: date-time
+    nullable: true
+    description: When repository was last pushed to on GitHub
+    example: "2025-11-11T00:00:00Z"
+  owner_login:
+    type: string
+    description: Repository owner username
+    example: "sidekiq"
+  owner_avatar_url:
+    type: string
+    format: uri
+    nullable: true
+    description: Owner avatar image URL
+    example: "https://avatars.githubusercontent.com/u/12345"
+  owner_type:
+    type: string
+    nullable: true
+    description: Owner type (User or Organization)
+    example: "Organization"
   categories:
     type: array
-    description: Associated categories (loaded when available)
+    description: Associated categories (if loaded)
     items:
       $ref: './Category.yml'
+  analyses:
+    type: array
+    description: All analyses for this repository (if loaded)
+    items:
+      type: object
+      required:
+        - id
+        - type
+        - model_used
+        - is_current
+        - created_at
+        - summary
+        - use_cases
+      properties:
+        id:
+          type: integer
+          example: 456
+        type:
+          type: string
+          enum: [Analysis, AnalysisDeep]
+          description: Type of analysis (Analysis = basic, AnalysisDeep = deep)
+          example: "Analysis"
+        model_used:
+          type: string
+          description: AI model used for analysis
+          example: "gpt-5-mini"
+        is_current:
+          type: boolean
+          description: Whether this is the current/active analysis
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          description: When analysis was created
+          example: "2025-11-12T00:00:00Z"
+        summary:
+          type: string
+          description: Brief summary of the repository
+          example: "Modern background job processor with Redis backend"
+        use_cases:
+          type: array
+          items:
+            type: string
+          description: Common use cases
+          example: ["Email sending", "Report generation", "Data processing"]
+        readme_analysis:
+          type: string
+          nullable: true
+          description: README analysis (AnalysisDeep only)
+          example: "Well-structured documentation with clear examples..."
+        issues_analysis:
+          type: string
+          nullable: true
+          description: Issues analysis (AnalysisDeep only)
+          example: "Active maintainer engagement, average response time 2 days..."
+        maintenance_analysis:
+          type: string
+          nullable: true
+          description: Maintenance analysis (AnalysisDeep only)
+          example: "Actively maintained, regular releases, stable API..."
+        adoption_analysis:
+          type: string
+          nullable: true
+          description: Adoption analysis (AnalysisDeep only)
+          example: "Easy integration, well-documented API, low learning curve..."
+        security_analysis:
+          type: string
+          nullable: true
+          description: Security analysis (AnalysisDeep only)
+          example: "No known CVEs, follows security best practices..."

@@ -95,6 +95,8 @@ tags:
     description: User authentication and JWT token management
   - name: Comparisons
     description: Repository comparison operations
+  - name: Repositories
+    description: Repository browsing and deep analysis operations
   - name: Profile
     description: User profile and usage statistics
   - name: Admin
@@ -109,6 +111,14 @@ paths:
     $ref: './paths/comparison_show.yml'
   /comparisons/status/{session_id}:
     $ref: './paths/comparison_status.yml'
+  /repositories:
+    $ref: './paths/repositories.yml'
+  /repositories/{id}:
+    $ref: './paths/repository_show.yml'
+  /repositories/{id}/analyze:
+    $ref: './paths/repository_analyze.yml'
+  /repositories/status/{session_id}:
+    $ref: './paths/repository_status.yml'
   /profile:
     $ref: './paths/profile.yml'
   /admin/stats:

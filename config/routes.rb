@@ -39,6 +39,14 @@ Rails.application.routes.draw do
         resources :comparisons, only: [ :index, :show, :create ]
         get "comparisons/status/:session_id", to: "comparisons#status", as: :comparison_status
 
+        # Repository endpoints
+        resources :repositories, only: [ :index, :show ] do
+          member do
+            post :analyze
+          end
+        end
+        get "repositories/status/:session_id", to: "repositories#status", as: :repository_status
+
         # Profile endpoint (requires user auth)
         get "profile", to: "profile#show"
 

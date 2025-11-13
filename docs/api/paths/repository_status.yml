@@ -1,0 +1,114 @@
+get:
+  summary: Get status of an async deep analysis
+  description: |
+    Polls the current status of an asynchronous deep analysis job. Use this endpoint if WebSocket is not available.
+
+    **Authentication:** API key required (no user auth needed)
+
+    **Use Case:** Check analysis progress via REST polling (fallback if WebSocket unavailable).
+
+    **Status Values:**
+    - `processing`: Analysis is running (poll again in a few seconds)
+    - `completed`: Analysis finished successfully (repository_id and repository_url included)
+    - `failed`: Analysis failed (error_message included)
+
+    **Recommended Polling Interval:** 2-3 seconds
+
+    **Alternative:** Subscribe to `AnalysisProgressChannel` via WebSocket for real-time updates
+  operationId: getRepositoryAnalysisStatus
+  tags:
+    - Repositories
+  security:
+    - BearerAuth: []
+  parameters:
+    - name: session_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Session ID returned from POST /repositories/:id/analyze
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  responses:
+    '200':
+      description: Status retrieved successfully
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - type: object
+                required:
+                  - status
+                properties:
+                  status:
+                    type: string
+                    enum: [processing]
+                    example: "processing"
+              - type: object
+                required:
+                  - status
+                  - repository_id
+                  - repository_url
+                properties:
+                  status:
+                    type: string
+                    enum: [completed]
+                    example: "completed"
+                  repository_id:
+                    type: integer
+                    description: ID of analyzed repository
+                    example: 123
+                  repository_url:
+                    type: string
+                    format: uri
+                    description: URL to view repository details
+                    example: "/api/v1/repositories/123"
+              - type: object
+                required:
+                  - status
+                  - error_message
+                properties:
+                  status:
+                    type: string
+                    enum: [failed]
+                    example: "failed"
+                  error_message:
+                    type: string
+                    description: User-friendly error message
+                    example: "Repository not found on GitHub"
+          examples:
+            processing:
+              summary: Analysis is still running
+              value:
+                status: "processing"
+            completed:
+              summary: Analysis completed successfully
+              value:
+                status: "completed"
+                repository_id: 123
+                repository_url: "/api/v1/repositories/123"
+            failed:
+              summary: Analysis failed with error
+              value:
+                status: "failed"
+                error_message: "Repository not found on GitHub"
+    '401':
+      description: Unauthorized (missing or invalid API key)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "API key required"
+              details: ["Authorization header is missing or invalid"]
+    '404':
+      description: Session not found
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "Session not found"
+              details: ["No analysis found with session ID 550e8400-e29b-41d4-a716-446655440000"]

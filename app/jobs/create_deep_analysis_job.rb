@@ -35,6 +35,7 @@ class CreateDeepAnalysisJob < ApplicationJob
     user = User.find(user_id)
     repository = Repository.find(repository_id)
     broadcaster = AnalysisProgressBroadcaster.new(session_id)
+    status = AnalysisStatus.find_by!(session_id: session_id)
 
     # Give frontend time to connect to ActionCable
     sleep(0.5)
@@ -59,8 +60,14 @@ class CreateDeepAnalysisJob < ApplicationJob
       user:
     )
 
+    # Update status record to completed
+    status.complete!(repository)
+
     broadcaster.broadcast_complete(repository.id)
   rescue => e
+    # Update status record to failed
+    status&.fail!(error_message_for(e))
+
     broadcaster.broadcast_error("Error running deep analysis: #{e.message}")
     raise
   end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_13_024204) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_13_055428) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -62,6 +62,20 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_13_024204) do
     t.index ["repository_id"], name: "index_analyses_on_repository_id"
     t.index ["type"], name: "index_analyses_on_type"
     t.index ["user_id"], name: "index_analyses_on_user_id"
+  end
+
+  create_table "analysis_statuses", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.decimal "pending_cost_usd", precision: 10, scale: 6, default: "0.0", null: false
+    t.bigint "repository_id"
+    t.string "session_id"
+    t.string "status"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["repository_id"], name: "index_analysis_statuses_on_repository_id"
+    t.index ["session_id"], name: "index_analysis_statuses_on_session_id", unique: true
+    t.index ["user_id"], name: "index_analysis_statuses_on_user_id"
   end
 
   create_table "api_keys", force: :cascade do |t|
@@ -124,6 +138,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_13_024204) do
     t.bigint "comparison_id"
     t.datetime "created_at", null: false
     t.text "error_message"
+    t.decimal "pending_cost_usd", precision: 10, scale: 6, default: "0.0", null: false
     t.string "session_id", null: false
     t.string "status", default: "processing", null: false
     t.datetime "updated_at", null: false
@@ -426,6 +441,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_13_024204) do
   add_foreign_key "ai_costs", "users"
   add_foreign_key "analyses", "repositories"
   add_foreign_key "analyses", "users"
+  add_foreign_key "analysis_statuses", "repositories"
+  add_foreign_key "analysis_statuses", "users"
   add_foreign_key "api_keys", "users"
   add_foreign_key "comparison_categories", "categories"
   add_foreign_key "comparison_categories", "comparisons"
