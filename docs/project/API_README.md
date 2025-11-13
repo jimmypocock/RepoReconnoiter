@@ -108,7 +108,7 @@ info:
 ```yaml
 servers:
   - url: https://reporeconnoiter.com/api/v1  # Production
-  - url: http://localhost:3000/api/v1        # Development
+  - url: http://localhost:3001/api/v1        # Development
 ```
 
 ### 3. **Paths** - Your endpoints (THE MEAT)
@@ -186,7 +186,7 @@ function ComparisonCard({ comparison }: { comparison: Comparison }) {
 
 ```bash
 # Test the endpoint
-curl http://localhost:3000/api/v1/comparisons?page=1&per_page=5
+curl http://localhost:3001/api/v1/comparisons?page=1&per_page=5
 
 # Verify response matches schema in openapi.yml
 ```

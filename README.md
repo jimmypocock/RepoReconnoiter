@@ -158,7 +158,7 @@ bin/dev
 
 This starts:
 
-- **Web server**: <http://localhost:3000>
+- **Web server**: <http://localhost:3001>
 - **Background jobs**: Solid Queue worker
 - **Tailwind CSS**: File watcher for CSS changes
 

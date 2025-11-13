@@ -24,13 +24,16 @@ Rails.application.routes.draw do
   resources :comparisons, only: [ :create, :show ]
 
   # API routes (v1) - Conditional subdomain routing
-  # Development:  localhost:3000/api/v1/comparisons
+  # Development:  localhost:3001/api/v1/comparisons
   # Production:   api.reporeconnoiter.com/v1/comparisons
   constraints(Rails.env.production? ? { subdomain: "api" } : {}) do
     scope path: (Rails.env.production? ? nil : "api"), module: "api" do
       namespace :v1, defaults: { format: :json } do
         # API root - shows available endpoints
         root to: "root#index"
+
+        # Authentication endpoints
+        post "auth/exchange", to: "auth#exchange"
 
         resources :comparisons, only: [ :index ]
 

@@ -88,7 +88,7 @@ ruby -r securerandom -e "puts SecureRandom.alphanumeric(32)"
 
 ```bash
 # API endpoint (development - localhost)
-NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
+NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
 
 # API endpoint (production - Render)
 NEXT_PUBLIC_API_URL=https://api.reporeconnoiter.com/v1

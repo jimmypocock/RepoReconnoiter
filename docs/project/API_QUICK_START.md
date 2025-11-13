@@ -2,25 +2,25 @@
 
 ## ✅ What's Working
 
-Your API is **LIVE** and functional at `http://localhost:3000/api/v1/comparisons`
+Your API is **LIVE** and functional at `http://localhost:3001/api/v1/comparisons`
 
 ### Test It Now:
 
 ```bash
 # Get all comparisons (paginated)
-curl http://localhost:3000/api/v1/comparisons | jq
+curl http://localhost:3001/api/v1/comparisons | jq
 
 # Search for Rails-related comparisons
-curl 'http://localhost:3000/api/v1/comparisons?search=rails' | jq
+curl 'http://localhost:3001/api/v1/comparisons?search=rails' | jq
 
 # Filter by date
-curl 'http://localhost:3000/api/v1/comparisons?date=week' | jq
+curl 'http://localhost:3001/api/v1/comparisons?date=week' | jq
 
 # Sort by popular
-curl 'http://localhost:3000/api/v1/comparisons?sort=popular' | jq
+curl 'http://localhost:3001/api/v1/comparisons?sort=popular' | jq
 
 # Combine filters
-curl 'http://localhost:3000/api/v1/comparisons?search=react&date=month&sort=recent' | jq
+curl 'http://localhost:3001/api/v1/comparisons?search=react&date=month&sort=recent' | jq
 ```
 
 ### Response Format (Working Perfectly):
@@ -135,7 +135,7 @@ Quick debug:
 
 Then test:
 ```bash
-curl 'http://localhost:3000/api/v1/comparisons?per_page=5' | jq '.data | length'
+curl 'http://localhost:3001/api/v1/comparisons?per_page=5' | jq '.data | length'
 ```
 
 Should return `5` instead of `20`.

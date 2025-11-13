@@ -1,0 +1,129 @@
+post:
+  summary: Exchange GitHub token for JWT
+  description: |
+    Exchange a GitHub OAuth token for a JWT that can be used to authenticate API requests on behalf of a user.
+
+    **Flow:**
+    1. User authenticates with GitHub OAuth (handled by your frontend)
+    2. Frontend receives GitHub OAuth `access_token`
+    3. Frontend sends GitHub token to this endpoint (with app API key)
+    4. Backend verifies GitHub token, checks whitelist, creates/updates user
+    5. Backend returns JWT tied to that user
+
+    **Authentication:**
+    - **App-level:** Requires API key via `Authorization: Bearer <API_KEY>` header (proves request is from your app)
+    - **User-level:** Requires `github_token` in request body (proves user identity)
+
+    **Usage:**
+    - Use returned JWT in `X-User-Token` header for user-authenticated endpoints
+    - JWT expires after 24 hours (refresh by calling this endpoint again)
+  operationId: exchangeGithubToken
+  tags:
+    - Authentication
+  security:
+    - BearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - github_token
+          properties:
+            github_token:
+              type: string
+              description: GitHub OAuth access token (obtained from GitHub OAuth flow)
+              example: "gho_16C7e42F292c6912E7710c838347Ae178B4a"
+  responses:
+    '200':
+      description: Successfully exchanged GitHub token for JWT
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  jwt:
+                    type: string
+                    description: JWT token to use for user-authenticated requests (send in X-User-Token header)
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: User ID
+                        example: 1
+                      github_id:
+                        type: integer
+                        description: GitHub user ID
+                        example: 12345
+                      github_username:
+                        type: string
+                        description: GitHub username
+                        example: "octocat"
+                      email:
+                        type: string
+                        format: email
+                        description: User email address
+                        example: "octocat@github.com"
+                      avatar_url:
+                        type: string
+                        format: uri
+                        description: GitHub avatar URL
+                        example: "https://avatars.githubusercontent.com/u/583231"
+                      name:
+                        type: string
+                        description: User's full name
+                        example: "The Octocat"
+                        nullable: true
+                      admin:
+                        type: boolean
+                        description: Whether user has admin privileges
+                        example: false
+    '400':
+      description: Bad request - missing or invalid parameters
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "GitHub token required"
+              details:
+                - "Missing github_token in request body"
+    '401':
+      description: Unauthorized - invalid API key or GitHub token
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          examples:
+            missing_api_key:
+              summary: Missing API key
+              value:
+                error:
+                  message: "API key required"
+                  details:
+                    - "Missing Authorization header. Expected format: 'Authorization: Bearer <API_KEY>'"
+            invalid_github_token:
+              summary: Invalid GitHub token
+              value:
+                error:
+                  message: "Invalid GitHub token"
+                  details:
+                    - "Could not verify GitHub token or fetch user data"
+    '403':
+      description: Forbidden - user not whitelisted
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "Access denied"
+              details:
+                - "Your GitHub account is not whitelisted for access"

@@ -97,7 +97,7 @@ Both work, but `API_KEY` is preferred for Next.js consistency.
 ```bash
 # Test with your dev key
 curl -H "Authorization: Bearer xyz789ghi012..." \
-  http://localhost:3000/api/v1/comparisons
+  http://localhost:3001/api/v1/comparisons
 ```
 
 Should bypass rate limits and return data.
@@ -226,7 +226,7 @@ bin/rails api_keys:generate NAME="Next.js Development (Local) v2"
 
 # 3. Test
 curl -H "Authorization: Bearer new_dev_key_abc..." \
-  http://localhost:3000/api/v1/comparisons
+  http://localhost:3001/api/v1/comparisons
 
 # 4. Revoke old key
 bin/rails api_keys:revoke ID=2

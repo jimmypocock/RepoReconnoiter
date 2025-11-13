@@ -72,7 +72,7 @@ namespace :comparison do
 
       puts "\n💰 Cost: $#{comparison.cost_usd.round(6)} (#{comparison.input_tokens} in / #{comparison.output_tokens} out)"
       puts "\n✅ Comparison saved! ID: #{comparison.id}"
-      puts "🔗 View at: http://localhost:3000/comparisons/#{comparison.id}"
+      puts "🔗 View at: http://localhost:3001/comparisons/#{comparison.id}"
 
       puts "\n" + "=" * 80
       puts "✅ Comparison creation complete"

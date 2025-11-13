@@ -97,7 +97,7 @@ namespace :ips do
 
       1. Update .env file: BLOCKED_IPS="127.0.0.1"
       2. Restart server: bin/dev
-      3. Test: curl http://localhost:3000
+      3. Test: curl http://localhost:3001
 
       ==========================================
       ## Commands

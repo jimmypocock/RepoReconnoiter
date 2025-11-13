@@ -138,7 +138,7 @@ namespace :whitelist do
       puts "   Notes: #{notes}"
 
       # Show environment-appropriate URL
-      app_url = Rails.env.production? ? "https://reporeconnoiter.com" : "http://localhost:3000"
+      app_url = Rails.env.production? ? "https://reporeconnoiter.com" : "http://localhost:3001"
       puts "\nThey can now sign in at: #{app_url}"
     rescue StandardError => e
       puts "❌ Error creating whitelist entry: #{e.message}"

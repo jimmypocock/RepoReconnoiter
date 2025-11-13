@@ -48,16 +48,16 @@ The endpoint should work even if tests are failing. Try this:
 bin/rails server
 
 # Test the endpoint
-curl http://localhost:3000/api/v1/comparisons | jq
+curl http://localhost:3001/api/v1/comparisons | jq
 
 # With parameters
-curl 'http://localhost:3000/api/v1/comparisons?page=1&per_page=5' | jq
+curl 'http://localhost:3001/api/v1/comparisons?page=1&per_page=5' | jq
 
 # With search
-curl 'http://localhost:3000/api/v1/comparisons?search=rails' | jq
+curl 'http://localhost:3001/api/v1/comparisons?search=rails' | jq
 
 # With filters
-curl 'http://localhost:3000/api/v1/comparisons?date=week&sort=popular' | jq
+curl 'http://localhost:3001/api/v1/comparisons?date=week&sort=popular' | jq
 ```
 
 Expected response format:

@@ -37,7 +37,7 @@ This document outlines the security measures in place for RepoReconnoiter's API 
 ### 3. **CORS Protection**
 
 - **Development Origins**:
-  - `http://localhost:3000`
+  - `http://localhost:3001`
   - `http://localhost:3001`
   - `http://localhost:4000`
   - `http://localhost:5173` (Vite)

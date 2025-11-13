@@ -396,11 +396,11 @@ NAME="Test Key" bin/rails api_keys:generate
 ```bash
 # Should work (bypass rate limits)
 curl -H "Authorization: Bearer <your-key>" \
-  http://localhost:3000/api/v1/comparisons
+  http://localhost:3001/api/v1/comparisons
 
 # Should fail (invalid key)
 curl -H "Authorization: Bearer invalid-key-123" \
-  http://localhost:3000/api/v1/comparisons
+  http://localhost:3001/api/v1/comparisons
 ```
 
 ### **Test Rate Limiting**
@@ -408,7 +408,7 @@ curl -H "Authorization: Bearer invalid-key-123" \
 ```bash
 # Make 101 requests without key - should get 429
 for i in {1..101}; do
-  curl -s http://localhost:3000/api/v1/comparisons > /dev/null
+  curl -s http://localhost:3001/api/v1/comparisons > /dev/null
   echo "Request $i"
 done
 ```
@@ -417,7 +417,7 @@ done
 
 ```bash
 # Use key a few times
-curl -H "Authorization: Bearer <key>" http://localhost:3000/api/v1/comparisons
+curl -H "Authorization: Bearer <key>" http://localhost:3001/api/v1/comparisons
 
 # Wait for background job (2-3 seconds)
 sleep 3

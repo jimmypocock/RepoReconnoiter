@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 
 info:
   title: RepoReconnoiter API
@@ -13,14 +13,26 @@ info:
 
     ## Authentication
 
-    **All API endpoints require authentication** via API key.
+    **Two-level authentication system:**
 
-    ### API Key Authentication (Required)
-    - Add `Authorization: Bearer <API_KEY>` header to all requests
+    ### 1. App-Level Authentication (Required for all endpoints)
+    - **API Key:** Add `Authorization: Bearer <API_KEY>` header to all requests
+    - **Purpose:** Proves request is from an authorized application
     - **Server-side only** - never expose key in browser/client code
     - Contact admin to obtain a 64-character API key
     - Keys can be revoked without code changes
     - Usage is tracked for analytics
+
+    ### 2. User-Level Authentication (Required for user-specific endpoints)
+    - **JWT Token:** Add `X-User-Token: <JWT>` header for user-authenticated endpoints
+    - **Purpose:** Proves which user is making the request
+    - **How to get JWT:** Call `/api/v1/auth/exchange` with GitHub OAuth token
+    - JWT expires after 24 hours (refresh by exchanging GitHub token again)
+
+    ### Authentication Flow
+    1. User authenticates with GitHub OAuth (handled by your frontend)
+    2. Frontend exchanges GitHub token for JWT via `/api/v1/auth/exchange`
+    3. Frontend includes both API key + JWT in subsequent requests
 
     ### Public Endpoints (No Authentication)
     - `/api/v1` - API root (discovery endpoint)
@@ -28,8 +40,6 @@ info:
     - `/api/v1/openapi.yml` - OpenAPI YAML specification
 
     ### Rate Limiting
-
-    API key authentication bypasses Rack::Attack rate limits:
     - Without valid API key: **Requests will be rejected with 401 Unauthorized**
     - With valid API key: **Unlimited** requests (no rate limiting)
 
@@ -42,14 +52,18 @@ info:
 servers:
   - url: https://reporeconnoiter.com/api/v1
     description: Production server
-  - url: http://localhost:3000/api/v1
+  - url: http://localhost:3001/api/v1
     description: Local development server
 
 tags:
+  - name: Authentication
+    description: User authentication and JWT token management
   - name: Comparisons
     description: Repository comparison operations
 
 paths:
+  /auth/exchange:
+    $ref: './paths/auth.yml'
   /comparisons:
     $ref: './paths/comparisons.yml'
 

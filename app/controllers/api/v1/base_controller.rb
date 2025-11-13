@@ -33,6 +33,7 @@ module Api
 
       rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
       rescue_from ActionController::ParameterMissing, with: :render_bad_request
+      rescue_from JWT::DecodeError, with: :render_invalid_token
 
       private
 
@@ -71,6 +72,48 @@ module Api
       # Current authenticated API key
       def current_api_key
         @current_api_key
+      end
+
+      # Authenticate user from JWT token in X-User-Token header
+      # Returns 401 Unauthorized if missing or invalid
+      # Use this in controllers that require user authentication:
+      #   before_action :authenticate_user_token!
+      def authenticate_user_token!
+        token = request.headers["X-User-Token"]
+
+        unless token.present?
+          return render_error(
+            message: "User authentication required",
+            errors: [ "Missing X-User-Token header" ],
+            status: :unauthorized
+          )
+        end
+
+        # Decode JWT and extract user_id
+        payload = JsonWebToken.decode(token)
+        user_id = payload[:user_id]
+
+        # Find user
+        @current_user = User.find_by(id: user_id)
+
+        unless @current_user
+          return render_error(
+            message: "Invalid user token",
+            errors: [ "User not found or token is invalid" ],
+            status: :unauthorized
+          )
+        end
+      rescue JWT::DecodeError => e
+        render_error(
+          message: "Invalid user token",
+          errors: [ e.message ],
+          status: :unauthorized
+        )
+      end
+
+      # Current authenticated user (from JWT)
+      def current_user
+        @current_user
       end
 
       #--------------------------------------
@@ -114,6 +157,14 @@ module Api
           message: "Invalid request parameters",
           errors: [ exception.message ],
           status: :bad_request
+        )
+      end
+
+      def render_invalid_token(exception)
+        render_error(
+          message: "Invalid or expired token",
+          errors: [ exception.message ],
+          status: :unauthorized
         )
       end
     end

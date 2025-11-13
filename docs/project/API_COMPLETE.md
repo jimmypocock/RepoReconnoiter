@@ -46,16 +46,16 @@ Your REST API foundation is **100% complete** and ready for Next.js integration!
 
 ```bash
 # Basic query
-curl http://localhost:3000/api/v1/comparisons | jq
+curl http://localhost:3001/api/v1/comparisons | jq
 
 # Pagination
-curl 'http://localhost:3000/api/v1/comparisons?page=2&per_page=5' | jq
+curl 'http://localhost:3001/api/v1/comparisons?page=2&per_page=5' | jq
 
 # Search
-curl 'http://localhost:3000/api/v1/comparisons?search=rails' | jq
+curl 'http://localhost:3001/api/v1/comparisons?search=rails' | jq
 
 # Combined filters
-curl 'http://localhost:3000/api/v1/comparisons?search=react&date=week&per_page=10' | jq
+curl 'http://localhost:3001/api/v1/comparisons?search=react&date=week&per_page=10' | jq
 ```
 
 ## Response Format
@@ -184,7 +184,7 @@ async function getComparisons(params?: {
   date?: 'week' | 'month';
   sort?: 'recent' | 'popular';
 }) {
-  const url = new URL('http://localhost:3000/api/v1/comparisons');
+  const url = new URL('http://localhost:3001/api/v1/comparisons');
   Object.entries(params || {}).forEach(([key, value]) => {
     if (value) url.searchParams.set(key, String(value));
   });

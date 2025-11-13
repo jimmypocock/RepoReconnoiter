@@ -45,7 +45,9 @@ RepoReconnoiter is an Open Source Intelligence Dashboard that analyzes GitHub tr
 - **Analytics**: Microsoft Clarity (CSP-friendly, free)
 - **Deployment**: Render.com (Starter plan - $14/month)
 - **Hosting**:
-  - Production URL: <https://reporeconnoiter.com> (custom domain via Render)
+  - Production Web UI: <https://reporeconnoiter.com> (custom domain via Render)
+  - Production API: <https://api.reporeconnoiter.com/v1/> (subdomain routing)
+  - Development API: <http://localhost:3001/api/v1/> (path-based routing)
   - PostgreSQL 17 database (1GB storage, 97 connections)
   - Web Service (512MB RAM, always-on, shell access)
 - **Styling**: Tailwind CSS
