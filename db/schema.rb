@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_12_035136) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_13_024204) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -120,6 +120,19 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_12_035136) do
     t.index ["repository_id"], name: "index_comparison_repositories_on_repository_id"
   end
 
+  create_table "comparison_statuses", force: :cascade do |t|
+    t.bigint "comparison_id"
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.string "session_id", null: false
+    t.string "status", default: "processing", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["comparison_id"], name: "index_comparison_statuses_on_comparison_id"
+    t.index ["session_id"], name: "index_comparison_statuses_on_session_id", unique: true
+    t.index ["user_id"], name: "index_comparison_statuses_on_user_id"
+  end
+
   create_table "comparisons", force: :cascade do |t|
     t.string "architecture_patterns"
     t.jsonb "constraints", default: []
@@ -135,6 +148,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_12_035136) do
     t.text "recommendation_reasoning"
     t.string "recommended_repo_full_name"
     t.integer "repos_compared_count"
+    t.string "session_id"
+    t.string "status"
     t.string "technologies"
     t.datetime "updated_at", null: false
     t.bigint "user_id"
@@ -145,6 +160,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_12_035136) do
     t.index ["normalized_query"], name: "index_comparisons_on_normalized_query_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["problem_domains"], name: "index_comparisons_on_problem_domains"
     t.index ["problem_domains"], name: "index_comparisons_on_problem_domains_trgm", opclass: :gin_trgm_ops, using: :gin
+    t.index ["session_id"], name: "index_comparisons_on_session_id", unique: true
     t.index ["technologies"], name: "index_comparisons_on_technologies_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["user_id"], name: "index_comparisons_on_user_id"
     t.index ["view_count"], name: "index_comparisons_on_view_count"
@@ -415,6 +431,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_12_035136) do
   add_foreign_key "comparison_categories", "comparisons"
   add_foreign_key "comparison_repositories", "comparisons"
   add_foreign_key "comparison_repositories", "repositories"
+  add_foreign_key "comparison_statuses", "comparisons"
+  add_foreign_key "comparison_statuses", "users"
   add_foreign_key "comparisons", "users"
   add_foreign_key "queued_analyses", "repositories"
   add_foreign_key "repository_categories", "categories"

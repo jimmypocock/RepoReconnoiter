@@ -10,6 +10,41 @@ info:
     - Search and filter repository comparisons
     - AI-generated repository recommendations
     - Category-based browsing
+    - Real-time comparison creation progress via WebSocket
+
+    ## Real-Time Updates (WebSocket)
+
+    For async operations like comparison creation, you can receive real-time progress updates via ActionCable WebSocket.
+
+    **WebSocket URL:**
+    - Production: `wss://reporeconnoiter.com/cable?token=<JWT>`
+    - Development: `ws://localhost:3001/cable?token=<JWT>`
+
+    **Authentication:** Include JWT token as URL parameter: `?token=<JWT>`
+
+    **Subscribe to ComparisonStatusChannel:**
+    ```javascript
+    import { createConsumer } from '@rails/actioncable'
+
+    const cable = createConsumer('wss://reporeconnoiter.com/cable?token=JWT_TOKEN')
+    const subscription = cable.subscriptions.create(
+      { channel: 'ComparisonStatusChannel', session_id: 'uuid-from-create' },
+      {
+        received(data) {
+          // data.type: "progress" | "complete" | "error"
+          // data.message, data.step, data.percentage, etc.
+          console.log('Progress update:', data)
+        }
+      }
+    )
+    ```
+
+    **Message Types:**
+    - `progress`: Incremental progress update (includes step, message, percentage)
+    - `complete`: Comparison finished (includes comparison_id, redirect_url)
+    - `error`: Comparison failed (includes error message)
+
+    **Fallback:** If WebSocket is not available, use REST polling via `GET /comparisons/status/:session_id`
 
     ## Authentication
 
@@ -66,6 +101,10 @@ paths:
     $ref: './paths/auth.yml'
   /comparisons:
     $ref: './paths/comparisons.yml'
+  /comparisons/{id}:
+    $ref: './paths/comparison_show.yml'
+  /comparisons/status/{session_id}:
+    $ref: './paths/comparison_status.yml'
 
 components:
   securitySchemes:

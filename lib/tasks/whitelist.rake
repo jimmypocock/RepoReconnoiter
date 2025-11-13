@@ -8,6 +8,7 @@
 #   bin/rails whitelist:add[12345678,johndoe,john@example.com]      # Add by GitHub ID and username
 #   bin/rails whitelist:list                                         # List all whitelisted users
 #   bin/rails whitelist:remove[johndoe]                              # Remove user by GitHub username
+#   bin/rails whitelist:remove[12345678]                             # Remove user by GitHub ID
 
 namespace :whitelist do
   desc "Add a user to the whitelist (interactive or with arguments)"
@@ -167,28 +168,38 @@ namespace :whitelist do
     end
   end
 
-  desc "Remove a user from the whitelist"
-  task :remove, [ :github_username ] => :environment do |_t, args|
-    if args.github_username.blank?
-      print "GitHub username to remove: "
-      github_username = $stdin.gets.strip
+  desc "Remove a user from the whitelist (by username or ID)"
+  task :remove, [ :identifier ] => :environment do |_t, args|
+    if args.identifier.blank?
+      print "GitHub username or ID to remove: "
+      identifier = $stdin.gets.strip
     else
-      github_username = args.github_username
+      identifier = args.identifier
     end
 
-    user = WhitelistedUser.find_by(github_username: github_username)
-
-    if user.nil?
-      puts "❌ User @#{github_username} not found in whitelist"
+    if identifier.blank?
+      puts "❌ GitHub username or ID is required"
       exit 1
     end
 
-    print "Are you sure you want to remove @#{github_username} from the whitelist? (y/N): "
+    # Find by GitHub ID or username
+    user = if identifier.match?(/^\d+$/)
+             WhitelistedUser.find_by(github_id: identifier.to_i)
+           else
+             WhitelistedUser.find_by(github_username: identifier)
+           end
+
+    if user.nil?
+      puts "❌ User #{identifier} not found in whitelist"
+      exit 1
+    end
+
+    print "Are you sure you want to remove @#{user.github_username} (ID: #{user.github_id}) from the whitelist? (y/N): "
     confirmation = $stdin.gets.strip.downcase
 
     if confirmation == "y"
       user.destroy!
-      puts "✅ Removed @#{github_username} from whitelist"
+      puts "✅ Removed @#{user.github_username} from whitelist"
     else
       puts "Cancelled"
     end

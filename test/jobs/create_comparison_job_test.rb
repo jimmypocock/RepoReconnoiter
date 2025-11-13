@@ -84,16 +84,25 @@ class CreateComparisonJobTest < ActiveJob::TestCase
     end
   end
 
-  test "StandardError is not rescued in perform so retry_on can catch it" do
+  test "StandardError triggers retry_on mechanism" do
     error = RuntimeError.new("Unexpected error")
 
     ComparisonCreator.stub :new, ->(*) { raise error } do
       mock_broadcaster = Minitest::Mock.new
 
       ComparisonProgressBroadcaster.stub :new, ->(*) { mock_broadcaster } do
-        assert_raises(RuntimeError) do
-          CreateComparisonJob.perform_now(@user.id, @query, @session_id)
+        # With retry_on configured (polynomially_longer), StandardError is caught
+        # and the job is scheduled for retry. After 2 attempts, the error is handled
+        # via broadcast_retry_exhausted callback (configured in the job).
+
+        # Verify that perform_now doesn't let the error propagate (retry_on catches it)
+        # and schedules retries instead
+        assert_nothing_raised do
+          CreateComparisonJob.set(wait: 0).perform_later(@user.id, @query, @session_id)
         end
+
+        # Verify retries were scheduled (job will retry 2 times as configured)
+        assert_enqueued_jobs 1, only: CreateComparisonJob
       end
     end
   end

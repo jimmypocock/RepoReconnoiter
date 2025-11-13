@@ -1,0 +1,88 @@
+get:
+  summary: Get a single comparison
+  description: |
+    Returns detailed information about a specific comparison, including all related categories and repositories.
+
+    **Authentication:** API key required
+
+    **Use Case:** After receiving a `comparison_id` from the status/WebSocket endpoint, use this endpoint
+    to retrieve the full comparison data for display.
+
+    **Response includes:**
+    - Basic comparison metadata (query, technologies, domains)
+    - Associated categories with confidence scores
+    - Repository details (name, description, stars, language, URL)
+  operationId: getComparison
+  tags:
+    - Comparisons
+  security:
+    - BearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Comparison ID
+      schema:
+        type: integer
+        example: 123
+  responses:
+    '200':
+      description: Comparison retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: '../schemas/Comparison.yml'
+          example:
+            data:
+              id: 123
+              user_query: "Rails background job library"
+              normalized_query: "rails background job"
+              technologies: "Ruby, Rails"
+              problem_domains: "Background Job Processing"
+              architecture_patterns: "Queue-based"
+              repos_compared_count: 5
+              recommended_repo: "sidekiq/sidekiq"
+              view_count: 42
+              created_at: "2025-11-12T00:00:00Z"
+              updated_at: "2025-11-12T00:00:00Z"
+              categories:
+                - id: 5
+                  name: "Ruby"
+                  category_type: "Technology"
+                - id: 23
+                  name: "Background Jobs"
+                  category_type: "Problem Domain"
+              repositories:
+                - id: 123
+                  full_name: "sidekiq/sidekiq"
+                  description: "Simple, efficient background processing for Ruby"
+                  stargazers_count: 13000
+                  language: "Ruby"
+                  html_url: "https://github.com/sidekiq/sidekiq"
+                - id: 124
+                  full_name: "resque/resque"
+                  description: "Redis-backed Ruby library for creating background jobs"
+                  stargazers_count: 9500
+                  language: "Ruby"
+                  html_url: "https://github.com/resque/resque"
+    '401':
+      description: Unauthorized (missing or invalid API key)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+    '404':
+      description: Comparison not found
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "Resource not found"
+              details: ["Couldn't find Comparison with 'id'=999999"]

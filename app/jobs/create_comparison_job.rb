@@ -8,7 +8,7 @@
 class CreateComparisonJob < ApplicationJob
   queue_as :default
 
-  retry_on StandardError, wait: :exponentially_longer, attempts: 2 do |job, error|
+  retry_on StandardError, wait: :polynomially_longer, attempts: 2 do |job, error|
     job.broadcast_retry_exhausted(error)
   end
 
@@ -19,6 +19,7 @@ class CreateComparisonJob < ApplicationJob
   def broadcast_retry_exhausted(error)
     user_id, query, session_id = arguments
     broadcaster = ComparisonProgressBroadcaster.new(session_id)
+    status_record = ComparisonStatus.find_by(session_id: session_id)
 
     Sentry.capture_exception(error, extra: {
       job: "CreateComparisonJob",
@@ -28,12 +29,15 @@ class CreateComparisonJob < ApplicationJob
       executions:
     })
 
-    broadcaster.broadcast_error(error_message_for(error))
+    error_msg = error_message_for(error)
+    status_record&.fail!(error_msg)
+    broadcaster.broadcast_error(error_msg)
   end
 
   def perform(user_id, query, session_id)
     user = User.find(user_id)
     broadcaster = ComparisonProgressBroadcaster.new(session_id)
+    status_record = ComparisonStatus.find_by(session_id: session_id)
 
     result = ComparisonCreator.new(
       query: query,
@@ -41,11 +45,18 @@ class CreateComparisonJob < ApplicationJob
       session_id: session_id
     ).call
 
+    # Update status to completed
+    status_record&.complete!(result.record)
+
     broadcaster.broadcast_complete(result.record.id)
   rescue ComparisonCreator::InvalidQueryError => e
-    broadcaster.broadcast_error("Invalid query: #{e.message}")
-  rescue ComparisonCreator::NoRepositoriesFoundError
-    broadcaster.broadcast_error("No repositories found. Try a different query.")
+    error_msg = "Invalid query: #{e.message}"
+    status_record&.fail!(error_msg)
+    broadcaster.broadcast_error(error_msg)
+  rescue ComparisonCreator::NoRepositoriesFoundError => e
+    error_msg = "No repositories found. Try a different query."
+    status_record&.fail!(error_msg)
+    broadcaster.broadcast_error(error_msg)
   end
 
   private

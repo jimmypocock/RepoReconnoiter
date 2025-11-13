@@ -1,3 +1,118 @@
+post:
+  summary: Create comparison (async)
+  description: |
+    Creates a new repository comparison asynchronously. Returns immediately with a session ID
+    that can be used to track progress via WebSocket or polling.
+
+    **Authentication:** Required
+    - API key: `Authorization: Bearer <API_KEY>` header
+    - User JWT: `X-User-Token: <JWT>` header
+
+    **Real-time Progress:** Two methods available
+    1. **WebSocket** (recommended): Subscribe to ComparisonStatusChannel with session_id
+    2. **REST Polling** (fallback): Poll GET /comparisons/status/:session_id
+
+    **Rate Limiting:** 25 comparisons/day per user
+  operationId: createComparison
+  tags:
+    - Comparisons
+  security:
+    - BearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - query
+          properties:
+            query:
+              type: string
+              description: Natural language query describing repository needs
+              minLength: 1
+              maxLength: 500
+              example: "Rails background job library with retry logic"
+        example:
+          query: "Rails background job library with retry logic"
+  responses:
+    '202':
+      description: Accepted - Comparison creation started
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - session_id
+              - status
+              - websocket_url
+              - status_url
+            properties:
+              session_id:
+                type: string
+                format: uuid
+                description: Unique session ID for tracking progress
+                example: "550e8400-e29b-41d4-a716-446655440000"
+              status:
+                type: string
+                enum: [processing]
+                description: Current status (always "processing" on creation)
+                example: "processing"
+              websocket_url:
+                type: string
+                format: uri
+                description: WebSocket URL for real-time progress updates
+                example: "wss://reporeconnoiter.com/cable"
+              status_url:
+                type: string
+                format: uri
+                description: REST endpoint for polling status
+                example: "/api/v1/comparisons/status/550e8400-e29b-41d4-a716-446655440000"
+          example:
+            session_id: "550e8400-e29b-41d4-a716-446655440000"
+            status: "processing"
+            websocket_url: "wss://reporeconnoiter.com/cable"
+            status_url: "/api/v1/comparisons/status/550e8400-e29b-41d4-a716-446655440000"
+    '400':
+      description: Bad request (invalid query)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "Invalid query"
+              details: ["Query must be between 1 and 500 characters"]
+    '401':
+      description: Unauthorized (missing or invalid authentication)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          examples:
+            missing_api_key:
+              summary: Missing API key
+              value:
+                error:
+                  message: "API key required"
+                  details: ["Missing Authorization header"]
+            missing_user_token:
+              summary: Missing user JWT
+              value:
+                error:
+                  message: "User authentication required"
+                  details: ["Missing X-User-Token header"]
+    '429':
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "Rate limit exceeded"
+              details: ["You've created 25 comparisons today. Try again tomorrow."]
+
 get:
   summary: List comparisons
   description: |

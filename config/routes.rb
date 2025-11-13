@@ -35,7 +35,9 @@ Rails.application.routes.draw do
         # Authentication endpoints
         post "auth/exchange", to: "auth#exchange"
 
-        resources :comparisons, only: [ :index ]
+        # Comparison endpoints
+        resources :comparisons, only: [ :index, :show, :create ]
+        get "comparisons/status/:session_id", to: "comparisons#status", as: :comparison_status
 
         # OpenAPI documentation endpoints
         get "openapi.json", to: "docs#openapi_json", as: :openapi_json  # For Swagger UI
@@ -43,6 +45,10 @@ Rails.application.routes.draw do
       end
     end
   end
+
+  # Session exchange for Next.js → Rails seamless authentication
+  # Allows JWT-authenticated users to access Rails-only UIs
+  get "session_exchange", to: "session_exchange#create"
 
   # Profile page (requires authentication)
   get "profile", to: "profile#show"

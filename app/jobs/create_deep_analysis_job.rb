@@ -8,7 +8,7 @@
 class CreateDeepAnalysisJob < ApplicationJob
   queue_as :default
 
-  retry_on StandardError, wait: :exponentially_longer, attempts: 2 do |job, error|
+  retry_on StandardError, wait: :polynomially_longer, attempts: 2 do |job, error|
     job.broadcast_retry_exhausted(error)
   end
 

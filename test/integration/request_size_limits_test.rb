@@ -110,9 +110,9 @@ class RequestSizeLimitsTest < ActionDispatch::IntegrationTest
            "Content-Length" => one_mb_payload.bytesize.to_s
          )
 
-    # Should get 404 (not found - POST route doesn't exist), NOT 413 (content too large)
+    # Should get 401 (unauthorized - requires user JWT), NOT 413 (content too large)
     # This proves the content size check passed (1MB is at the limit)
-    assert_response :not_found  # Expected since POST isn't routed for this endpoint
+    assert_response :unauthorized  # POST route now exists but requires user authentication
   end
 
   test "request size limit over 1MB by 1 byte fails" do

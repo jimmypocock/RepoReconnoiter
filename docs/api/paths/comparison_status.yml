@@ -1,0 +1,112 @@
+get:
+  summary: Get comparison status (polling fallback)
+  description: |
+    Returns the current status of an async comparison creation. Use this endpoint for polling
+    if WebSocket connection is not available.
+
+    **Recommended:** Use WebSocket (ComparisonStatusChannel) for real-time updates instead of polling.
+
+    **Authentication:** API key required
+
+    **Polling Interval:** Poll every 2-5 seconds while status is "processing"
+
+    **Status Values:**
+    - `processing`: Comparison is being created (keep polling)
+    - `completed`: Comparison finished successfully (includes comparison_id)
+    - `failed`: Comparison failed (includes error_message)
+  operationId: getComparisonStatus
+  tags:
+    - Comparisons
+  security:
+    - BearerAuth: []
+  parameters:
+    - name: session_id
+      in: path
+      required: true
+      description: Session ID returned from POST /comparisons
+      schema:
+        type: string
+        format: uuid
+        example: "550e8400-e29b-41d4-a716-446655440000"
+  responses:
+    '200':
+      description: Status retrieved successfully
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - type: object
+                title: Processing
+                required:
+                  - status
+                properties:
+                  status:
+                    type: string
+                    enum: [processing]
+                    example: "processing"
+              - type: object
+                title: Completed
+                required:
+                  - status
+                  - comparison_id
+                  - comparison_url
+                properties:
+                  status:
+                    type: string
+                    enum: [completed]
+                    example: "completed"
+                  comparison_id:
+                    type: integer
+                    description: ID of the created comparison
+                    example: 123
+                  comparison_url:
+                    type: string
+                    format: uri
+                    description: URL to view the comparison
+                    example: "/comparisons/123"
+              - type: object
+                title: Failed
+                required:
+                  - status
+                  - error_message
+                properties:
+                  status:
+                    type: string
+                    enum: [failed]
+                    example: "failed"
+                  error_message:
+                    type: string
+                    description: Error message explaining failure
+                    example: "No repositories found. Try a different query."
+          examples:
+            processing:
+              summary: Still processing
+              value:
+                status: "processing"
+            completed:
+              summary: Comparison complete
+              value:
+                status: "completed"
+                comparison_id: 123
+                comparison_url: "/comparisons/123"
+            failed:
+              summary: Comparison failed
+              value:
+                status: "failed"
+                error_message: "No repositories found. Try a different query."
+    '401':
+      description: Unauthorized (missing or invalid API key)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+    '404':
+      description: Session not found
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "Resource not found"
+              details: ["Couldn't find ComparisonStatus"]

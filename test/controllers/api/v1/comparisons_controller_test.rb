@@ -338,6 +338,304 @@ module Api
         assert_equal repo.id, comparison_data["repositories"].first["id"]
         assert_schema_conform
       end
+
+      #--------------------------------------
+      # CREATE ENDPOINT TESTS (ASYNC)
+      #--------------------------------------
+
+      test "POST /api/v1/comparisons requires API key" do
+        post v1_comparisons_path, params: { query: "Rails background jobs" }, as: :json
+
+        assert_response :unauthorized
+        json = JSON.parse(response.body)
+        assert_equal "API key required", json["error"]["message"]
+      end
+
+      test "POST /api/v1/comparisons requires user JWT token" do
+        post v1_comparisons_path,
+             headers: auth_headers,
+             params: { query: "Rails background jobs" },
+             as: :json
+
+        assert_response :unauthorized
+        json = JSON.parse(response.body)
+        assert_equal "User authentication required", json["error"]["message"]
+      end
+
+      test "POST /api/v1/comparisons validates query presence" do
+        user = users(:one)
+        jwt = JsonWebToken.encode({ user_id: user.id })
+
+        post v1_comparisons_path,
+             headers: auth_headers.merge("X-User-Token" => jwt),
+             params: { query: "" },
+             as: :json
+
+        assert_response :unprocessable_entity
+        json = JSON.parse(response.body)
+        assert_equal "Invalid query", json["error"]["message"]
+      end
+
+      test "POST /api/v1/comparisons validates query length" do
+        user = users(:one)
+        jwt = JsonWebToken.encode({ user_id: user.id })
+        long_query = "x" * 501
+
+        post v1_comparisons_path,
+             headers: auth_headers.merge("X-User-Token" => jwt),
+             params: { query: long_query },
+             as: :json
+
+        assert_response :unprocessable_entity
+        json = JSON.parse(response.body)
+        assert_includes json["error"]["details"].first, "500 characters"
+      end
+
+      test "POST /api/v1/comparisons creates status and queues job" do
+        user = users(:one)
+        jwt = JsonWebToken.encode({ user_id: user.id })
+
+        assert_difference "ComparisonStatus.count", 1 do
+          assert_enqueued_with(job: CreateComparisonJob) do
+            post v1_comparisons_path,
+                 headers: auth_headers.merge("X-User-Token" => jwt),
+                 params: { query: "Rails background jobs" },
+                 as: :json
+          end
+        end
+
+        assert_response :accepted
+      end
+
+      test "POST /api/v1/comparisons returns session info" do
+        user = users(:one)
+        jwt = JsonWebToken.encode({ user_id: user.id })
+
+        post v1_comparisons_path,
+             headers: auth_headers.merge("X-User-Token" => jwt),
+             params: { query: "Rails background jobs" },
+             as: :json
+
+        assert_response :accepted
+        json = JSON.parse(response.body)
+
+        assert json.key?("session_id")
+        assert json.key?("status")
+        assert json.key?("websocket_url")
+        assert json.key?("status_url")
+        assert_equal "processing", json["status"]
+        assert_match(/^ws/, json["websocket_url"])
+      end
+
+      #--------------------------------------
+      # STATUS ENDPOINT TESTS (POLLING)
+      #--------------------------------------
+
+      test "GET /api/v1/comparisons/status/:session_id requires API key" do
+        get v1_comparison_status_path("some-uuid"), as: :json
+
+        assert_response :unauthorized
+      end
+
+      test "GET /api/v1/comparisons/status/:session_id returns 404 for invalid session" do
+        get v1_comparison_status_path("invalid-uuid"),
+            headers: auth_headers,
+            as: :json
+
+        assert_response :not_found
+      end
+
+      test "GET /api/v1/comparisons/status/:session_id returns processing status" do
+        user = users(:one)
+        status = ComparisonStatus.create!(
+          session_id: "test-session-123",
+          user: user,
+          status: :processing
+        )
+
+        get v1_comparison_status_path(status.session_id),
+            headers: auth_headers,
+            as: :json
+
+        assert_response :success
+        json = JSON.parse(response.body)
+        assert_equal "processing", json["status"]
+        assert_nil json["comparison_id"]
+      end
+
+      test "GET /api/v1/comparisons/status/:session_id returns completed status" do
+        user = users(:one)
+        comparison = Comparison.create!(
+          user_query: "Test",
+          normalized_query: "test",
+          repos_compared_count: 1
+        )
+        status = ComparisonStatus.create!(
+          session_id: "test-session-456",
+          user: user,
+          status: :completed,
+          comparison: comparison
+        )
+
+        get v1_comparison_status_path(status.session_id),
+            headers: auth_headers,
+            as: :json
+
+        assert_response :success
+        json = JSON.parse(response.body)
+        assert_equal "completed", json["status"]
+        assert_equal comparison.id, json["comparison_id"]
+        assert json.key?("comparison_url")
+      end
+
+      test "GET /api/v1/comparisons/status/:session_id returns failed status" do
+        user = users(:one)
+        status = ComparisonStatus.create!(
+          session_id: "test-session-789",
+          user: user,
+          status: :failed,
+          error_message: "No repositories found"
+        )
+
+        get v1_comparison_status_path(status.session_id),
+            headers: auth_headers,
+            as: :json
+
+        assert_response :success
+        json = JSON.parse(response.body)
+        assert_equal "failed", json["status"]
+        assert_equal "No repositories found", json["error_message"]
+        assert_nil json["comparison_id"]
+      end
+
+      #--------------------------------------
+      # SHOW ENDPOINT TESTS
+      #--------------------------------------
+
+      test "GET /api/v1/comparisons/:id requires API key" do
+        comparison = Comparison.first
+
+        get v1_comparison_path(comparison), as: :json
+
+        assert_response :unauthorized
+        json = JSON.parse(response.body)
+        assert_equal "API key required", json["error"]["message"]
+      end
+
+      test "GET /api/v1/comparisons/:id returns 404 for non-existent comparison" do
+        get v1_comparison_path(999999), headers: auth_headers, as: :json
+
+        assert_response :not_found
+      end
+
+      test "GET /api/v1/comparisons/:id returns success" do
+        comparison = Comparison.create!(
+          user_query: "Rails background jobs",
+          normalized_query: "rails background jobs",
+          technologies: "Rails, Ruby",
+          repos_compared_count: 5
+        )
+
+        get v1_comparison_path(comparison), headers: auth_headers, as: :json
+
+        assert_response :success
+        assert_equal "application/json; charset=utf-8", response.content_type
+        assert_schema_conform
+      end
+
+      test "GET /api/v1/comparisons/:id returns full comparison data" do
+        comparison = Comparison.create!(
+          user_query: "Rails background jobs",
+          normalized_query: "rails background jobs",
+          technologies: "Rails, Ruby",
+          problem_domains: "Background Processing",
+          architecture_patterns: "Queue-based",
+          repos_compared_count: 5,
+          view_count: 42
+        )
+
+        get v1_comparison_path(comparison), headers: auth_headers, as: :json
+
+        assert_response :success
+        json = JSON.parse(response.body)
+        data = json["data"]
+
+        assert_equal comparison.id, data["id"]
+        assert_equal "Rails background jobs", data["user_query"]
+        assert_equal "rails background jobs", data["normalized_query"]
+        assert_equal "Rails, Ruby", data["technologies"]
+        assert_equal "Background Processing", data["problem_domains"]
+        assert_equal "Queue-based", data["architecture_patterns"]
+        assert_equal 5, data["repos_compared_count"]
+        assert_equal 42, data["view_count"]
+        assert data.key?("created_at")
+        assert data.key?("updated_at")
+        assert_schema_conform
+      end
+
+      test "GET /api/v1/comparisons/:id includes categories" do
+        comparison = Comparison.create!(
+          user_query: "Test",
+          normalized_query: "test",
+          repos_compared_count: 1
+        )
+
+        category = categories(:one)
+        ComparisonCategory.create!(
+          comparison: comparison,
+          category: category,
+          confidence_score: 0.95
+        )
+
+        get v1_comparison_path(comparison), headers: auth_headers, as: :json
+
+        assert_response :success
+        json = JSON.parse(response.body)
+        data = json["data"]
+
+        assert data.key?("categories")
+        assert data["categories"].is_a?(Array)
+        assert_equal 1, data["categories"].size
+        assert_equal category.id, data["categories"].first["id"]
+        assert_equal category.name, data["categories"].first["name"]
+        assert_equal category.category_type, data["categories"].first["category_type"]
+        assert_schema_conform
+      end
+
+      test "GET /api/v1/comparisons/:id includes repositories" do
+        comparison = Comparison.create!(
+          user_query: "Test",
+          normalized_query: "test",
+          repos_compared_count: 1
+        )
+
+        repo = repositories(:one)
+        ComparisonRepository.create!(
+          comparison: comparison,
+          repository: repo,
+          rank: 1,
+          score: 95
+        )
+
+        get v1_comparison_path(comparison), headers: auth_headers, as: :json
+
+        assert_response :success
+        json = JSON.parse(response.body)
+        data = json["data"]
+
+        assert data.key?("repositories")
+        assert data["repositories"].is_a?(Array)
+        assert_equal 1, data["repositories"].size
+
+        repo_data = data["repositories"].first
+        assert_equal repo.id, repo_data["id"]
+        assert_equal repo.full_name, repo_data["full_name"]
+        assert_equal repo.description, repo_data["description"]
+        assert_equal repo.stargazers_count, repo_data["stargazers_count"]
+        assert_equal repo.language, repo_data["language"]
+        assert_equal repo.html_url, repo_data["html_url"]
+        assert_schema_conform
+      end
     end
   end
 end
