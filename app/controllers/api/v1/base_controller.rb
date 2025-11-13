@@ -97,7 +97,7 @@ module Api
         @current_user = User.find_by(id: user_id)
 
         unless @current_user
-          return render_error(
+          render_error(
             message: "Invalid user token",
             errors: [ "User not found or token is invalid" ],
             status: :unauthorized
