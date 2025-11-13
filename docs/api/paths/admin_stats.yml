@@ -1,0 +1,223 @@
+get:
+  summary: Get platform statistics (admin only)
+  description: |
+    Returns platform-wide statistics including AI spending, budget tracking, and usage metrics.
+
+    **Authentication:** API key + User JWT token + Admin role required
+
+    **Use Case:** Admin dashboard showing platform health, AI costs, budget status, and user activity.
+
+    **Response includes:**
+    - AI spending breakdown (today, week, month, total, projected)
+    - Budget information (limit, remaining, percentage used, status)
+    - Platform metrics (comparisons count, repositories count, total views)
+    - Spending breakdown by AI model
+    - Spending breakdown by user (top 10)
+  operationId: getAdminStats
+  tags:
+    - Admin
+  security:
+    - BearerAuth: []
+    - UserAuth: []
+  responses:
+    '200':
+      description: Statistics retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                type: object
+                required:
+                  - ai_spending
+                  - budget
+                  - platform
+                  - spend_by_model
+                  - spend_by_user
+                properties:
+                  ai_spending:
+                    type: object
+                    description: AI API spending breakdown
+                    required:
+                      - today
+                      - this_week
+                      - this_month
+                      - total
+                      - projected_month
+                    properties:
+                      today:
+                        type: number
+                        format: float
+                        description: Spending today (USD)
+                        example: 0.02
+                      this_week:
+                        type: number
+                        format: float
+                        description: Spending this week (USD)
+                        example: 0.15
+                      this_month:
+                        type: number
+                        format: float
+                        description: Spending this month (USD)
+                        example: 0.45
+                      total:
+                        type: number
+                        format: float
+                        description: Total spending all-time (USD)
+                        example: 2.35
+                      projected_month:
+                        type: number
+                        format: float
+                        description: Projected spending by end of month (USD)
+                        example: 0.90
+                  budget:
+                    type: object
+                    description: Monthly budget tracking
+                    required:
+                      - monthly_limit
+                      - remaining
+                      - percentage_used
+                      - status
+                    properties:
+                      monthly_limit:
+                        type: number
+                        format: float
+                        description: Monthly budget limit (USD)
+                        example: 10.0
+                      remaining:
+                        type: number
+                        format: float
+                        description: Remaining budget this month (USD)
+                        example: 9.55
+                      percentage_used:
+                        type: number
+                        format: float
+                        description: Percentage of monthly budget used
+                        example: 4.5
+                      status:
+                        type: string
+                        enum: [healthy, warning, critical, exceeded]
+                        description: Budget health status
+                        example: "healthy"
+                  platform:
+                    type: object
+                    description: Platform-wide metrics
+                    required:
+                      - comparisons_count
+                      - repositories_count
+                      - total_views
+                    properties:
+                      comparisons_count:
+                        type: integer
+                        description: Total comparisons created
+                        example: 150
+                      repositories_count:
+                        type: integer
+                        description: Total repositories analyzed
+                        example: 500
+                      total_views:
+                        type: integer
+                        description: Total comparison views
+                        example: 3200
+                  spend_by_model:
+                    type: array
+                    description: AI spending breakdown by model (this month)
+                    items:
+                      type: object
+                      required:
+                        - model
+                        - cost
+                        - percentage
+                      properties:
+                        model:
+                          type: string
+                          description: AI model name
+                          example: "gpt-5-mini"
+                        cost:
+                          type: number
+                          format: float
+                          description: Cost for this model (USD)
+                          example: 0.30
+                        percentage:
+                          type: number
+                          format: float
+                          description: Percentage of total spend
+                          example: 66.7
+                  spend_by_user:
+                    type: array
+                    description: AI spending breakdown by user (top 10, this month)
+                    items:
+                      type: object
+                      required:
+                        - username
+                        - cost
+                        - percentage
+                      properties:
+                        username:
+                          type: string
+                          description: GitHub username
+                          example: "johndoe"
+                        cost:
+                          type: number
+                          format: float
+                          description: Cost for this user (USD)
+                          example: 0.25
+                        percentage:
+                          type: number
+                          format: float
+                          description: Percentage of total spend
+                          example: 55.6
+          example:
+            data:
+              ai_spending:
+                today: 0.02
+                this_week: 0.15
+                this_month: 0.45
+                total: 2.35
+                projected_month: 0.90
+              budget:
+                monthly_limit: 10.0
+                remaining: 9.55
+                percentage_used: 4.5
+                status: "healthy"
+              platform:
+                comparisons_count: 150
+                repositories_count: 500
+                total_views: 3200
+              spend_by_model:
+                - model: "gpt-5-mini"
+                  cost: 0.30
+                  percentage: 66.7
+                - model: "gpt-5"
+                  cost: 0.15
+                  percentage: 33.3
+              spend_by_user:
+                - username: "johndoe"
+                  cost: 0.25
+                  percentage: 55.6
+                - username: "janedoe"
+                  cost: 0.20
+                  percentage: 44.4
+    '401':
+      description: Unauthorized (missing or invalid API key or user token)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "User authentication required"
+              details: ["X-User-Token header is missing or invalid"]
+    '403':
+      description: Forbidden (user is not an admin)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "Admin access required"
+              details: ["You must be an admin to access this endpoint"]

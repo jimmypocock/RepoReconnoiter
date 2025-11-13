@@ -95,6 +95,10 @@ tags:
     description: User authentication and JWT token management
   - name: Comparisons
     description: Repository comparison operations
+  - name: Profile
+    description: User profile and usage statistics
+  - name: Admin
+    description: Administrative endpoints (admin role required)
 
 paths:
   /auth/exchange:
@@ -105,6 +109,10 @@ paths:
     $ref: './paths/comparison_show.yml'
   /comparisons/status/{session_id}:
     $ref: './paths/comparison_status.yml'
+  /profile:
+    $ref: './paths/profile.yml'
+  /admin/stats:
+    $ref: './paths/admin_stats.yml'
 
 components:
   securitySchemes:

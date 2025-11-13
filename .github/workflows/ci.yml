@@ -11,6 +11,7 @@ env:
   DATABASE_URL: postgres://postgres:postgres@localhost:5432/repo_reconnoiter_test
   GITHUB_CLIENT_ID: test_client_id
   GITHUB_CLIENT_SECRET: test_client_secret
+  ALLOWED_ADMIN_GITHUB_IDS: "1"
   COMPARISON_SIMILARITY_THRESHOLD: 0.8
   COMPARISON_CACHE_DAYS: 7
 

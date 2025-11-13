@@ -1,0 +1,185 @@
+get:
+  summary: Get current user profile
+  description: |
+    Returns the authenticated user's profile information, usage statistics, and recent activity.
+
+    **Authentication:** API key + User JWT token required
+
+    **Use Case:** Display user dashboard with profile info, usage stats, rate limits, and recent activity.
+
+    **Response includes:**
+    - User profile (id, email, GitHub info, admin status)
+    - Usage statistics (comparisons/analyses this month, remaining today, total cost)
+    - Recent 20 comparisons
+    - Recent 20 analyses (deep dives)
+  operationId: getUserProfile
+  tags:
+    - Profile
+  security:
+    - BearerAuth: []
+    - UserAuth: []
+  responses:
+    '200':
+      description: Profile retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                type: object
+                required:
+                  - user
+                  - stats
+                  - recent_comparisons
+                  - recent_analyses
+                properties:
+                  user:
+                    type: object
+                    required:
+                      - id
+                      - email
+                      - github_username
+                      - github_id
+                      - github_avatar_url
+                      - admin
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      email:
+                        type: string
+                        format: email
+                        example: "user@example.com"
+                      github_username:
+                        type: string
+                        example: "johndoe"
+                      github_id:
+                        type: integer
+                        example: 12345678
+                      github_avatar_url:
+                        type: string
+                        format: uri
+                        example: "https://avatars.githubusercontent.com/u/12345678"
+                      admin:
+                        type: boolean
+                        example: false
+                  stats:
+                    type: object
+                    required:
+                      - comparisons_this_month
+                      - analyses_this_month
+                      - remaining_comparisons_today
+                      - remaining_analyses_today
+                      - total_cost_spent
+                    properties:
+                      comparisons_this_month:
+                        type: integer
+                        description: Number of comparisons created this month
+                        example: 5
+                      analyses_this_month:
+                        type: integer
+                        description: Number of deep analyses created this month
+                        example: 2
+                      remaining_comparisons_today:
+                        type: number
+                        description: Remaining comparisons allowed today (Infinity for admins)
+                        example: 20
+                      remaining_analyses_today:
+                        type: number
+                        description: Remaining analyses allowed today (Infinity for admins)
+                        example: 8
+                      total_cost_spent:
+                        type: number
+                        format: float
+                        description: Total AI API cost spent by this user (USD)
+                        example: 0.15
+                  recent_comparisons:
+                    type: array
+                    description: Most recent 20 comparisons created by user
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - user_query
+                        - repos_compared_count
+                        - created_at
+                      properties:
+                        id:
+                          type: integer
+                          example: 123
+                        user_query:
+                          type: string
+                          example: "Rails background job library"
+                        repos_compared_count:
+                          type: integer
+                          example: 5
+                        created_at:
+                          type: string
+                          format: date-time
+                          example: "2025-11-12T00:00:00Z"
+                  recent_analyses:
+                    type: array
+                    description: Most recent 20 deep analyses created by user
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - repository_name
+                        - model_used
+                        - created_at
+                      properties:
+                        id:
+                          type: integer
+                          example: 456
+                        repository_name:
+                          type: string
+                          example: "sidekiq/sidekiq"
+                        model_used:
+                          type: string
+                          example: "gpt-5"
+                        created_at:
+                          type: string
+                          format: date-time
+                          example: "2025-11-12T00:00:00Z"
+          example:
+            data:
+              user:
+                id: 1
+                email: "johndoe@example.com"
+                github_username: "johndoe"
+                github_id: 12345678
+                github_avatar_url: "https://avatars.githubusercontent.com/u/12345678"
+                admin: false
+              stats:
+                comparisons_this_month: 5
+                analyses_this_month: 2
+                remaining_comparisons_today: 20
+                remaining_analyses_today: 8
+                total_cost_spent: 0.15
+              recent_comparisons:
+                - id: 123
+                  user_query: "Rails background job library"
+                  repos_compared_count: 5
+                  created_at: "2025-11-12T00:00:00Z"
+                - id: 122
+                  user_query: "Python web framework"
+                  repos_compared_count: 7
+                  created_at: "2025-11-11T00:00:00Z"
+              recent_analyses:
+                - id: 456
+                  repository_name: "sidekiq/sidekiq"
+                  model_used: "gpt-5"
+                  created_at: "2025-11-12T00:00:00Z"
+    '401':
+      description: Unauthorized (missing or invalid API key or user token)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Error.yml'
+          example:
+            error:
+              message: "User authentication required"
+              details: ["X-User-Token header is missing or invalid"]
