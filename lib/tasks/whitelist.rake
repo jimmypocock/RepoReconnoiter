@@ -185,9 +185,9 @@ namespace :whitelist do
     # Find by GitHub ID or username
     user = if identifier.match?(/^\d+$/)
              WhitelistedUser.find_by(github_id: identifier.to_i)
-           else
+    else
              WhitelistedUser.find_by(github_username: identifier)
-           end
+    end
 
     if user.nil?
       puts "❌ User #{identifier} not found in whitelist"

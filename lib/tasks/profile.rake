@@ -25,10 +25,10 @@ namespace :profile do
 
     # Find user by GitHub ID or username
     user = if identifier.match?(/^\d+$/)
-             User.find_by(github_id: identifier.to_i)
-           else
-             User.find_by(github_username: identifier)
-           end
+      User.find_by(github_id: identifier.to_i)
+    else
+      User.find_by(github_username: identifier)
+    end
 
     if user.nil?
       puts "❌ User not found: #{identifier}"
@@ -83,9 +83,9 @@ namespace :profile do
     # Find user by GitHub ID or username
     user = if identifier.match?(/^\d+$/)
              User.find_by(github_id: identifier.to_i)
-           else
+    else
              User.find_by(github_username: identifier)
-           end
+    end
 
     if user.nil?
       puts "❌ User not found: #{identifier}"
@@ -140,9 +140,9 @@ namespace :profile do
     # Find user by GitHub ID or username (including deleted)
     user = if identifier.match?(/^\d+$/)
              User.unscoped.find_by(github_id: identifier.to_i)
-           else
+    else
              User.unscoped.find_by(github_username: identifier)
-           end
+    end
 
     if user.nil?
       puts "❌ User not found: #{identifier}"
